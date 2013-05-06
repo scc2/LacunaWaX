@@ -1,0 +1,123 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Lacunawax - HowTo</title>
+    <link rel="stylesheet" href="../stylesheets/styles.css">
+    <link rel="stylesheet" href="../stylesheets/pygment_trac.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="../javascripts/respond.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <!--[if lt IE 8]>
+    <link rel="stylesheet" href="stylesheets/ie.css">
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+      <div id="header">
+        <nav>
+          <li class="fork"><a href="https://github.com/tmtowtdi/LacunaWaX">View On GitHub</a></li>
+          <li class="downloads"><a href="https://github.com/tmtowtdi/LacunaWaX/zipball/master">ZIP</a></li>
+          <li class="downloads"><a href="https://github.com/tmtowtdi/LacunaWaX/tarball/master">TAR</a></li>
+          <li class="downloads"><a href="https://docs.google.com/file/d/0B14CBHCJM9BdZko5LXVRdzNMZzQ/edit?usp=sharing" title="Download from Google Docs">EXE</a></li>
+          <li class="title">DOWNLOADS</li>
+        </nav>
+      </div><!-- end header -->
+
+    <div class="wrapper">
+
+      <section>
+        <div id="title">
+          <h1>LacunaWaX</h1>
+          <p>A GUI for The Lacuna Expanse</p>
+          <hr>
+          <span class="credits left">Project maintained by <a href="https://github.com/tmtowtdi">tmtowtdi</a></span>
+          <span class="credits right">Hosted on GitHub Pages &mdash; Theme by <a href="http://twitter.com/#!/michigangraham">mattgraham</a></span>
+        </div>
+
+        <h2>Main Program</h2>
+        The installer puts a single icon on your desktop; click it to run the main program.
+        <p>
+
+        The main program does two things:
+        <ol>
+            <li>
+                It provides some functions you can use right through the program (like 
+                rearranging buildings on your planets and building halls out of 
+                glyphs).
+            </li>
+            <li>
+                It lets you set up preferences for how you want things done in your 
+                scheduled tasks, like autovoting and training spies.
+            </li>
+        </ol>
+
+        The programs that actually perform those scheduled tasks do get installed along 
+        with the main program, but they won't have icons on your desktop.
+        <p>
+
+        <h2>Scheduled Programs</h2>
+        These programs will be on your computer wherever you installed LacunaWax, which 
+        will probably be something like:
+        <blockquote><code>
+            C:\Program Files\TMT Tools\LacunaWaX\bin\
+        </code></blockquote>
+        (adjust as needed for your version of Windows).
+        <p>
+
+        The scheduling programs available are:
+        <ul>
+            <li>
+                Schedule_archmin.exe<br>
+                <small> Handles both glyph pushing and automated searching of individual arch 
+                mins.  </small>
+            </li>
+            <li>
+                Schedule_autovote.exe<br>
+                <small> Votes for SS propositions based on your settings </small>
+            </li>
+            <li>
+                Schedule_lottery.exe<br>
+                <small> Plays the lottery on your requested colonies </small>
+            </li>
+            <li>
+                Schedule_train_spies.exe<br>
+                <small> Trains spies in the skills you've chosen provided the spies are both 
+                available and currently sitting on a planet with the appropriate training 
+                building </small>
+            </li>
+        </ul>
+
+        <h3>Setting up a run schedule</h3>
+        If you already know how to do so, just use the Windows Task Scheduler or your 
+        favorite third-party scheduling program.  But keep in mind that the scheduled 
+        programs will all open CMD windows when they're run, so be sure to set up your 
+        scheduled tasks to run hidden.
+        <p>
+
+        If you're unfamiliar with setting up scheduled tasks, or your normal task 
+        scheduler does not provide the option to run scheduled tasks in a "hidden" mode, 
+        <a href="create_schedule.html">See the step-by-step guide on setting up scheduled 
+        tasks</a>.
+
+
+
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-298531-10");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+  </body>
+</html>
