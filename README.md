@@ -17,7 +17,7 @@ CAUTION
 -------
 
 LacunaWaX stores game account passwords in plain text.  Guard your lacuna\_app.sqlite file 
-- handing it to someone else for any reason is the same as handing that person not only 
+\- handing it to someone else for any reason is the same as handing that person not only 
 your own account password, but also all of your recorded sitter passwords.
 
 It is safe to send your lacuna\_log.sqlite file to someone else for debugging help if 
