@@ -1,0 +1,100 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Lacunawax by tmtowtdi</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/respond.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <!--[if lt IE 8]>
+    <link rel="stylesheet" href="stylesheets/ie.css">
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+      <div id="header">
+        <nav>
+          <li class="fork"><a href="https://github.com/tmtowtdi/LacunaWaX">View On GitHub</a></li>
+          <li class="downloads"><a href="https://github.com/tmtowtdi/LacunaWaX/zipball/master">ZIP</a></li>
+          <li class="downloads"><a href="https://github.com/tmtowtdi/LacunaWaX/tarball/master">TAR</a></li>
+          <li class="title">DOWNLOADS</li>
+        </nav>
+      </div><!-- end header -->
+
+    <div class="wrapper">
+
+      <section>
+        <div id="title">
+          <h1>Lacunawax</h1>
+          <p>A GUI for The Lacuna Expanse</p>
+          <hr>
+          <span class="credits left">Project maintained by <a href="https://github.com/tmtowtdi">tmtowtdi</a></span>
+          <span class="credits right">Hosted on GitHub Pages &mdash; Theme by <a href="http://twitter.com/#!/michigangraham">mattgraham</a></span>
+        </div>
+
+        <h1>LacunaWaX</h1>
+
+<p>A GUI for The Lacuna Expanse</p>
+
+<p>Copyright 2012-2013 Jonathan D. Barton (<a href="mailto:tmtowtdi@gmail.com">tmtowtdi@gmail.com</a>)</p>
+
+<p>See NOTES for developer notes.</p>
+
+<h2>STATUS</h2>
+
+<p>Installing and running the executable on Windows is reasonably straightforward and stable.</p>
+
+<p>Running from source takes a bit of tweaking.</p>
+
+<h2>CAUTION</h2>
+
+<p>LacunaWaX stores game account passwords in plain text.  Guard your lacuna_app.sqlite file 
+- handing it to someone else for any reason is the same as handing that person not only 
+your own account password, but also all of your recorded sitter passwords.</p>
+
+<p>It is safe to send your lacuna_log.sqlite file to someone else for debugging help if 
+needed, as it contains no passwords.</p>
+
+<h2>RUNNING FROM SOURCE</h2>
+
+<p>Quite a few non-core Perl modules are required, and no make process exists yet, so 
+pre-requisite modules will need to be installed manually.</p>
+
+<h3>REQUIREMENTS</h3>
+
+<p>This list is not yet exhaustive.</p>
+
+<ul>
+<li>Perl &gt;= v5.14</li>
+<li>Archive::Zip</li>
+<li>Bread::Board</li>
+<li>CHI</li>
+<li>DateTime</li>
+<li>File::Which</li>
+<li>LWP::UserAgent</li>
+<li>Moose</li>
+<li>MooseX::NonMoose</li>
+<li>Try::Tiny</li>
+<li>URI</li>
+<li>Wx</li>
+</ul><h3>Run</h3>
+
+<pre><code>$ perl bin/LacunaWaX.pl
+</code></pre>
+
+<p>Install any modules it complains about missing, and add them to the list above.</p>
+
+<p>Once all pre-reqs have been installed, that command will start the GUI.</p>
+      </section>
+
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
+  </body>
+</html>
