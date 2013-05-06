@@ -15,8 +15,18 @@
     <link rel="stylesheet" href="stylesheets/ie.css">
     <![endif]-->
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-
   </head>
+
+<!--
+    When uploading a new version to Google Drive:
+        - All (yes, all) docs pages have an "EXE" button linked to Google drive.  Until I 
+          figure out a better solution, all of those links need to be updated to point to 
+          the newly-uploaded version.
+
+        - This file contains a link to the Warroom (towards the bottom).  Update that 
+          version as well and fix the link in this file.
+-->
+
   <body>
       <div id="header">
         <nav>
@@ -74,7 +84,7 @@ This is still in its infancy, but <a href="docs/">there are some docs online</a>
 
 <p>LacunaWaX stores game account passwords in plain text.  Guard your lacuna_app.sqlite file 
 - handing it to someone else for any reason is the same as handing that person not only 
-your own account password, but also all of your recorded sitter passwords.</p>
+  your own account password, but also all of your recorded sitter passwords.</p>
 
 <p>It is safe to send your lacuna_log.sqlite file to someone else for debugging help if 
 needed, as it contains no passwords.</p>
@@ -84,33 +94,43 @@ needed, as it contains no passwords.</p>
 <p>Quite a few non-core Perl modules are required, and no make process exists yet, so 
 pre-requisite modules will need to be installed manually.</p>
 
-<h3>REQUIREMENTS</h3>
+        <h3>REQUIREMENTS</h3>
 
-<p>This list is not yet exhaustive.</p>
+        <p>This list is not yet exhaustive.</p>
 
-<ul>
-<li>Perl &gt;= v5.14</li>
-<li>Archive::Zip</li>
-<li>Bread::Board</li>
-<li>CHI</li>
-<li>DateTime</li>
-<li>File::Which</li>
-<li>LWP::UserAgent</li>
-<li>Moose</li>
-<li>MooseX::NonMoose</li>
-<li>Try::Tiny</li>
-<li>URI</li>
-<li>Wx</li>
-</ul><h3>Run</h3>
+        <ul>
+        <li>Perl &gt;= v5.14</li>
+        <li>Archive::Zip</li>
+        <li>Bread::Board</li>
+        <li>CHI</li>
+        <li>DateTime</li>
+        <li>File::Which</li>
+        <li>LWP::UserAgent</li>
+        <li>Moose</li>
+        <li>MooseX::NonMoose</li>
+        <li>Try::Tiny</li>
+        <li>URI</li>
+        <li>Wx</li>
+        </ul><h3>Run</h3>
 
-<pre><code>$ perl bin/LacunaWaX.pl
-</code></pre>
+        <pre><code>$ perl bin/LacunaWaX.pl
+        </code></pre>
 
-<p>Install any modules it complains about missing, and add them to the list above.</p>
+        <p>Install any modules it complains about missing, and add them to the list above.</p>
 
-<p>Once all pre-reqs have been installed, that command will start the GUI.</p>
+        <p>Once all pre-reqs have been installed, that command will start the GUI.</p>
+
+        <h3>Blocked Google Drive?</h3>
+        The executable is being hosted from Google Drive, which is blocked in some 
+        countries.  If Drive is blocked for you and you're an S.M.A member, you can 
+        download it from <a 
+        href="http://kiamo.haphazardmedia.co.uk/warroom/download/file.php?id=49">The 
+        Warroom</a>.
+
+
+
+
       </section>
-
     </div>
     <!--[if !IE]><script>fixScale(document);</script><![endif]-->
               <script type="text/javascript">
