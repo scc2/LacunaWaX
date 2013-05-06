@@ -616,6 +616,7 @@ section img {
 }
 
 blockquote {
+  background: #555555;  /* JDB - originally no background setting */
   border-left: 3px solid #ffcc00;
   margin: 0;
   padding: 0 0 0 20px;
