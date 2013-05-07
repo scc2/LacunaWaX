@@ -172,10 +172,11 @@ package LacunaWaX::Model::Container {
                 );#}}}
             };#}}}
             container 'Directory' => as {#{{{
+                service 'assets'    => join '/', $self->root_dir, 'user', 'assets';
+                service 'html'      => join '/', $self->root_dir, 'user', 'doc', 'html';
+                service 'ico'       => join '/', $self->root_dir, 'user', 'ico';
                 service 'root'      => $self->root_dir;
                 service 'user'      => join '/', $self->root_dir, 'user';
-                service 'assets'    => join '/', $self->root_dir, 'user', 'assets';
-                service 'ico'       => join '/', $self->root_dir, 'user', 'ico';
             };#}}}
             container 'Globals' => as {#{{{
                 service 'api_key' => $self->api_key;

@@ -6,6 +6,11 @@ inc/
 Build
 !Build/
 Build.bat
+Cava/tmt/cava20/
+Cava/tmt/cava20-logs/
+Cava/tmt/cava20-temp/
+Cava/tmt/installer/
+Cava/tmt/release/
 .last_cover_stats
 Makefile
 Makefile.old
