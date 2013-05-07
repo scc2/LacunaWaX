@@ -1,9 +1,36 @@
 
+### TBD
+### - Needs an OnResize event for both the nav bar and the html window
+###
+### - Needs a Home button
+###     - currently there's no way to get out of a search that returned no 
+###     results
+###
+### - Search works (search for 'gogopuffs'), but the hitlist page is ugly.
+###
+### - Index creation is strictly manual right now.  I'm thinking it should be 
+### made part of post_build.pl, but the indexing script (build_index.pl, 
+### sitting in the HTML help directory) should also remain in case a user 
+### wants to add their own help docs.
+###     - Possibly that build_index.pl should be created as an executable
+###     - Certainly it should end up living somewhere other than where it is 
+###     now.
+###     - The buttons need to be disable-able
+###         - Make grayed-out versions of the images
+###         - BitmapButton has a SetBitmapDisabled() method I can use to set 
+###         those grayed images.
+###         - If I'm at the start of my history, back button should be 
+###         disabled.  If I'm at the end, forward button should be disabled.  
+###         And if the user hasn't entered a search term yet, the search 
+###         button should be disabled.
+###         - So all three buttons should begin life disabled.
+
 package LacunaWaX::Dialog::Help {
     use v5.14;
     use Data::Dumper;
     use File::Slurp;
     use Moose;
+    use Template;
     use Try::Tiny;
     use Wx qw(:everything);
     use Wx::Event qw(EVT_BUTTON EVT_CLOSE EVT_HTML_LINK_CLICKED EVT_SIZE);
@@ -28,9 +55,11 @@ package LacunaWaX::Dialog::Help {
             The subscript of the history array containing our current location.
         }
     );
+    has 'html_dir' => (is => 'rw', isa => 'Str', lazy_build => 1);
     has 'prev_click_href' => (is => 'rw', isa => 'Str', lazy => 1, default => q{},
         documentation => q{ See OnLinkClicked for details.  }
     );
+    has 'tt' => (is => 'rw', isa => 'Template', lazy_build => 1);
 
     has 'title' => (is => 'rw', isa => 'Str',       lazy_build => 1);
     has 'size'  => (is => 'rw', isa => 'Wx::Szie',  lazy_build => 1);
@@ -136,7 +165,7 @@ package LacunaWaX::Dialog::Help {
     sub _build_fs_html {#{{{
         my $self = shift;
         my $v    = Wx::FileSystem->new();
-        $v->ChangePathTo( $self->app->bb->resolve(service => '/Directory/html'), 1 );
+        $v->ChangePathTo( $self->html_dir, 1 );
         return $v;
     }#}}}
     sub _build_history {#{{{
@@ -159,6 +188,10 @@ package LacunaWaX::Dialog::Help {
             wxHW_SCROLLBAR_AUTO
         );
         return $v;
+    }#}}}
+    sub _build_html_dir {#{{{
+        my $self = shift;
+        return $self->app->bb->resolve(service => '/Directory/html');
     }#}}}
     sub _build_index {#{{{
         return 'index.html';
@@ -184,6 +217,15 @@ package LacunaWaX::Dialog::Help {
     }#}}}
     sub _build_title {#{{{
         return 'HTML Window';
+    }#}}}
+    sub _build_tt {#{{{
+        my $self = shift;
+        my $tt = Template->new(
+            INCLUDE_PATH => $self->html_dir,
+            OUTPUT_PATH => $self->html_dir,
+            INTERPOLATE => 1,
+        );
+        return $tt;
     }#}}}
     sub _build_txt_search {#{{{
         my $self = shift;
@@ -286,7 +328,24 @@ package LacunaWaX::Dialog::Help {
         my $dialog  = shift;    # LacunaWaX::Dialog::Help
         my $event   = shift;    # Wx::CommandEvent
 
-        $self->app->popmsg("I SAID IT'S NON-FUNCTIONAL STOP CLICKING!");
+        my $term = $self->txt_search->GetValue;
+        unless($term) {
+            $self->app->popmsg("Searching for nothing isn't going to return many results.");
+            return;
+        }
+
+        my $searcher = $self->app->bb->resolve(service => '/Lucy/searcher');
+        my $hits = $searcher->hits( query => $term );
+        my $vars = {};
+        while ( my $hit = $hits->next ) {
+            push @{$vars->{'hits'}}, $hit->{'title'};
+        }
+
+        my $tmpl_file = 'hitlist.tmpl';
+        my $html_file = 'hitlist.html';
+
+        $self->tt->process($tmpl_file, $vars, $html_file);
+        $self->load_html_file($html_file);
     }#}}}
 
     no Moose;
