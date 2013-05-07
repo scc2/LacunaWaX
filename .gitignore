@@ -6,6 +6,8 @@ inc/
 Build
 !Build/
 Build.bat
+Cava/tmt/cava20-temp/
+Cava/tmt/release/
 .last_cover_stats
 Makefile
 Makefile.old
@@ -14,4 +16,5 @@ META.yml
 MYMETA.yml
 nytprof.out
 pm_to_blib
+*.sqlite
 .svn/
