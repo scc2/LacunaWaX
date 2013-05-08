@@ -64,6 +64,17 @@ package LacunaWaX::Dialog::Help {
     has 'title' => (is => 'rw', isa => 'Str',       lazy_build => 1);
     has 'size'  => (is => 'rw', isa => 'Wx::Szie',  lazy_build => 1);
 
+    ### CHECK
+    ### On ubuntu, the full bitmap is not displayed in the bitmapbutton - it's 
+    ### got a bit of a border that obscures the image detail at the edges.
+    ### All of the bitmapbutton styles are Win32 only.  It looks to me like 
+    ### turning on wxBU_AUTODRAW will make the buttons on Windows look more 
+    ### like the buttons on ubuntu.
+    ###
+    ### I think that should be done for consistency, but this will mean that 
+    ### the images I'm using right now will probably not work because the 
+    ### circle around the arrows goes to the edge of the image and therefore 
+    ### gets cut off
     has 'nav_img_h'     => (is => 'rw', isa => 'Int',  lazy => 1, default => 32);
     has 'nav_img_w'     => (is => 'rw', isa => 'Int',  lazy => 1, default => 32);
     has 'search_box_h'  => (is => 'rw', isa => 'Int',  lazy => 1, default => 32);
