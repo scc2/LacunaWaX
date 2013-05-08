@@ -10,18 +10,12 @@ package LacunaWaX::MainFrame::MenuBar {
     use MooseX::NonMoose::InsideOut;
     extends 'Wx::MenuBar';
 
-    use LacunaWaX::Dialog::About;
-    use LacunaWaX::Dialog::LogViewer;
-    use LacunaWaX::Dialog::Mail;
-    use LacunaWaX::Dialog::Prefs;
-    use LacunaWaX::Dialog::SitterManager;
-    use LacunaWaX::Dialog::Test;
     use LacunaWaX::MainFrame::MenuBar::Edit;
     use LacunaWaX::MainFrame::MenuBar::File;
     use LacunaWaX::MainFrame::MenuBar::Help;
     use LacunaWaX::MainFrame::MenuBar::Tools;
 
-    has 'show_test'   => (is => 'rw', isa => 'Int',  lazy => 1, default => 1,
+    has 'show_test'   => (is => 'rw', isa => 'Int',  lazy => 1, default => 0,
         documentation => q{
             If true, the Tools menu will include a "Test Dialog" entry, which 
             will display Dialog/Test.pm, which I'm using to play with controls 

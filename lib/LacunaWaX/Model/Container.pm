@@ -39,10 +39,17 @@ package LacunaWaX::Model::Container {
     has 'root_dir' => ( is => 'rw', isa => 'Str', required => 1 );
 
     ### Logging
-    has 'log_time_zone' => ( is => 'rw', isa => 'Str', default => 'UTC' );
-    has 'log_component' => ( is => 'rw', isa => 'Str', default => 'main' );
+    has 'log_time_zone' => ( is => 'rw', isa => 'Str', lazy => 1, default => 'UTC' );
+    has 'log_component' => ( is => 'rw', isa => 'Str', lazy => 1, default => 'main' );
     has 'run'           => ( is => 'rw', isa => 'Int' );
 
+    ### Lucy
+    has 'help_index' => ( is => 'rw', isa => 'Str', lazy_build => 1 );
+
+    sub _build_help_index {#{{{
+        my $self = shift;
+        return join '/', ($self->root_dir, 'user', 'doc', 'html', 'html.idx');
+    }#}}}
     sub _check_caller_type {#{{{
         ### This trigger is emulating an enum, which we could get out of 
         ### Moose::Util::TypeConstraints.  However, we cannot use that, as it 
@@ -172,10 +179,11 @@ package LacunaWaX::Model::Container {
                 );#}}}
             };#}}}
             container 'Directory' => as {#{{{
+                service 'assets'    => join '/', $self->root_dir, 'user', 'assets';
+                service 'html'      => join '/', $self->root_dir, 'user', 'doc', 'html';
+                service 'ico'       => join '/', $self->root_dir, 'user', 'ico';
                 service 'root'      => $self->root_dir;
                 service 'user'      => join '/', $self->root_dir, 'user';
-                service 'assets'    => join '/', $self->root_dir, 'user', 'assets';
-                service 'ico'       => join '/', $self->root_dir, 'user', 'ico';
             };#}}}
             container 'Globals' => as {#{{{
                 service 'api_key' => $self->api_key;
@@ -225,6 +233,22 @@ package LacunaWaX::Model::Container {
                         my $log                 = Log::Dispatch->new;
                         $log->add( $outputs->get_service('dbi')->get );
                         $log;
+                    }
+                );#}}}
+            };#}}}
+            container 'Lucy' => as {#{{{
+                service 'index' => $self->help_index;
+                service 'searcher' => (#{{{
+                    dependencies => [
+                        depends_on('/Lucy/index'),
+                    ],
+                    class => 'Lucy::Search::IndexSearcher',
+                    block => sub {
+                        my $s = shift;
+                        my $searcher = Lucy::Search::IndexSearcher->new(
+                            index => $s->param('index')
+                        );
+                        return $searcher;
                     }
                 );#}}}
             };#}}}

@@ -6,6 +6,11 @@ package LacunaWaX::MainFrame::MenuBar::Tools {
     use Wx::Event qw(EVT_MENU);
     with 'LacunaWaX::Roles::GuiElement';
 
+    use LacunaWaX::Dialog::LogViewer;
+    use LacunaWaX::Dialog::Mail;
+    use LacunaWaX::Dialog::SitterManager;
+    use LacunaWaX::Dialog::Test;
+
     ### Wx::Menu is a non-hash object.  Extending such requires 
     ### MooseX::NonMoose::InsideOut instead of plain MooseX::NonMoose.
     use MooseX::NonMoose::InsideOut;
