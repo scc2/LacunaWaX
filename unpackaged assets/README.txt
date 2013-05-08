@@ -23,3 +23,11 @@ Metrize_Icons.zip
       haven't decided 100% what that size will be yet, so a little rescale is OK 
       for now.
 
+onebit icons.zip
+    - Downloaded from here: 
+      http://www.iconfinder.com/search/?q=iconset%3Aonebit&resettype=1
+
+    - The originals are only 48², but rescaling them in the app results in ugly 
+      images.  So I'm resizing them with mogrify before adding them to 
+      assets.zip.
+

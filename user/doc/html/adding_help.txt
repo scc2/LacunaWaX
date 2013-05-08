@@ -1,0 +1,11 @@
+
+You may add new help files or edit the existing ones as you like.
+
+To get your edits to show up in the search index, simply delete the html.idx/ 
+directory entirely.  The next time Help is accessed from the app, the index will 
+be rebuilt to include your changes.
+
+All help files must appear in this directory.  Do not create subdirectories 
+containing help documents.  You will be able to link to those nested documents, 
+but they will never appear in search results.
+
