@@ -235,8 +235,9 @@ package LacunaWaX::Dialog::Help {
         my $self = shift;
         my $tt = Template->new(
             INCLUDE_PATH => $self->html_dir,
-            OUTPUT_PATH => $self->html_dir,
             INTERPOLATE => 1,
+            OUTPUT_PATH => $self->html_dir,
+            WRAPPER => 'wrapper',
         );
         return $tt;
     }#}}}
@@ -284,9 +285,13 @@ package LacunaWaX::Dialog::Help {
             my $content = $kandi->parse( $html );
             $kandi->eof;
 
-            my $x       = HTML::TreeBuilder::XPath->new();
-            $x->parse($html);
-            my $title   = $x->findvalue('/html/head/title') || 'No Title';
+            ### The templates we're parsing are not full HTML documents, since 
+            ### the wrapper contains our header and footer.  Tack on opening 
+            ### and closing html and body tags to the content to make XPath 
+            ### happy.
+            my $x = HTML::TreeBuilder::XPath->new();
+            $x->parse("<html><body>$html</body></html>");
+            my $title   = $x->findvalue('/html/body/h1') || 'No Title';
             my $summary = $self->get_doc_summary($x) || 'No Summary';
 
             $docs->{$f} = {
@@ -370,7 +375,10 @@ package LacunaWaX::Dialog::Help {
             return;
         }
 
-        $self->htm_window->LoadFile( $self->fs_html->GetPath() . $file );
+        my $output  = q{};
+        my $vars    = {};
+        $self->tt->process($file, $vars, \$output);
+        $self->htm_window->SetPage($output);
     }#}}}
     sub make_navbar {#{{{
         my $self = shift;
@@ -448,7 +456,7 @@ package LacunaWaX::Dialog::Help {
 
         push @{$self->history}, $info->GetHref;
         $self->history_idx( $self->history_idx + 1 );
-        $event->Skip;
+        $self->load_html_file($info->GetHref);
     }#}}}
     sub OnResize {#{{{
         my $self = shift;
@@ -503,11 +511,9 @@ package LacunaWaX::Dialog::Help {
             push @{$vars->{'hits'}}, $hr;
         }
 
-        my $tmpl_file = 'hitlist.tmpl';
-        my $html_file = 'hitlist.html';
-
-        $self->tt->process($tmpl_file, $vars, $html_file);
-        $self->load_html_file($html_file);
+        my $output = q{};
+        $self->tt->process('hitlist.html', $vars, \$output);
+        $self->htm_window->SetPage($output);
     }#}}}
 
     no Moose;
