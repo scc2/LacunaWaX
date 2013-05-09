@@ -38,7 +38,7 @@ restart LacunaWaX.  The next time you open the Help browser, that search index w
 automatically re-created, and will include any edits or new files you just added, so 
 searches will turn up your new documents.
 
-<h2>"I do know some HTML, and these help docs look awfully sparse!"</h2>
+<h2>"I do know some HTML, and these help files look awfully sparse!"</h2>
 
 The help documents themselves are actually templates, and all the standard HTML 
 boilerplate header and footer stuff is being dealt with elsewhere.
@@ -46,11 +46,18 @@ boilerplate header and footer stuff is being dealt with elsewhere.
 
 So most of the Help files consist of a few headers (&lt;h1&gt;, &lt;h2&gt;, etc), some 
 paragraph breaks (&lt;p&gt;), the help content itself, and not much else.
+<p>
+
+You may notice that the help files are not using any CSS, and are using (ack!) font tags 
+in a few places.  This is not because I'm a horrible human being.  It's because the HTML 
+parser being used in this window is fairly basic, and simply does not understand CSS.
 
 <h2>"I've made some updates or edits to help documents.  What now?"</h2>
 
 All you need to do now is submit a pull request to the main LacunaWaX github repository 
 (<code>https://github.com/tmtowtdi/LacunaWaX</code>).  If you're not sure how to do that, 
-you can try to find me (tmtowtdi) in-game, either via chat or mail, and I'll let you know 
-how to get your shiny new help files added to the program for everybody.
+you might be able to find a friend or alliance member who does know, and just send the 
+help files to them and have them submit the pull request on your behalf.  Most alliances 
+have at least one member who can manage that, since it's the same way that the alliance 
+logos had to be submitted.
 
