@@ -69,7 +69,6 @@ package LacunaWaX::Dialog::Help {
     has 'bmp_left'          => (is => 'rw', isa => 'Wx::BitmapButton',  lazy_build => 1);
     has 'bmp_right'         => (is => 'rw', isa => 'Wx::BitmapButton',  lazy_build => 1);
     has 'bmp_search'        => (is => 'rw', isa => 'Wx::BitmapButton',  lazy_build => 1);
-    has 'fs_html'           => (is => 'rw', isa => 'Wx::FileSystem',    lazy_build => 1);
     has 'htm_window'        => (is => 'rw', isa => 'Wx::HtmlWindow',    lazy_build => 1);
     has 'szr_html'          => (is => 'rw', isa => 'Wx::Sizer',         lazy_build => 1, documentation => q{vertical});
     has 'szr_navbar'        => (is => 'rw', isa => 'Wx::Sizer',         lazy_build => 1, documentation => q{horizontal});
@@ -103,6 +102,7 @@ package LacunaWaX::Dialog::Help {
 
         $self->szr_html->Add($self->htm_window, 0, 0, 0);
 
+        $self->main_sizer->AddSpacer(5);
         $self->main_sizer->Add($self->szr_navbar, 0, 0, 0);
         $self->main_sizer->AddSpacer(5);
         $self->main_sizer->Add($self->szr_html, 0, 0, 0);
@@ -176,12 +176,6 @@ package LacunaWaX::Dialog::Help {
             Wx::Size->new($self->nav_img_w, $self->nav_img_h),
             wxBU_AUTODRAW 
         );
-        return $v;
-    }#}}}
-    sub _build_fs_html {#{{{
-        my $self = shift;
-        my $v    = Wx::FileSystem->new();
-        $v->ChangePathTo( $self->html_dir, 1 );
         return $v;
     }#}}}
     sub _build_history {#{{{
@@ -321,6 +315,29 @@ package LacunaWaX::Dialog::Help {
         }
         return $summary;
     }#}}}
+    sub get_html_width {#{{{
+        my $self = shift;
+        return ($self->GetClientSize->width - 10);
+    }#}}}
+    sub get_html_height {#{{{
+        my $self = shift;
+        return ($self->GetClientSize->height - 40);
+    }#}}}
+    sub load_html_file {#{{{
+        my $self = shift;
+        my $file = shift || return;
+
+        my $fqfn = join '/', ($self->html_dir, $file);
+        unless(-e $fqfn) {
+            $self->app->poperr("$fqfn: No such file or directory");
+            return;
+        }
+
+        my $output  = q{};
+        my $vars    = {};
+        $self->tt->process($file, $vars, \$output);
+        $self->htm_window->SetPage($output);
+    }#}}}
     sub make_index {#{{{
         my $self = shift;
 
@@ -359,31 +376,6 @@ package LacunaWaX::Dialog::Help {
             });
         }
         $indexer->commit;
-    }#}}}
-
-    sub get_html_width {#{{{
-        my $self = shift;
-        return ($self->GetClientSize->width - 10);
-    }#}}}
-    sub get_html_height {#{{{
-        my $self = shift;
-        return ($self->GetClientSize->height - 40);
-    }#}}}
-    sub load_html_file {#{{{
-        my $self = shift;
-        my $file = shift || return;
-
-        ### GetPath does end with a /
-        my $fqfn = $self->fs_html->GetPath() . $file;
-        unless(-e $fqfn) {
-            $self->app->poperr("$fqfn: No such file or directory");
-            return;
-        }
-
-        my $output  = q{};
-        my $vars    = {};
-        $self->tt->process($file, $vars, \$output);
-        $self->htm_window->SetPage($output);
     }#}}}
     sub make_navbar {#{{{
         my $self = shift;
