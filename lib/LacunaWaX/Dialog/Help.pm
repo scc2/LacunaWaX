@@ -4,6 +4,7 @@ package LacunaWaX::Dialog::Help {
     use Data::Dumper;
     use File::Basename;
     use File::Slurp;
+    use File::Spec;
     use HTML::Strip;
     use HTML::TreeBuilder::XPath;
     use Lucy::Analysis::PolyAnalyzer;
@@ -30,13 +31,9 @@ package LacunaWaX::Dialog::Help {
         }
     );
 
-    has 'index'         => (is => 'rw', isa => 'Str',       lazy_build => 1);
+    has 'index_file'    => (is => 'rw', isa => 'Str',       lazy_build => 1);
     has 'history'       => (is => 'rw', isa => 'ArrayRef',  lazy_build => 1);
-    has 'history_idx'   => (is => 'rw', isa => 'Int',       lazy_build => 1,
-        documentation => q{
-            The subscript of the history array containing our current location.
-        }
-    );
+    has 'history_idx'   => (is => 'rw', isa => 'Int',       lazy_build => 1);
     has 'html_dir' => (is => 'rw', isa => 'Str', lazy_build => 1);
     has 'prev_click_href' => (is => 'rw', isa => 'Str', lazy => 1, default => q{},
         documentation => q{ See OnLinkClicked for details.  }
@@ -47,18 +44,6 @@ package LacunaWaX::Dialog::Help {
     has 'title' => (is => 'rw', isa => 'Str',       lazy_build => 1);
     has 'size'  => (is => 'rw', isa => 'Wx::Szie',  lazy_build => 1);
 
-    ### CHECK
-    ### On Windows, the bitmapbutton is exactly the same size as the bitmap 
-    ### itself.  The wxBU_AUTODRAW style just puts a 1-px border around the 
-    ### image.
-    ###
-    ### On ubuntu, the bitmapbutton itself uses the size assigned (nav_img_h, 
-    ### nav_img_w), but it has a bit of neutral border inside the edges before 
-    ### it starts displaying the image.
-    ###
-    ### So any part of your nav image that touches the image borders will be 
-    ### turning on wxBU_AUTODRAW will make the buttons on Windows look more 
-    ### like the buttons on ubuntu.
     has 'nav_img_h'     => (is => 'rw', isa => 'Int',  lazy => 1, default => 32     );
     has 'nav_img_w'     => (is => 'rw', isa => 'Int',  lazy => 1, default => 32     );
     has 'search_box_h'  => (is => 'rw', isa => 'Int',  lazy => 1, default => 32     );
@@ -95,7 +80,7 @@ package LacunaWaX::Dialog::Help {
         my($self, @params) = @_;
         $self->Show(0);
 
-        $self->make_index;
+        $self->make_search_index;
 
         $self->SetTitle( $self->title );
         $self->make_navbar();
@@ -107,10 +92,8 @@ package LacunaWaX::Dialog::Help {
         $self->main_sizer->AddSpacer(5);
         $self->main_sizer->Add($self->szr_html, 0, 0, 0);
 
-        unless( $self->load_html_file($self->index) ) {
-            ### Produces an ugly window flash, but since this is something that 
-            ### really should never happen, I'm not too concerned about 
-            ### momentary ugliness.
+        unless( $self->load_html_file($self->index_file) ) {
+            $self->poperr("GONG!  Unable to load help files!", "GONG!");
             $self->Destroy;
             return;
         }
@@ -180,7 +163,7 @@ package LacunaWaX::Dialog::Help {
     }#}}}
     sub _build_history {#{{{
         my $self = shift;
-        return [$self->index];
+        return [$self->index_file];
     }#}}}
     sub _build_history_idx {#{{{
         return 0;
@@ -188,13 +171,9 @@ package LacunaWaX::Dialog::Help {
     sub _build_htm_window {#{{{
         my $self = shift;
 
-        #my $w = $self->GetClientSize->width - 10;
-        #my $h = $self->GetClientSize->height - 30;
-
         my $v = Wx::HtmlWindow->new(
             $self, -1, 
             wxDefaultPosition, 
-            #Wx::Size->new($w, $h),
             Wx::Size->new($self->get_html_width, $self->get_html_height),
             wxHW_SCROLLBAR_AUTO
             |wxSIMPLE_BORDER
@@ -205,7 +184,7 @@ package LacunaWaX::Dialog::Help {
         my $self = shift;
         return $self->app->bb->resolve(service => '/Directory/html');
     }#}}}
-    sub _build_index {#{{{
+    sub _build_index_file {#{{{
         return 'index.html';
     }#}}}
     sub _build_size {#{{{
@@ -321,7 +300,7 @@ package LacunaWaX::Dialog::Help {
     }#}}}
     sub get_html_height {#{{{
         my $self = shift;
-        return ($self->GetClientSize->height - 40);
+        return ($self->GetClientSize->height - 45);
     }#}}}
     sub load_html_file {#{{{
         my $self = shift;
@@ -333,12 +312,17 @@ package LacunaWaX::Dialog::Help {
             return;
         }
 
+        my $vars = {
+            ### fix the .. in the paths, since it might confuse muggles.
+            html_dir    => File::Spec->rel2abs($self->html_dir),
+            lucy_index  => File::Spec->rel2abs($self->app->bb->resolve(service => '/Lucy/index')),
+        };
+
         my $output  = q{};
-        my $vars    = {};
         $self->tt->process($file, $vars, \$output);
         $self->htm_window->SetPage($output);
     }#}}}
-    sub make_index {#{{{
+    sub make_search_index {#{{{
         my $self = shift;
 
         my $idx = $self->app->bb->resolve(service => '/Lucy/index');
@@ -417,8 +401,8 @@ package LacunaWaX::Dialog::Help {
         my $event   = shift;    # Wx::CommandEvent
 
         $self->history_idx( $self->history_idx + 1 );
-        $self->history->[ $self->history_idx ] = $self->index;
-        $self->load_html_file( $self->index );
+        $self->history->[ $self->history_idx ] = $self->index_file;
+        $self->load_html_file( $self->index_file );
     }#}}}
     sub OnLeftNav {#{{{
         my $self    = shift;    # LacunaWaX::Dialog::Help
@@ -429,6 +413,7 @@ package LacunaWaX::Dialog::Help {
 
         my $page = $self->history->[ $self->history_idx - 1 ];
         $self->history_idx( $self->history_idx - 1 );
+        $self->prev_click_href( $page );
         $self->load_html_file( $page );
     }#}}}
     sub OnLinkClicked {#{{{
@@ -441,7 +426,6 @@ package LacunaWaX::Dialog::Help {
         ### Each link click is triggering this event twice.  This keeps the 
         ### same document from being pushed into our history twice.
         if( $self->prev_click_href eq $info->GetHref ) {
-            $event->Skip;
             return;
         }
         $self->prev_click_href( $info->GetHref );
@@ -478,6 +462,7 @@ package LacunaWaX::Dialog::Help {
 
         my $page = $self->history->[ $self->history_idx + 1];
         $self->history_idx( $self->history_idx + 1 );
+        $self->prev_click_href( $page );
         $self->load_html_file( $page );
     }#}}}
     sub OnSearchNav {#{{{
