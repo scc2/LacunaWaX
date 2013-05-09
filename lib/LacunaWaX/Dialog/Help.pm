@@ -207,7 +207,7 @@ package LacunaWaX::Dialog::Help {
         return $v;
     }#}}}
     sub _build_title {#{{{
-        return 'HTML Window';
+        return 'LacunaWaX Help';
     }#}}}
     sub _build_tt {#{{{
         my $self = shift;
@@ -228,6 +228,7 @@ package LacunaWaX::Dialog::Help {
             Wx::Size->new($self->search_box_w, $self->search_box_h),
             wxTE_PROCESS_ENTER
         );
+        $v->SetToolTip("Type search terms and hit <enter> or click the search button");
         return $v;
     }#}}}
     sub _set_events {#{{{
