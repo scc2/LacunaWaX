@@ -403,6 +403,7 @@ package LacunaWaX::Dialog::Help {
 
         $self->history_idx( $self->history_idx + 1 );
         $self->history->[ $self->history_idx ] = $self->index_file;
+        $self->prev_click_href( $self->index_file );
         $self->load_html_file( $self->index_file );
     }#}}}
     sub OnLeftNav {#{{{
