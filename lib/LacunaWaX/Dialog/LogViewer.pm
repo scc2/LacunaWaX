@@ -52,7 +52,7 @@ package LacunaWaX::Dialog::LogViewer {
             $self, -1, 
             "Component", 
             wxDefaultPosition, 
-            Wx::Size->new(400,50), 
+            Wx::Size->new(430,50), 
             $self->component_labels,
             1, 
             wxRA_SPECIFY_ROWS

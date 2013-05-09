@@ -1,4 +1,8 @@
 
+Check the button resizings on Windows - they work on samwise.
+Add wxSIMPLE_BORDER to any control that needs it
+    htm_window in Help has it on - dramatically improves the look.
+
 BUILDING THE EXECUTABLE WITH CAVA PACKAGER {#{{{
 
 

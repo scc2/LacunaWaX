@@ -122,7 +122,7 @@ package LacunaWaX::Dialog::Help {
     sub _build_bmp_home {#{{{
         my $self = shift;
         my $img = $self->app->wxbb->resolve(service => '/Assets/images/app/home.png');
-        $img->Rescale($self->nav_img_w, $self->nav_img_h);
+        $img->Rescale($self->nav_img_w - 10, $self->nav_img_h - 10);    # see build_bmp_left
         my $bmp = Wx::Bitmap->new($img);
         my $v = Wx::BitmapButton->new(
             $self, -1, 
@@ -136,7 +136,11 @@ package LacunaWaX::Dialog::Help {
     sub _build_bmp_left {#{{{
         my $self = shift;
         my $img = $self->app->wxbb->resolve(service => '/Assets/images/app/arrow-left.png');
-        $img->Rescale($self->nav_img_w, $self->nav_img_h);
+        ### On Ubuntu, there's a margin inside the button.  If the image is 
+        ### the same size as the button, that margin obscures part of the 
+        ### image.  So the image must be a bit smaller than the button.
+        ### CHECK on Windows.
+        $img->Rescale($self->nav_img_w - 10, $self->nav_img_h - 10);
         my $bmp = Wx::Bitmap->new($img);
         my $v = Wx::BitmapButton->new(
             $self, -1, 
@@ -150,7 +154,7 @@ package LacunaWaX::Dialog::Help {
     sub _build_bmp_right {#{{{
         my $self = shift;
         my $img = $self->app->wxbb->resolve(service => '/Assets/images/app/arrow-right.png');
-        $img->Rescale($self->nav_img_w, $self->nav_img_h);
+        $img->Rescale($self->nav_img_w - 10, $self->nav_img_h - 10);    # see build_bmp_left
         my $bmp = Wx::Bitmap->new($img);
         my $v = Wx::BitmapButton->new(
             $self, -1, 
@@ -163,7 +167,7 @@ package LacunaWaX::Dialog::Help {
     sub _build_bmp_search {#{{{
         my $self = shift;
         my $img = $self->app->wxbb->resolve(service => '/Assets/images/app/search.png');
-        $img->Rescale($self->nav_img_w, $self->nav_img_h);
+        $img->Rescale($self->nav_img_w - 10, $self->nav_img_h - 10);    # see build_bmp_left
         my $bmp = Wx::Bitmap->new($img);
         my $v = Wx::BitmapButton->new(
             $self, -1, 
@@ -199,6 +203,7 @@ package LacunaWaX::Dialog::Help {
             #Wx::Size->new($w, $h),
             Wx::Size->new($self->get_html_width, $self->get_html_height),
             wxHW_SCROLLBAR_AUTO
+            |wxSIMPLE_BORDER
         );
         return $v;
     }#}}}
