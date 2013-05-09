@@ -110,10 +110,12 @@ package LacunaWaX::MainSplitterWindow::LeftPane::BodiesTreeCtrl {
                     my $b64_bfg   = encode_base64(join ':', ('bfg', $pid));
 
                     ### Since BFG firing is now part of the game, this leaf no 
-                    ### longer needs to be here.
-                    #my $bfg_id = $self->treectrl->AppendItem( $planet_name_id, 
-                    #    'Fire the BFG', -1, -1, Wx::TreeItemData->new($b64_bfg)
-                    #);
+                    ### longer needs to be here.  However, IO mentioned that 
+                    ### he liked having it so he didn't have to switch between 
+                    ### windows as much, so it stays in.
+                    my $bfg_id = $self->treectrl->AppendItem( $planet_name_id, 
+                        'Fire the BFG', -1, -1, Wx::TreeItemData->new($b64_bfg)
+                    );
 
                     my $props_id = $self->treectrl->AppendItem( 
                         $planet_name_id, 'Propositions', -1, -1, Wx::TreeItemData->new($b64_props)
