@@ -6,6 +6,7 @@ package LacunaWaX::Dialog::Help {
     use File::Basename;
     use File::Slurp;
     use File::Spec;
+    use File::Util;
     use HTML::Strip;
     use HTML::TreeBuilder::XPath;
     use Lucy::Analysis::PolyAnalyzer;
@@ -323,7 +324,9 @@ package LacunaWaX::Dialog::Help {
         my $vars = {
             ### fix the .. in the paths, since it might confuse muggles.
             bin_dir     => File::Spec->rel2abs($self->app->bb->resolve(service => '/Directory/bin')),
+            dir_sep     => File::Util->SL,
             html_dir    => File::Spec->rel2abs($self->html_dir),
+            user_dir    => File::Spec->rel2abs($self->app->bb->resolve(service => '/Directory/user')),
             lucy_index  => File::Spec->rel2abs($self->app->bb->resolve(service => '/Lucy/index')),
         };
 

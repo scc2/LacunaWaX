@@ -329,8 +329,8 @@ package LacunaWaX::Dialog::Mail {
     sub _build_lbl_hdr_send {#{{{
         my $self = shift;
         my $v = Wx::StaticText->new(
-            $self, -1, 
-            "Inter-Alliance Mail",
+            $self, -1,
+            "Intra-Alliance Mail",
             wxDefaultPosition, 
             Wx::Size->new(400, 30)
         );
