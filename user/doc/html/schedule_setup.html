@@ -1,0 +1,138 @@
+<h1>Set up Scheduled Programs</h1>
+
+One of the main benefits of LacunaWaX is that it allows you to schedule a number of common 
+tasks.  You set up what you want those scheduled tasks to do using the main LacunaWaX GUI, 
+but LacunaWaX itself does not schedule anything; you must set up your own schedule.
+<p>
+
+Schedule-able programs are found in <code>[% bin_dir %], and include:
+<ul>
+    <li>
+        <code>Schedule_archmin.exe</code><br>
+        <font size=-1>
+            Handles both glyph pushing and automated searching of individual arch 
+            mins
+        </font>
+    </li>
+    <li>
+        <code>Schedule_autovote.exe</code><br>
+        <font size=-1>
+            Votes for SS propositions based on your settings
+        </font>
+    </li>
+    <li>
+        <code>Schedule_lottery.exe</code><br>
+        <font size=-1>
+            Plays the lottery on your requested colonies
+        </font>
+    </li>
+    <li>
+        <code>Schedule_train_spies.exe</code><br>
+        <font size=-1>
+            Trains spies in the skills you've chosen provided the spies are both available 
+            and currently sitting on a planet with the appropriate training building
+        </font>
+    </li>
+</ul>
+
+<h2>Actually setting up the schedule (Windows)</h2>
+
+You can use the built-in Windows Task Scheduler if you want to, but if you're not used to 
+it, it can be a horror show to try to figure out.
+<p>
+
+Instead, download and install <a href="http://www.splinterware.com/download/index.htm">System 
+Scheduler Free</a> from Splinterware.  It's easier to use than the Windows scheduler and 
+it will look the same across different versions of Windows, so you can just follow the 
+instructions below step-by-step.
+<p>
+
+<strong>Preferences</strong><br>
+<img src="[%html_dir%]/images/ss-prefs.png">
+<p>
+
+After installing System Scheduler, you'll have a little alarm clock icon in 
+your system tray (next to your clock).  Right-click it and chose 
+"Preferences", then chose the Startup/Logging tab.
+<p>
+
+Make sure the "Do NOT start System Scheduler automatically on logon" checkbox 
+is <em>unchecked!</em>  After you've made sure of that, you can close the 
+preferences window.
+<p>
+<hr>
+<p>
+
+<strong>Create new event</strong><br>
+<img src="[%html_dir%]/images/ss-create-new.png">
+<p>
+
+Go back to the alarm clock icon in your systray again and just double-(left)-click it to 
+bring up the actual scheduler.
+<p>
+
+You can see I have my Arch Min and Spy Training already set up, but I don't have Autovote 
+set yet.  To set that up, click the indicated green circle icon to create a New Event.
+<p>
+<hr>
+<p>
+    
+<strong>Name it and select the program to run</strong><br>
+<img src="[%html_dir%]/images/ss-add-autovote.png">
+<p>
+
+Give your event a title, then click the yellow folder icon next to <em>Application</em>.  
+Browse to your TMT Tools/LacunaWaX/bin/ folder and select "Schedule_autovote.exe".
+<p>
+<hr>
+<p>
+
+<strong>Make sure to run it Hidden</strong><br>
+<img src="[%html_dir%]/images/ss-choose-hidden.png">
+<p>
+
+Make sure to select the "Hidden" State.  This will keep the black CMD window from popping 
+up at you each time the scheduled event runs.
+<p>
+<hr>
+<p>
+
+<strong>Choose times for it to run</strong><br>
+<img src="[%html_dir%]/images/ss-autovote-every-three-hours.png">
+<p>
+
+I want my autovote to run every three hours.  So I selected "Every 
+Hour/Selected Minutes" in the dropdown box up top.  Then, in the Hours 
+box, I entered:
+<blockquote><code>
+    <b>00,03,06,09,12,15,18,21</b>
+</code></blockquote>
+Also, I typed <b>30</b> in the Minutes box, so my task will run at 
+30 minutes past the hour, every three hours.
+<p>
+
+If you wanted your task to run every two hours, it would be:
+<blockquote><code>
+    <b>00,02,04,06,08,10,12,14,16,18,20,22</b>
+</code></blockquote>
+...etc
+<p>
+<hr>
+<p>
+
+<strong>Save</strong><br>
+<img src="[%html_dir%]/images/ss-save.png">
+<p>
+
+Don't forget to save your new scheduled task by clicking the floppy icon.
+<p>
+<hr>
+<p>
+
+<strong>Done!</strong><br>
+<img src="[%html_dir%]/images/ss-complete.png">
+<p>
+
+And that's it - you can see my new scheduled task has been set up, and it displays the 
+time when it'll run next.  You can now just close the System Scheduler window.
+

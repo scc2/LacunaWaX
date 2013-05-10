@@ -1,6 +1,7 @@
 
 package LacunaWaX::Dialog::Help {
     use v5.14;
+    use Browser::Open;
     use Data::Dumper;
     use File::Basename;
     use File::Slurp;
@@ -21,6 +22,13 @@ package LacunaWaX::Dialog::Help {
 
     use MooseX::NonMoose::InsideOut;
     extends 'Wx::Dialog', 'LacunaWaX::Dialog::NonScrolled';
+
+    if( $^O eq 'MSWin32' ) {
+        my $mod  = 'Win32::WebBrowser';
+        my $file = 'Win32/WebBrowser.pm';
+        require $file;
+        $mod->import;
+    }
 
     has 'sizer_debug' => (is => 'rw', isa => 'Int',  lazy => 1, default => 0,
         documentation => q{
@@ -314,6 +322,7 @@ package LacunaWaX::Dialog::Help {
 
         my $vars = {
             ### fix the .. in the paths, since it might confuse muggles.
+            bin_dir     => File::Spec->rel2abs($self->app->bb->resolve(service => '/Directory/bin')),
             html_dir    => File::Spec->rel2abs($self->html_dir),
             lucy_index  => File::Spec->rel2abs($self->app->bb->resolve(service => '/Lucy/index')),
         };
@@ -423,9 +432,41 @@ package LacunaWaX::Dialog::Help {
         my $event   = shift;    # Wx::HtmlLinkEvent
 
         my $info = $event->GetLinkInfo;
+        if( $info->GetHref =~ /^http/ ) {# Deal with real URLs {{{
+            ### The retvals of Win32::WebBrowser::open_browser and 
+            ### Browser::Open::open_browser clash.
+            ###     W32  - retval == true --> no error
+            ###     B::O
+            ###         - retval == undef --> no open cmd found
+            ###         - retval != 0     --> open cmd found but error encountered
+            ###
+            ### Browser::Open is returning undef for me on WinXP, every time.
+            my $ok;
+            if($^O eq 'MSWin32') {
+                my $win_ok = Win32::WebBrowser::open_browser($info->GetHref);
+                $ok = 0 if $win_ok;
+            }
+            else {
+                $ok = Browser::Open::open_browser($info->GetHref, 1);
+            }
 
-        ### Each link click is triggering this event twice.  This keeps the 
-        ### same document from being pushed into our history twice.
+            if( $ok ) {
+                $self->app->poperr(
+                    "LacunaWaX encountered an error while attempting to open the URL in your web browser.  The URL you were attempting to reach was '" . $info->GetHref . "'.",
+                    "Error opening web browser"
+                );
+            }
+            elsif(not defined $ok) {
+                $self->app->poperr(
+                    "LacunaWaX was unable to open the URL in your web browser.  The URL you were attempting to reach was '" . $info->GetHref . "'.",
+                    "Unable to open web browser"
+                );
+            }
+
+            return;
+        }#}}}
+
+        ### Each link click is triggering this event twice.
         if( $self->prev_click_href eq $info->GetHref ) {
             return;
         }
