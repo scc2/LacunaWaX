@@ -9,6 +9,12 @@ Most of the info in the folds below has been added to the github wiki.  Take
 another look, make sure nothing has been missed, then biff this file.
 
 
+Add a note to the "how to help" page requesting a Mac user to help with Cava 
+packaging.
+
+Also ask for installation procedure notes from anybody who's installed it from source.
+
+
 BUILDING THE EXECUTABLE WITH CAVA PACKAGER {#{{{
 
 

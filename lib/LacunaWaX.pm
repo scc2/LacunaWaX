@@ -20,8 +20,7 @@ package LacunaWaX {
     use MooseX::NonMoose;
     extends 'Wx::App';
 
-    my $rev = '$Rev: 323 $';
-    our $VERSION = join '.', ('1.11', $rev =~ s/\D//gr);
+    our $VERSION = '1.12';
 
     has 'root_dir'          => (is => 'rw', isa => 'Str',                               required   => 1);
     has 'bb'                => (is => 'rw', isa => 'LacunaWaX::Model::Container',       lazy_build => 1);

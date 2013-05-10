@@ -258,7 +258,6 @@ package LacunaWaX::Dialog::Help {
         my $docs    = {};
         my $dir     = $self->app->bb->resolve(service => '/Directory/html');
         foreach my $f(glob("\"$dir\"/*.html")) {
-            next if $f =~ /hitlist\.html$/;
             my $html = read_file($f);
 
             my $content = $kandi->parse( $html );
@@ -496,7 +495,7 @@ package LacunaWaX::Dialog::Help {
         }
 
         my $output = q{};
-        $self->tt->process('hitlist.html', $vars, \$output);
+        $self->tt->process('hitlist.tmpl', $vars, \$output);
         $self->htm_window->SetPage($output);
     }#}}}
 
