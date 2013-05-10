@@ -1,0 +1,63 @@
+<h1>Adding Help Documents</h1>
+
+Adding new help documents is easy.  Even if you don't know any HTML, the markup used in 
+the help files is very simple, and you should be able to figure it out just by looking at 
+what's already there.
+<p>
+
+All of the pages of this help system are stored on your machine in
+<blockquote><code><font size="-1">
+    [% html_dir %]
+</font></code></blockquote>
+
+Browse to that directory and edit any of the .html files you find there.  You can edit 
+existing help files and see your edits immediately in the Help browser window - browse to 
+the page you're editing, make your changes, then click 'back' and then 'forward' again to 
+get back to the page on which you're working.  Upon coming back to that page, you should 
+be able to see your edits.
+<p>
+
+If you want to make a new Help file, your best bet is to copy one of the existing ones 
+(<code>ss_as_planet.html</code> is probably a good candidate), give your copy a good 
+descriptive name (make sure it ends in ".html"), and edit away.
+<p>
+
+When you're finished editing, link your new help document in <code>index.html</code> where 
+ever it makes sense to do so; follow the existing examples.
+<p>
+
+<h2>Make your changes show up in the search index</h2>
+
+In that same directory with the help files is a subdirectory (folder) called
+<blockquote><code><font size="-1">
+    [% lucy_index %]
+</font></code></blockquote>
+
+...that subdirectory is the search index.  <em>Delete it completely</em>.  Then close and 
+restart LacunaWaX.  The next time you open the Help browser, that search index will be 
+automatically re-created, and will include any edits or new files you just added, so 
+searches will turn up your new documents.
+
+<h2>"I do know some HTML, and these help files look awfully sparse!"</h2>
+
+The help documents themselves are actually templates, and all the standard HTML 
+boilerplate header and footer stuff is being dealt with elsewhere.
+<p>
+
+So most of the Help files consist of a few headers (&lt;h1&gt;, &lt;h2&gt;, etc), some 
+paragraph breaks (&lt;p&gt;), the help content itself, and not much else.
+<p>
+
+You may notice that the help files are not using any CSS, and are using (ack!) font tags 
+in a few places.  This is not because I'm a horrible human being.  It's because the HTML 
+parser being used in this window is fairly basic, and simply does not understand CSS.
+
+<h2>"I've made some updates or edits to help documents.  What now?"</h2>
+
+All you need to do now is submit a pull request to the main LacunaWaX github repository 
+(<code>https://github.com/tmtowtdi/LacunaWaX</code>).  If you're not sure how to do that, 
+you might be able to find a friend or alliance member who does know, and just send the 
+help files to them and have them submit the pull request on your behalf.  Most alliances 
+have at least one member who can manage that, since it's the same way that the alliance 
+logos had to be submitted.
+
