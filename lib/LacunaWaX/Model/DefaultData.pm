@@ -40,6 +40,7 @@ package LacunaWaX::Model::DefaultData {
             '11971',    # Urn Oochaid Rie 2
             '215640',   # Bu Siesphio Wea 8
             '480714',   # SASS Absolut Darkness
+            '596628',   # SASS Absolut Punishment
             '153256',   # SASS Absolut Retribution
             '288617',   # SASS Ashanti High Lightning
             '471875',   # SASS Basestar
