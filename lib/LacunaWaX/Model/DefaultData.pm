@@ -42,6 +42,7 @@ package LacunaWaX::Model::DefaultData {
             '480714',   # SASS Absolut Darkness
             '596628',   # SASS Absolut Punishment
             '153256',   # SASS Absolut Retribution
+            '210382',   # SASS Absolut Vanguard
             '288617',   # SASS Ashanti High Lightning
             '471875',   # SASS Basestar
             '468709',   # SASS bmots 01
