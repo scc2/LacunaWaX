@@ -180,6 +180,7 @@ package LacunaWaX::Model::Container {
             };#}}}
             container 'Directory' => as {#{{{
                 service 'assets'    => join '/', $self->root_dir, 'user', 'assets';
+                service 'bin'       => join '/', $self->root_dir, 'bin';
                 service 'html'      => join '/', $self->root_dir, 'user', 'doc', 'html';
                 service 'ico'       => join '/', $self->root_dir, 'user', 'ico';
                 service 'root'      => $self->root_dir;

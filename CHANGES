@@ -89,11 +89,17 @@ FUTURE {#{{{
             poperr($msg)....
             }
 }#}}}
-1.11/12 {#{{{
+1.12 {#{{{
+
+fix the installer to figure out why it's blowing up, then tag as 1.12.
+
+    COMPLETED FEATURES:
+        - Added Help systems
 
     INTERNAL CHANGES
         - All images except the program icon are being drawn from assets.zip
             - Resized images have been removed
+        - Removed the REVISION byte from the version number and from LacunaWaX.pm
 
 }#}}}
 1.10    (tagged 04/25/2013) {#{{{
