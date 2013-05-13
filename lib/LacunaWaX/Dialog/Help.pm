@@ -24,13 +24,6 @@ package LacunaWaX::Dialog::Help {
     use MooseX::NonMoose::InsideOut;
     extends 'Wx::Dialog', 'LacunaWaX::Dialog::NonScrolled';
 
-    if( $^O eq 'MSWin32' ) {
-        my $mod  = 'Win32::WebBrowser';
-        my $file = 'Win32/WebBrowser.pm';
-        require $file;
-        $mod->import;
-    }
-
     has 'sizer_debug' => (is => 'rw', isa => 'Int',  lazy => 1, default => 0,
         documentation => q{
             Turning this on adds extra space usage because of the boxes drawn 
@@ -436,22 +429,11 @@ package LacunaWaX::Dialog::Help {
 
         my $info = $event->GetLinkInfo;
         if( $info->GetHref =~ /^http/ ) {# Deal with real URLs {{{
-            ### The retvals of Win32::WebBrowser::open_browser and 
-            ### Browser::Open::open_browser clash.
-            ###     W32  - retval == true --> no error
-            ###     B::O
-            ###         - retval == undef --> no open cmd found
-            ###         - retval != 0     --> open cmd found but error encountered
-            ###
-            ### Browser::Open is returning undef for me on WinXP, every time.
-            my $ok;
-            if($^O eq 'MSWin32') {
-                my $win_ok = Win32::WebBrowser::open_browser($info->GetHref);
-                $ok = 0 if $win_ok;
-            }
-            else {
-                $ok = Browser::Open::open_browser($info->GetHref, 1);
-            }
+            ### retval of Browser::Open::open_browser
+            ###     - retval == undef --> no open cmd found
+            ###     - retval != 0     --> open cmd found but error encountered
+            ### Browser::Open must be v0.04 to work on Windows.
+            my $ok = Browser::Open::open_browser($info->GetHref, 1);
 
             if( $ok ) {
                 $self->app->poperr(
