@@ -433,7 +433,7 @@ package LacunaWaX::Dialog::Help {
             ###     - retval == undef --> no open cmd found
             ###     - retval != 0     --> open cmd found but error encountered
             ### Browser::Open must be v0.04 to work on Windows.
-            my $ok = Browser::Open::open_browser($info->GetHref, 1);
+            my $ok = Browser::Open::open_browser($info->GetHref);
 
             if( $ok ) {
                 $self->app->poperr(
