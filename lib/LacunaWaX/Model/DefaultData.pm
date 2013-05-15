@@ -37,6 +37,7 @@ package LacunaWaX::Model::DefaultData {
     sub _build_stations {#{{{
         my $self = shift;
         return [
+            '578020',   # App Awuiss Plae 2
             '11971',    # Urn Oochaid Rie 2
             '215640',   # Bu Siesphio Wea 8
             '480714',   # SASS Absolut Darkness
