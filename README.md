@@ -22,30 +22,5 @@ It is safe to send your lacuna\_log.sqlite file to someone else for debugging he
 RUNNING FROM SOURCE
 -------------------
 
-Quite a few non-core Perl modules are required, and no make process exists yet, so pre-requisite modules will need to be installed manually.
-
-### REQUIREMENTS
-
-This list is not yet exhaustive.
-
-* Perl >= v5.14
-* Archive::Zip
-* Bread::Board
-* Browser::Open
-* CHI
-* DateTime
-* File::Which
-* LWP::UserAgent
-* Moose
-* MooseX::NonMoose
-* Try::Tiny
-* URI
-* Wx
-
-### Run
-    $ perl bin/LacunaWaX.pl
-
-Install any modules it complains about missing, and add them to the list above.
-
-Once all pre-reqs have been installed, that command will start the GUI.
+See the github wiki pages for help.  https://github.com/tmtowtdi/LacunaWaX/wiki
 
