@@ -252,7 +252,7 @@ package LacunaWaX::MainFrame {
             $self->app->caption("Connecting...");
             $self->app->throb();
 
-            unless($self->app->connect) {
+            unless($self->app->game_connect) {
                 ### Probably bad creds filled out in Prefs frame.  Undef 
                 ### app->server so we don't get told we're "Already Connected" 
                 ### on our next attempt.

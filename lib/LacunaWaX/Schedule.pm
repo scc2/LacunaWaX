@@ -70,7 +70,7 @@ package LacunaWaX::Schedule {
         my $self = shift;
         return LacunaWaX::Model::Mutex->new( bb => $self->bb, name => 'schedule' );
     }#}}}
-    sub connect {#{{{
+    sub game_connect {#{{{
         my $self      = shift;
         my $server_id = shift;
 
@@ -298,7 +298,7 @@ package LacunaWaX::Schedule {
 
             $logger->info("Checking Arch Mins on server " . $server_rec->id);
             if( my $server = $schema->resultset('Servers')->find({id => $server_rec->id}) ) {
-                unless( $self->connect($server->id) ) {
+                unless( $self->game_connect($server->id) ) {
                     $logger->info("Failed to connect to " . $server->name . " - check your credentials!");
                     next SERVER;
                 }
@@ -360,7 +360,7 @@ package LacunaWaX::Schedule {
             }
 
             if( my $server = $schema->resultset('Servers')->find({id => $av_rec->server_id}) ) {
-                unless( $self->connect($server->id) ) {
+                unless( $self->game_connect($server->id) ) {
                     $logger->info("Failed to connect to " . $server->name . " - check your credentials!");
                     next SERVER;
                 }
@@ -471,7 +471,7 @@ package LacunaWaX::Schedule {
 
         SERVER:
         foreach my $server_rec( @server_recs ) {#{{{
-            unless( $self->connect($server_rec->id) ) {
+            unless( $self->game_connect($server_rec->id) ) {
                 $logger->info("Failed to connect to " . $server_rec->name . " - check your credentials!");
                 next SERVER;
             }
@@ -591,7 +591,7 @@ package LacunaWaX::Schedule {
         foreach my $server_rec(@$servers) {
             $logger->info("--- Attempting to train spies on server " . $server_rec->name . ' ---');
 
-            unless( $self->connect($server_rec->id) ) {
+            unless( $self->game_connect($server_rec->id) ) {
                 $logger->info("Failed to connect to " . $server_rec->name . " - check your credentials!");
                 next SERVER;
             }

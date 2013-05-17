@@ -1,6 +1,8 @@
 
 package LacunaWaX {
     use v5.14;
+    use strict;
+    use warnings;
     use English qw( -no_match_vars );
     use Games::Lacuna::Client::TMTRPC;
     use Getopt::Long;
@@ -20,7 +22,7 @@ package LacunaWaX {
     use MooseX::NonMoose;
     extends 'Wx::App';
 
-    our $VERSION = '1.12';
+    our $VERSION = 1.12;
 
     has 'root_dir'          => (is => 'rw', isa => 'Str',                               required   => 1);
     has 'bb'                => (is => 'rw', isa => 'LacunaWaX::Model::Container',       lazy_build => 1);
@@ -41,14 +43,14 @@ package LacunaWaX {
         is => 'rw', isa => 'Maybe[LacunaWaX::Model::Schema::Servers]', clearer => 'clear_server',
         documentation => q{
             DBIC Servers record of the server to which we're connected.
-            Populated by call to ->connect().
+            Populated by call to ->game_connect().
         },
     );
     has 'account' => (
         is => 'rw', isa => 'Maybe[LacunaWaX::Model::Schema::ServerAccounts]', clearer => 'clear_server_prefs',
         documentation => q{
             DBIC ServerAccounts record of the account we're connected as.
-            Populated by call to ->connect().
+            Populated by call to ->game_connect().
         },
     );
     has 'game_client' => (
@@ -59,7 +61,7 @@ package LacunaWaX {
             Chicken-and-egg.
             This makes sense as an attribute of LacunaWaX, but it cannot connect until the user has 
             updated their username/password in the Preferences window during their first run.
-            Populated by call to ->connect().
+            Populated by call to ->game_connect().
         }
     );
 
@@ -83,7 +85,7 @@ package LacunaWaX {
     }
     sub _build_bb {#{{{
         my $self = shift;
-        LacunaWaX::Model::Container->new(
+        return LacunaWaX::Model::Container->new(
             name        => 'my container',
             root_dir    => $self->root_dir,
             db_file     => $self->db_file,
@@ -128,7 +130,7 @@ package LacunaWaX {
         my $self = shift;
 
         my $bundle = Wx::IconBundle->new();
-        my @images = map{ join '/', ($self->bb->resolve(service => "/Directory/ico"), "frai_$_.png") }qw(16 24 32 48 64 72 128 256);
+        my @images = map{ join q{/}, ($self->bb->resolve(service => q{/Directory/ico}), qq{frai_$_.png}) }qw(16 24 32 48 64 72 128 256);
         foreach my $i(@images) {
             $bundle->AddIcon( Wx::Icon->new($i, wxBITMAP_TYPE_ANY) );
         }
@@ -191,10 +193,11 @@ package LacunaWaX {
             sweeper
             thud
         )];
+        return $list;
     }#}}}
     sub _build_wxbb {#{{{
         my $self = shift;
-        LacunaWaX::Model::WxContainer->new(
+        return LacunaWaX::Model::WxContainer->new(
             name        => 'wx container',
             root_dir    => $self->root_dir,
         );
@@ -202,6 +205,7 @@ package LacunaWaX {
     sub _set_events {#{{{
         my $self = shift;
         EVT_CLOSE( $self->main_frame->frame, sub{$self->OnClose(@_)} );
+        return;
     }#}}}
 
     sub api_ship_name {#{{{
@@ -233,11 +237,11 @@ called.
 
 =cut
 
-        my $img_list = Wx::ImageList->new( 39, 50, 0, 20 );
+        my $img_list = Wx::ImageList->new( '39', '50', '0', '20' );
         foreach my $g( @{$self->game_client->glyphs} ) {#{{{
 
             my $img = $self->wxbb->resolve(service => "/Assets/images/glyphs/$g.png");
-            $img->Rescale(39, 50);
+            $img->Rescale('39', '50');
             my $bmp = Wx::Bitmap->new($img);
 
             $img_list->Add($bmp, wxNullBitmap);
@@ -265,11 +269,11 @@ images from user/assets/ to keep them from having to be installed each time.
 
 =cut
 
-        my $img_list = Wx::ImageList->new( 50, 50, 0, 4 );
+        my $img_list = Wx::ImageList->new( '50', '50', '0', '4' );
         foreach my $ship( @{$self->game_client->warships} ) {
 
             my $img = $self->wxbb->resolve(service => "/Assets/images/ships/$ship.png");
-            $img->Rescale(50, 50);
+            $img->Rescale('50', '50');
             my $bmp = Wx::Bitmap->new($img);
 
             $img_list->Add($bmp, wxNullBitmap);
@@ -297,7 +301,7 @@ Really just a convenience method to keep you from having to call
         my $old_text = $self->main_frame->status_bar->change_caption($msg);
         return $old_text;
     }#}}}
-    sub connect {#{{{
+    sub game_connect {#{{{
         my $self = shift;
 
 =pod
@@ -525,7 +529,6 @@ Instead, you need something like this...
 
     no Moose;
     __PACKAGE__->meta->make_immutable;
-    1;
 }
 
 1;
