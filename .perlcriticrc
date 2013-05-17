@@ -1,0 +1,110 @@
+
+### 1 == 'brutal' ... 5 == 'gentle'
+severity = 2
+
+### Boolean - only use the policies mentioned in this file
+only = 0
+
+### Boolean.  True == 'ignore ##no critic'
+force = 0
+
+### 1-11.
+### 8 is the first level that identifies the policy names.
+### 10 is the first multi-line level.
+verbose = 8 
+
+### Show this many results
+top = 100
+
+### Space-separated list.  Always load these regardless of other settings.
+include =
+
+
+### Boolean
+color = 1
+
+### Boolean
+allow-unsafe = 1
+
+### pager to pipe output to
+pager = less
+
+###
+### EXCLUSIONS
+###
+### Documentation - whines about missing POD sections
+###
+### ProhibitImplicitNewlines - Attempts to keep embedded newlines out of 
+### strings for readability.  I include those to explicitly increase 
+### readability, mostly in Moose documentation sections.
+### 
+### ProhibitMagicNumbers - Requires that all integers other than 0, 1, and 2 
+### be quoted.  Hogwash.
+###
+### ProhibitPostfixControls - I don't see /if($error) {\nreturn;\n}/ as more 
+### readable than /return if $error/
+###
+### ProhibitUnlessBlocks - I don't see /if( not foo)/ as more readable than
+### /unless(foo)/
+###
+### ProhibitVersionStrings - Disallows version strings like "use v5.14" - "To 
+### ensure compatibility with older perls".  Since "use v5.14" exists to 
+### explicitly deny compatibility with older perls, this is not helpful.
+###
+### RegularExpressions - whines about missing /xsg
+###
+### RequireVersionVar - wants a $VERSION in every module.
+###
+### Space-separated list.
+exclude = Documentation ProhibitImplicitNewlines ProhibitMagicNumbers ProhibitPostfixControls ProhibitUnlessBlocks ProhibitVersionStrings RegularExpressions RequireVersionVar
+
+### 
+### THEMES
+###
+### Built-in:
+###     core
+###     pbp
+###     maintenance
+###     cosmetic
+###     complexity
+###     security
+###     tests
+###
+### My own themes:
+###     nonmoose
+###         Omit (!nonmoose) when working with Moose.
+###     nonpackageblock
+###         Omit (!nonpackageblock) with packages using the new block syntax.
+###     svn
+###         Omit (!svn) unless using a source-keyword-expanding RCS
+theme = (pbp || security || maintenance) && !svn && !nonpackageblock && !nonmoose
+
+
+###
+### POLICY MODIFICATIONS
+###
+[Miscellanea::RequireRcsKeywords]
+### Space-separated list of keywords
+keywords = Revision Id
+add_themes = svn
+
+[Modules::RequireEndWithOne]
+### Requires you module end with 1;.  Confused by package blocks.
+add_themes = nonpackageblock
+
+[TestingAndDebugging::RequireUseStrict]
+### Doesn't recognize 'use strict' or 'use Moose' inside a block-scoped 
+### package.
+add_themes = nonpackageblock
+
+[TestingAndDebugging::RequireUseWarnings]
+### Doesn't recognize 'use warnings' or 'use Moose' inside a block-scoped 
+### package.
+add_themes = nonpackageblock
+
+[Subroutines::ProhibitUnusedPrivateSubroutines]
+### disallows private subs (sub _build_thingy{} ) if it doesn't see calls to 
+### it.  Those sorts of subs are generally lazy_build subs so there won't ever 
+### be explicit calls to them.
+add_themes = nonmoose
+

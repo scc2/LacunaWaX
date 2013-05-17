@@ -1,6 +1,7 @@
 
 package LacunaWaX::Schedule {
     use v5.14;
+    use Carp;
     use Data::Dumper;
     use LacunaWaX::Model::Container;
     use LacunaWaX::Model::Mutex;
@@ -28,7 +29,7 @@ package LacunaWaX::Schedule {
         my $logger = $self->bb->resolve( service => '/Log/logger' );
         $logger->component('Schedule');
         $logger->info("# -=-=-=-=-=-=- #"); # easier to visually find the start of a run in the Log Viewer
-        $logger->info("Scheduler beginning with task '" . $self->schedule .  "'.");
+        $logger->info("Scheduler beginning with task '" . $self->schedule .  q{'.});
 
         ### ex lock for the entire run might seem a little heavy-handed.  But 
         ### I'm not just trying to limit database collisions; I'm also 
@@ -65,6 +66,7 @@ package LacunaWaX::Schedule {
         $self->mutex->lock_un;
 
         $logger->info("Scheduler run of task " . $self->schedule . " complete.");
+        return $self;
     }
     sub _build_mutex {#{{{
         my $self = shift;
@@ -95,6 +97,63 @@ package LacunaWaX::Schedule {
         return $self->game_client->ping;
     }#}}}
 
+    sub archmin {#{{{
+        my $self = shift;
+
+        my $logger = $self->bb->resolve( service => '/Log/logger' );
+        $logger->component('Archmin');
+
+        my $schema      = $self->bb->resolve( service => '/Database/schema' );
+        my @server_recs = $schema->resultset('Servers')->search()->all;
+
+        SERVER:
+        foreach my $server_rec( @server_recs ) {#{{{
+            my $server_searches         = 0;
+            my $server_glyphs_pushed    = 0;
+
+            $logger->info("Checking Arch Mins on server " . $server_rec->id);
+            if( my $server = $schema->resultset('Servers')->find({id => $server_rec->id}) ) {
+                unless( $self->game_connect($server->id) ) {
+                    $logger->info("Failed to connect to " . $server->name . " - check your credentials!");
+                    next SERVER;
+                }
+            }
+            else {
+                next SERVER;
+            }
+
+            my @am_recs = $schema->resultset('ArchMinPrefs')->search({server_id => $server_rec->id})->all;
+            $logger->info("User has Arch Min pref records on " . @am_recs . " planets.");
+
+            BODY:
+            foreach my $am_rec(@am_recs) {
+                my $body_name = $self->game_client->planet_name($am_rec->body_id);
+
+                unless($body_name) {
+                    $logger->info("Scheduler found prefs for a planet that you've since abandoned; skipping.");
+### CHECK
+### I can't continue to just leave these old prefs here.  Along with skipping, I 
+### need to be deleting those old prefs.
+                    next BODY;
+                }
+                $logger->info("- Dealing with the Arch Min on $body_name.");
+
+                unless( ($am_rec->glyph_home_id and $am_rec->pusher_ship_name) or $am_rec->auto_search_for ) {
+                    $logger->info("Arch Min pref record exists but is empty; skipping $body_name.");
+                    next BODY;
+                }
+
+                $server_glyphs_pushed   += $self->archmin_push($am_rec, $logger)   || 0;
+                $server_searches        += $self->archmin_search($am_rec, $logger) || 0;
+            }
+
+            $logger->info("- Pushed $server_glyphs_pushed glyphs to their homes.");
+            $logger->info("- Started $server_searches glyph searches.");
+        }#}}}
+
+        $logger->info("--- Arch Min Manager Complete ---");
+        return;
+    }#}}}
     sub archmin_push {#{{{
         my $self    = shift;
         my $am_rec  = shift;
@@ -115,7 +174,7 @@ package LacunaWaX::Schedule {
             ### check that pusher_ship_name exists, idle
             my $pusher_ship;
             my $ships = $self->game_client->get_available_ships($am_rec->body_id);
-            foreach my $ship(@$ships) {
+            foreach my $ship(@{$ships}) {
                 if( $ship->{'name'} eq $am_rec->pusher_ship_name ) {
                     $pusher_ship = $ship;
                     last;
@@ -126,7 +185,7 @@ package LacunaWaX::Schedule {
                 return;
             }
             my $hold_size = $pusher_ship->{'hold_size'} || 0;
-            $logger->info("Pushing with ship " . $am_rec->pusher_ship_name . ".");
+            $logger->info("Pushing with ship " . $am_rec->pusher_ship_name . q{.});
 
             ### Get list of glyphs currently available
             my $trademin = try {
@@ -163,7 +222,7 @@ package LacunaWaX::Schedule {
                 return;
             }
             my $glyphs = $glyphs_rv->{'glyphs'};
-            $logger->debug( scalar @$glyphs . " glyphs onsite about to be pushed.");
+            $logger->debug( scalar @{$glyphs} . " glyphs onsite about to be pushed.");
 
         
             ### Add glyphs as cargo.  Make sure we don't add more than 
@@ -171,16 +230,16 @@ package LacunaWaX::Schedule {
             my $cargo = [];
             my $count = 0;
             ADD_GLYPHS:
-            foreach my $g( @$glyphs ) {
+            foreach my $g( @{$glyphs} ) {
                 $count += $g->{'quantity'};
                 if( $count * 100 > $hold_size ) { # Whoops
                     $count -= $g->{'quantity'};
                     $logger->info("Too many glyphs onsite to push them all right now.  We'll get the rest later.");
                     last ADD_GLYPHS;
                 }
-                push @$cargo, {type => 'glyph', name => $g->{'name'}, quantity => $g->{'quantity'}};
+                push @{$cargo}, {type => 'glyph', name => $g->{'name'}, quantity => $g->{'quantity'}};
             }
-            if( scalar @$cargo ) { # Don't attempt the push with zero glyphs
+            if( scalar @{$cargo} ) { # Don't attempt the push with zero glyphs
                 my $rv = try {
                     $trademin->push_items($am_rec->glyph_home_id, $cargo, {ship_id => $pusher_ship->{'id'}});
                 }
@@ -282,62 +341,6 @@ package LacunaWaX::Schedule {
 
         return $rv;
     }#}}}
-    sub archmin {#{{{
-        my $self = shift;
-
-        my $logger = $self->bb->resolve( service => '/Log/logger' );
-        $logger->component('Archmin');
-
-        my $schema      = $self->bb->resolve( service => '/Database/schema' );
-        my @server_recs = $schema->resultset('Servers')->search()->all;
-
-        SERVER:
-        foreach my $server_rec( @server_recs ) {#{{{
-            my $server_searches         = 0;
-            my $server_glyphs_pushed    = 0;
-
-            $logger->info("Checking Arch Mins on server " . $server_rec->id);
-            if( my $server = $schema->resultset('Servers')->find({id => $server_rec->id}) ) {
-                unless( $self->game_connect($server->id) ) {
-                    $logger->info("Failed to connect to " . $server->name . " - check your credentials!");
-                    next SERVER;
-                }
-            }
-            else {
-                next SERVER;
-            }
-
-            my @am_recs = $schema->resultset('ArchMinPrefs')->search({server_id => $server_rec->id})->all;
-            $logger->info("User has Arch Min pref records on " . @am_recs . " planets.");
-
-            BODY:
-            foreach my $am_rec(@am_recs) {
-                my $body_name = $self->game_client->planet_name($am_rec->body_id);
-
-                unless($body_name) {
-                    $logger->info("Scheduler found prefs for a planet that you've since abandoned; skipping.");
-### CHECK
-### I can't continue to just leave these old prefs here.  Along with skipping, I 
-### need to be deleting those old prefs.
-                    next BODY;
-                }
-                $logger->info("- Dealing with the Arch Min on $body_name.");
-
-                unless( ($am_rec->glyph_home_id and $am_rec->pusher_ship_name) or $am_rec->auto_search_for ) {
-                    $logger->info("Arch Min pref record exists but is empty; skipping $body_name.");
-                    next BODY;
-                }
-
-                $server_glyphs_pushed   += $self->archmin_push($am_rec, $logger)   || 0;
-                $server_searches        += $self->archmin_search($am_rec, $logger) || 0;
-            }
-
-            $logger->info("- Pushed $server_glyphs_pushed glyphs to their homes.");
-            $logger->info("- Started $server_searches glyph searches.");
-        }#}}}
-
-        $logger->info("--- Arch Min Manager Complete ---");
-    }#}}}
     sub autovote {#{{{
         my $self = shift;
 
@@ -376,83 +379,102 @@ package LacunaWaX::Schedule {
 
             STATION:
             foreach my $ss_rec(@ss_recs) {#{{{
-
-                my $ss_status = try {
-                    $self->game_client->get_body_status($ss_rec->body_id);
+                my $station_name = $self->game_client->planet_name($ss_rec->body_id) or next STATION;
+                $logger->info("Attempting to vote on $station_name" );
+                my $station_votes = try {
+                    $self->_vote_on_station($ss_rec, $av_rec);
                 }
                 catch {
-                    $logger->error("Attempt to get status of body " . $ss_rec->body_id . " failed with: $_");
+                    my $msg = (ref $_) ? $_->text : $_;
+                    $logger->error("Attempt to vote failed: $msg");
                     return;
                 };
-                $ss_status or next STATION;
-                my $ss_name   = $ss_status->{'name'};
-                my $ss_owner  = $ss_status->{'empire'}{'name'};
-
-                my $parl = try {
-                    $self->game_client->get_building($ss_rec->body_id, 'Parliament');
-                }
-                catch {
-                    $logger->error("Attempt to get parl failed with: $_");
-                    return;
-                };
-                unless($parl) {
-                    $logger->info("Unable to find a Parliament on $ss_name.");
-                    next STATION;
-                }
-
-                my $props = try {
-                    $parl->view_propositions;
-                }
-                catch {
-                    $logger->error("Attempt to view props failed with: $_");
-                    return;
-                };
-                $props or next STATION;
-                $logger->info("Checking props on $ss_name.");
-
-                unless($props and ref $props eq 'HASH' and defined $props->{'propositions'}) {
-                    $logger->info("No props active on $ss_name; skipping.");
-                    next STATION;
-                }
-                $props = $props->{'propositions'};
-                $logger->info(@$props . " props active on $ss_name.");
-
-                PROP:
-                foreach my $p(@$props) {#{{{
-                    if( $p->{my_vote} ) {
-                        $logger->info("$p->{name} - I've already voted on this prop; skipping.");
-                        next PROP;
-                    }
-
-                    my $propper = $p->{'proposed_by'}{'name'};
-                    if($av_rec->proposed_by eq 'owner' and $propper ne $ss_owner) {
-                        $logger->info("Prop $p->{name} was proposed by $propper, who is not the SS owner - skipped.");
-                        next PROP;
-                    }
-
-                    $logger->info("Agreeing to prop $p->{name} proposed by $propper.");
-                    my $rv = try {
-                        $parl->cast_vote($p->{'id'}, 1);
-                    }
-                    catch {
-                        $logger->info("Attempt to vote failed with: $_");
-                        return;
-                    };
-                    $rv or next PROP;
-
-                    if( $rv->{proposition}{my_vote} ) {
-                        $logger->info("Vote recorded successfully.");
-                        $server_votes++;
-                    }
-                    else {
-                        $logger->info("Vote attempt did not produce an error, but did not succeed either.");
-                    }
-                }#}}}
+                $station_votes // next STATION;
+                $server_votes += $station_votes;
+                $logger->info("$station_votes votes cast.");
             }#}}}
-            $logger->info("$server_votes votes recorded.");
+            $logger->info("$server_votes votes recorded server-wide.");
             $logger->info("--- Autovote Run Complete ---");
         }#}}}
+        return;
     }#}}}
+    sub _vote_on_station {#{{{
+        my $self    = shift;
+        my $ss_rec  = shift;    # BodyTypes record
+        my $av_rec  = shift;    # ScheduleAutovote record
+
+        my $logger    = $self->bb->resolve( service => '/Log/logger' );
+        my $votecount = 0;
+
+        my $ss_status = try {
+            $self->game_client->get_body_status($ss_rec->body_id);
+        }
+        catch { return; };
+        $ss_status or croak "Could not get station status";
+        my $ss_name   = $ss_status->{'name'};
+        my $ss_owner  = $ss_status->{'empire'}{'name'};
+
+        my $parl = try {
+            $self->game_client->get_building($ss_rec->body_id, 'Parliament');
+        }
+        catch { return; };
+        $parl or croak "No parliament";
+
+        my $props = try {
+            $parl->view_propositions;
+        }
+        catch { return; };
+        $props or croak "No props";
+        $logger->info("Checking props on $ss_name.");
+
+        unless($props and ref $props eq 'HASH' and defined $props->{'propositions'}) {
+            croak "No active props";
+        }
+        $props = $props->{'propositions'};
+        $logger->info(@{$props} . " props active on $ss_name.");
+
+        PROP:
+        foreach my $prop(@{$props}) {#{{{
+            try {
+                $self->_vote_on_prop($parl, $prop, $av_rec, $ss_owner);
+            }
+            catch {
+                my $msg = (ref $_) ? $_->text : $_;
+                $logger->info($msg);
+                return;
+            };
+            $votecount++;
+        }#}}}
+        return $votecount;
+    }#}}}
+    sub _vote_on_prop {#{{{
+        my $self        = shift;
+        my $parl        = shift;
+        my $prop        = shift;
+        my $av_rec      = shift;    # ScheduleAutovote record
+        my $ss_owner    = shift;    # SS owner name - string
+
+        if( $prop->{my_vote} ) {
+            croak "$prop->{name} - I've already voted on this prop; skipping.";
+        }
+
+        my $propper = $prop->{'proposed_by'}{'name'};
+        if($av_rec->proposed_by eq 'owner' and $propper ne $ss_owner) {
+            croak "Prop $prop->{name} was proposed by $propper, who is not the SS owner - skipped.";
+        }
+
+        my $rv = try {
+            $parl->cast_vote($prop->{'id'}, 1);
+        }
+        catch { croak "Attempt to vote failed with: $_"; };
+
+        unless( $rv->{proposition}{my_vote} ) {
+            croak "Vote attempt did not produce an error, but did not succeed either.";
+        }
+
+        return 1;
+    }#}}}
+
     sub lottery {#{{{
         my $self = shift;
 
@@ -571,6 +593,7 @@ package LacunaWaX::Schedule {
         }#}}}
 
         $logger->info("--- Lottery Run Complete ---");
+        return;
     }#}}}
     sub train_spies {#{{{
         my $self = shift;
@@ -582,13 +605,13 @@ package LacunaWaX::Schedule {
         my $servers = [];
         my $servers_rs = $schema->resultset('Servers');
         while(my $server_rec = $servers_rs->next) {
-            push @$servers, $server_rec;
+            push @{$servers}, $server_rec;
         }
 
         $self->set_memoize();
 
         SERVER:
-        foreach my $server_rec(@$servers) {
+        foreach my $server_rec(@{$servers}) {
             $logger->info("--- Attempting to train spies on server " . $server_rec->name . ' ---');
 
             unless( $self->game_connect($server_rec->id) ) {
@@ -619,13 +642,13 @@ package LacunaWaX::Schedule {
                         $training_bldgs->{$type} = $bldg;
                     }
                 }
-                unless(keys %$training_bldgs) {
+                unless(keys %{$training_bldgs}) {
                     $logger->info("$pname has no spy training buildings; skipping.");
                     next PLANET;
                 }
 
                 BUILDING:
-                foreach my $type(keys %$training_bldgs) {   # 'Intel', 'Mayhem', etc
+                foreach my $type(keys %{$training_bldgs}) {   # 'Intel', 'Mayhem', etc
                     $logger->info("$pname has a $type training building.");
 
                     my $bldg = $training_bldgs->{$type};
@@ -641,10 +664,10 @@ package LacunaWaX::Schedule {
                         $spies = $view->{'spies'}{'training_costs'}{'time'};
                     }
 
-                    $logger->info(@$spies . " spies are available to train at this building.");
+                    $logger->info(@{$spies} . " spies are available to train at this building.");
                     my $got_one = 0;
                     SPY:
-                    foreach my $spy(@$spies) {
+                    foreach my $spy(@{$spies}) {
 
                         if( my $rec = $schema->resultset('SpyTrainPrefs')->search({spy_id => $spy->{'spy_id'}, train => (lc $type)})->single ) {
                             $got_one++;
@@ -682,6 +705,7 @@ package LacunaWaX::Schedule {
             }
         }
         $logger->info("--- Spy Training Run Complete ---");
+        return;
     }#}}}
 
     sub test {#{{{
@@ -749,6 +773,7 @@ out of the server code with the text:
         my $self = shift;
         memoize('get_int_min');
         memoize('get_spies');
+        return;
     }#}}}
     sub is_idle {#{{{
         my $self = shift;
@@ -757,7 +782,7 @@ out of the server code with the text:
         my $int_min     = get_int_min($self->game_client, $spy->{'based_from'}{'body_id'}) or return;
         my $home_spies  = get_spies($int_min) or return;
 
-        my $full_spy_info = first{ $_->{'name'} eq $spy->{'name'} }@$home_spies;
+        my $full_spy_info = first{ $_->{'name'} eq $spy->{'name'} }@{$home_spies};
         return( $full_spy_info->{'assignment'} eq 'Idle' ? 1 : 0 );
     }#}}}
     ### Subs, not methods - these get memoized.
@@ -774,6 +799,9 @@ out of the server code with the text:
                     catch { return };
         return $spies->{'spies'} // undef;
     }#}}}
+
+    no Moose;
+    __PACKAGE__->meta->make_immutable; 
 }
 
 1;

@@ -360,55 +360,27 @@ Returns true/false on success/fail.
 
         $self->main_frame->status_bar->bar_reset;
         $self->Yield; 
-        $SIG{ALRM} = undef;
+        local %SIG = ();
+        $SIG{ALRM} = undef;     ##no critic qw(RequireLocalizedPunctuationVars) - PC thinks $SIG there is a scalar - whoops
         alarm 0;
-    }#}}}
-    sub myalarm {#{{{
-        my $self         = shift;
-        my $microseconds = shift || 0;
-
-=head2 myalarm
-
-The original idea behind this was to allow fractional-second alarms so the 
-throbber gauge could pulse more smoothly.
-
-But all attempts to fool with fractional-second alarms caused problems on at 
-least one of the OSs I'm targetting.  The end result is that I'm simply using a 
-straight 1-second alarm between gauge pulses (throbs).  It's not quite as pretty 
-as I'd like it to be, but it gets the point across.
-
-The end result is that this is not being used by anything (nor should it).
-
-=cut
-
-        #if( $OSNAME eq 'MSWin32' ) {
-        if( 1 ) {
-            unless($microseconds) {
-                alarm 0;
-                return;
-            }
-            my $seconds = (sprintf "%1.0f", ($microseconds / 1_000_000)) || 1;
-            alarm($seconds);
-        }
-        else {
-            #Time::HiRes::ualarm($microseconds);
-            Time::HiRes::alarm(0.05);
-        }
+        return;
     }#}}}
     sub poperr {#{{{
         my $self    = shift;
         my $message = shift || 'Unknown error occurred';
         my $title   = shift || 'Error!';
-        Wx::MessageBox(	$message, $title, wxICON_EXCLAMATION, $self->main_frame->frame );
+        Wx::MessageBox($message, $title, wxICON_EXCLAMATION, $self->main_frame->frame );
+        return;
     }#}}}
     sub popmsg {#{{{
         my $self    = shift;
         my $message = shift || 'Everything is fine';
         my $title   = shift || 'LacunaWaX';
-        Wx::MessageBox(	$message,
+        Wx::MessageBox($message,
                         $title,
                         wxOK | wxICON_INFORMATION,
                         $self->main_frame->frame );
+        return;
     }#}}}
     sub popconf {#{{{
         my $self    = shift;
@@ -451,7 +423,7 @@ Instead, you need something like this...
 
 =cut
 
-        my $resp = Wx::MessageBox(	$message,
+        my $resp = Wx::MessageBox($message,
                                     $title,
                                     wxYES_NO|wxYES_DEFAULT|wxICON_QUESTION|wxSTAY_ON_TOP,
                                     $self->main_frame->frame );
@@ -460,14 +432,16 @@ Instead, you need something like this...
     sub throb {#{{{
         my $self = shift;
 
-        $self->main_frame->status_bar->gauge->Pulse;
+        $self->main_frame->status_bar->gauge->Pulse;        ## no critic qw(ProhibitLongChainsOfMethodCalls)
         $self->Yield; 
-        $SIG{ALRM} = sub {
-            $self->main_frame->status_bar->gauge->Pulse;
+        local %SIG = ();
+        $SIG{ALRM} = sub {  ##no critic qw(RequireLocalizedPunctuationVars) - PC thinks $SIG there is a scalar - whoops
+            $self->main_frame->status_bar->gauge->Pulse;    ## no critic qw(ProhibitLongChainsOfMethodCalls)
             $self->Yield; 
             alarm 1;
         };
         alarm 1;
+        return;
     }#}}}
 
     sub OnClose {#{{{
@@ -512,6 +486,7 @@ Instead, you need something like this...
         }
 
         $event->Skip();
+        return;
     }#}}}
     sub OnInit {#{{{
         my $self = shift;

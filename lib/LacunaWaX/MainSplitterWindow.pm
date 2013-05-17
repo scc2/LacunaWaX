@@ -86,6 +86,7 @@ package LacunaWaX::MainSplitterWindow {
     sub _set_events {#{{{
         my $self = shift;
         EVT_CLOSE($self->splitter_window, sub{$self->OnClose(@_)});
+        return;
     }#}}}
 
 =pod
@@ -117,16 +118,19 @@ You can then check which pane has focus with:
         my $self = shift;
         $self->left_pane->has_focus(0);
         $self->right_pane->has_focus(0);
+        return;
     }#}}}
     sub focus_left {#{{{
         my $self = shift;
         $self->left_pane->has_focus(1);
         $self->right_pane->has_focus(0);
+        return;
     }#}}}
     sub focus_right {#{{{
         my $self = shift;
         $self->left_pane->has_focus(0);
         $self->right_pane->has_focus(1);
+        return;
     }#}}}
     sub which_focus {#{{{
         my $self = shift;
@@ -138,10 +142,12 @@ You can then check which pane has focus with:
     sub hide {#{{{
         my $self = shift;
         $self->splitter_window->Show(0);
+        return;
     }#}}}
     sub show {#{{{
         my $self = shift;
         $self->splitter_window->Show(1);
+        return;
     }#}}}
 
     sub OnClose {#{{{
@@ -153,6 +159,7 @@ You can then check which pane has focus with:
         if( $self->has_right_pane ) {
             $self->right_pane->OnClose if $self->right_pane->can('OnClose');
         }
+        return;
     }#}}}
 
     no Moose;

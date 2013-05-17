@@ -89,7 +89,7 @@ package LacunaWaX::MainFrame {
         my $self = shift;
 
         my $icon = Wx::Icon->new(
-            join '/', $self->app->bb->resolve(service => '/Directory/assets'), 'Futurama', '128', 'frai_128.png',
+            join q{/}, $self->app->bb->resolve(service => '/Directory/assets'), 'Futurama', '128', 'frai_128.png',
             wxBITMAP_TYPE_ANY,
         );
 
@@ -102,7 +102,7 @@ package LacunaWaX::MainFrame {
     }#}}}
     sub _build_intro_panel {#{{{
         my $self = shift;
-        my $ip = LacunaWaX::MainFrame::IntroPanel->new(
+        return LacunaWaX::MainFrame::IntroPanel->new(
             app         => $self->app,
             ancestor    => $self,
             parent      => $self->frame,
@@ -201,6 +201,7 @@ package LacunaWaX::MainFrame {
     sub _set_events {#{{{
         my $self = shift;
         EVT_CLOSE($self->frame, sub{$self->OnClose(@_)});
+        return;
     }#}}}
 
     before 'clear_intro_panel' => sub {#{{{
@@ -210,6 +211,7 @@ package LacunaWaX::MainFrame {
     before 'clear_splitter' => sub {#{{{
         my $self = shift;
         $self->splitter->splitter_window->Destroy();
+        return;
     };#}}}
 
     sub OnClose {#{{{
@@ -221,10 +223,11 @@ package LacunaWaX::MainFrame {
             $self->splitter->OnClose;
         }
         $event->Skip();
+        return;
     }#}}}
     sub OnGameServerConnect {#{{{
-        my $self = shift;
-        my($server_id, $frame, $event) = @_;
+        my $self        = shift;
+        my $server_id   = shift;
 
 ### CHECK
 ### I'm beginning to feel like this event should be in LacunaWaX.pm, not here.  
@@ -248,7 +251,6 @@ package LacunaWaX::MainFrame {
         if( my $server = $schema->resultset('Servers')->find({id => $server_id}) ) {
             $self->app->server( $server );
 
-            #$self->status_bar->caption("Connecting...");
             $self->app->caption("Connecting...");
             $self->app->throb();
 
@@ -281,6 +283,7 @@ package LacunaWaX::MainFrame {
             Wx::MessageBox("Invalid Server!", "Whoops", wxICON_EXCLAMATION, $self->frame);
         }
 
+        return;
     }#}}}
 
     no Moose;
