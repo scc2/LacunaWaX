@@ -37,22 +37,22 @@ package LacunaWaX::Model::DefaultData {
     sub _build_stations {#{{{
         my $self = shift;
         return [
-            '578020',   # App Awuiss Plae 2
             '11971',    # Urn Oochaid Rie 2
-            '215640',   # Bu Siesphio Wea 8
             '480714',   # SASS Absolut Darkness
             '596628',   # SASS Absolut Punishment
             '153256',   # SASS Absolut Retribution
-            '210382',   # SASS Absolut Vanguard
+            '210382',   # SASS Absolut Salvation
+            '578020',   # SASS Afrass
             '288617',   # SASS Ashanti High Lightning
             '471875',   # SASS Basestar
             '468709',   # SASS bmots 01
             '110204',   # SASS bmots 02
+            '359715',   # SASS Dexter's Lab
+            '215640',   # SASS Free Clinic
             '754487',   # SASS Heart of Darkness
             '285952',   # SASS Iasph Pienu 8
             '463023',   # SASS One-Eye
             '491837',   # SASS Origins
-            '299393',   # SASS Silmarilos Outpost 01
             '645488',   # SASS Parilla
             '71377',    # SASS PAW1
             '82971',    # SASS PAW2
@@ -61,6 +61,8 @@ package LacunaWaX::Model::DefaultData {
             '59842',    # SASS PAW5
             '72782',    # SASS PAW6
             '144584',   # SASS Quatch
+            '299393',   # SASS Silmarilos Outpost 01
+            '86085',    # SASS Silmarilos Outpost 02
             '289142',   # SASS Silmarilos Silvertongue
             '370033',   # SASS Silmarilos Trelinator
             '144971',   # SASS Ultra
