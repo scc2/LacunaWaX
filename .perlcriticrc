@@ -19,9 +19,9 @@ top = 100
 ### Space-separated list.  Always load these regardless of other settings.
 include =
 
-
 ### Boolean
-color = 1
+### Leave off if you want to run perlcritic through a vim plugin.
+color = 0
 
 ### Boolean
 allow-unsafe = 1
@@ -52,11 +52,14 @@ pager = less
 ### explicitly deny compatibility with older perls, this is not helpful.
 ###
 ### RegularExpressions - whines about missing /xsg
+### 
+### RequireTidyCode - perltidy makes a mess.
 ###
 ### RequireVersionVar - wants a $VERSION in every module.
 ###
 ### Space-separated list.
-exclude = Documentation ProhibitImplicitNewlines ProhibitMagicNumbers ProhibitPostfixControls ProhibitUnlessBlocks ProhibitVersionStrings RegularExpressions RequireVersionVar
+exclude = Documentation ProhibitImplicitNewlines ProhibitMagicNumbers ProhibitPostfixControls ProhibitUnlessBlocks ProhibitVersionStrings RegularExpressions RequireTidyCode RequireVersionVar
+
 
 ### 
 ### THEMES

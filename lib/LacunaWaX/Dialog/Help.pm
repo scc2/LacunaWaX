@@ -66,7 +66,7 @@ package LacunaWaX::Dialog::Help {
     ### main_sizer is required by our NonScrolled parent.
     has 'main_sizer' => (is => 'rw', isa => 'Wx::Sizer', lazy_build => 1, documentation => q{vertical});
 
-    sub FOREIGNBUILDARGS {#{{{
+    sub FOREIGNBUILDARGS {## no critic qw(RequireArgUnpacking) {{{
         my $self = shift;
         my %args = @_;
 
@@ -141,7 +141,7 @@ package LacunaWaX::Dialog::Help {
         my $img = $self->app->wxbb->resolve(service => '/Assets/images/app/arrow-right.png');
         $img->Rescale($self->nav_img_w - 10, $self->nav_img_h - 10);    # see build_bmp_left
         my $bmp = Wx::Bitmap->new($img);
-        my $v = Wx::BitmapButton->new(
+        return Wx::BitmapButton->new(
             $self, -1, 
             $bmp,
             wxDefaultPosition,
@@ -243,6 +243,7 @@ package LacunaWaX::Dialog::Help {
         EVT_HTML_LINK_CLICKED(  $self,  $self->htm_window->GetId,   sub{$self->OnLinkClicked(@_)}   );
         EVT_SIZE(               $self,                              sub{$self->OnResize(@_)}        );
         EVT_TEXT_ENTER(         $self,  $self->txt_search->GetId,   sub{$self->OnSearchNav(@_)}     );
+        return 1;
     }#}}}
 
     sub clean_text {#{{{
@@ -308,7 +309,7 @@ package LacunaWaX::Dialog::Help {
         my $self = shift;
         my $file = shift || return;
 
-        my $fqfn = join '/', ($self->html_dir, $file);
+        my $fqfn = join q{/}, ($self->html_dir, $file);
         unless(-e $fqfn) {
             $self->app->poperr("$fqfn: No such file or directory");
             return;
@@ -326,6 +327,7 @@ package LacunaWaX::Dialog::Help {
         my $output  = q{};
         $self->tt->process($file, $vars, \$output);
         $self->htm_window->SetPage($output);
+        return 1;
     }#}}}
     sub make_search_index {#{{{
         my $self = shift;
@@ -355,7 +357,7 @@ package LacunaWaX::Dialog::Help {
             truncate => 1,  # if index already exists with content, trash them before adding more.
         );
 
-        while ( my ( $filename, $hr ) = each %$docs ) {
+        while ( my ( $filename, $hr ) = each %{$docs} ) {
             my $basename = basename($filename);
             $indexer->add_doc({
                 filename    => $basename,
@@ -365,6 +367,7 @@ package LacunaWaX::Dialog::Help {
             });
         }
         $indexer->commit;
+        return 1;
     }#}}}
     sub make_navbar {#{{{
         my $self = shift;
@@ -391,6 +394,7 @@ package LacunaWaX::Dialog::Help {
         $self->szr_navbar->Add($self->bmp_search, 0, 0, 0);
 
         $self->txt_search->SetFocus;
+        return 1;
     }#}}}
 
     sub OnClose {#{{{
@@ -399,6 +403,7 @@ package LacunaWaX::Dialog::Help {
         my $event   = shift;
         $self->Destroy;
         $event->Skip();
+        return 1;
     }#}}}
     sub OnHomeNav {#{{{
         my $self    = shift;    # LacunaWaX::Dialog::Help
@@ -409,6 +414,7 @@ package LacunaWaX::Dialog::Help {
         $self->history->[ $self->history_idx ] = $self->index_file;
         $self->prev_click_href( $self->index_file );
         $self->load_html_file( $self->index_file );
+        return 1;
     }#}}}
     sub OnLeftNav {#{{{
         my $self    = shift;    # LacunaWaX::Dialog::Help
@@ -421,6 +427,7 @@ package LacunaWaX::Dialog::Help {
         $self->history_idx( $self->history_idx - 1 );
         $self->prev_click_href( $page );
         $self->load_html_file( $page );
+        return 1;
     }#}}}
     sub OnLinkClicked {#{{{
         my $self    = shift;    # LacunaWaX::Dialog::Help
@@ -437,23 +444,23 @@ package LacunaWaX::Dialog::Help {
 
             if( $ok ) {
                 $self->app->poperr(
-                    "LacunaWaX encountered an error while attempting to open the URL in your web browser.  The URL you were attempting to reach was '" . $info->GetHref . "'.",
+                    "LacunaWaX encountered an error while attempting to open the URL in your web browser.  The URL you were attempting to reach was '" . $info->GetHref . q{'.},
                     "Error opening web browser"
                 );
             }
             elsif(not defined $ok) {
                 $self->app->poperr(
-                    "LacunaWaX was unable to open the URL in your web browser.  The URL you were attempting to reach was '" . $info->GetHref . "'.",
+                    "LacunaWaX was unable to open the URL in your web browser.  The URL you were attempting to reach was '" . $info->GetHref . q{'.},
                     "Unable to open web browser"
                 );
             }
 
-            return;
+            return 1;
         }#}}}
 
         ### Each link click is triggering this event twice.
         if( $self->prev_click_href eq $info->GetHref ) {
-            return;
+            return 1;
         }
         $self->prev_click_href( $info->GetHref );
 
@@ -465,6 +472,7 @@ package LacunaWaX::Dialog::Help {
         push @{$self->history}, $info->GetHref;
         $self->history_idx( $self->history_idx + 1 );
         $self->load_html_file($info->GetHref);
+        return 1;
     }#}}}
     sub OnResize {#{{{
         my $self = shift;
@@ -479,6 +487,7 @@ package LacunaWaX::Dialog::Help {
         $self->Layout;
 
         $self->htm_window->SetSize( Wx::Size->new($self->get_html_width, $self->get_html_height) );
+        return 1;
     }#}}}
     sub OnRightNav {#{{{
         my $self    = shift;    # LacunaWaX::Dialog::Help
@@ -491,6 +500,7 @@ package LacunaWaX::Dialog::Help {
         $self->history_idx( $self->history_idx + 1 );
         $self->prev_click_href( $page );
         $self->load_html_file( $page );
+        return 1;
     }#}}}
     sub OnSearchNav {#{{{
         my $self    = shift;    # LacunaWaX::Dialog::Help
@@ -523,6 +533,7 @@ package LacunaWaX::Dialog::Help {
         my $output = q{};
         $self->tt->process('hitlist.tmpl', $vars, \$output);
         $self->htm_window->SetPage($output);
+        return 1;
     }#}}}
 
     no Moose;

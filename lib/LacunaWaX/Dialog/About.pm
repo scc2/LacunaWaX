@@ -37,6 +37,7 @@ package LacunaWaX::Dialog::About {
     sub show {#{{{
         my $self = shift;
         Wx::AboutBox($self->info);
+        return;
     }#}}}
 
     no Moose;
