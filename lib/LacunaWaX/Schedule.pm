@@ -23,6 +23,10 @@ package LacunaWaX::Schedule {
         }
     );
 
+    ### CONSTANTS
+    sub GLYPH_CARGO_SIZE()  { 100 }                                 ## no critic qw(ProhibitSubroutinePrototypes RequireFinalReturn)
+    sub TRAINING_TYPES()    { qw(Intel Mayhem Politics Theft) }     ## no critic qw(ProhibitSubroutinePrototypes RequireFinalReturn)
+
     sub BUILD {
         my $self = shift;
 
@@ -143,8 +147,8 @@ package LacunaWaX::Schedule {
                     next BODY;
                 }
 
-                $server_glyphs_pushed   += $self->archmin_push($am_rec, $logger)   || 0;
-                $server_searches        += $self->archmin_search($am_rec, $logger) || 0;
+                $server_glyphs_pushed   += $self->_archmin_push($am_rec, $logger)   || 0;
+                $server_searches        += $self->_archmin_search($am_rec, $logger) || 0;
             }
 
             $logger->info("- Pushed $server_glyphs_pushed glyphs to their homes.");
@@ -154,115 +158,61 @@ package LacunaWaX::Schedule {
         $logger->info("--- Arch Min Manager Complete ---");
         return;
     }#}}}
-    sub archmin_push {#{{{
+    sub _archmin_push {#{{{
         my $self    = shift;
-        my $am_rec  = shift;
+        my $am_rec  = shift;    # ArchMinPrefs record
         my $logger  = shift;
 
-        my $body_name    = $self->game_client->planet_name($am_rec->body_id) or return;
-        my $total_pushed = 0;
+        my $this_body_name = $self->game_client->planet_name($am_rec->body_id) or return;
 
-        if( $am_rec->glyph_home_id and $am_rec->pusher_ship_name ) {
-            ### ensure glyph_home_id is valid
-            my $glyph_home_name;
-            unless( $glyph_home_name = $self->game_client->planet_name($am_rec->glyph_home_id) ) {
-                $logger->info("Specified glyph home is invalid; perhaps it was abandoned?");
-                return;
-            }
-            $logger->info("Planning to push to $glyph_home_name.");
-
-            ### check that pusher_ship_name exists, idle
-            my $pusher_ship;
-            my $ships = $self->game_client->get_available_ships($am_rec->body_id);
-            foreach my $ship(@{$ships}) {
-                if( $ship->{'name'} eq $am_rec->pusher_ship_name ) {
-                    $pusher_ship = $ship;
-                    last;
-                }
-            }
-            unless($pusher_ship) {
-                $logger->info("Requested pusher ship " . $am_rec->pusher_ship_name . " either does not exist or is not currently available.");
-                return;
-            }
-            my $hold_size = $pusher_ship->{'hold_size'} || 0;
-            $logger->info("Pushing with ship " . $am_rec->pusher_ship_name . q{.});
-
-            ### Get list of glyphs currently available
-            my $trademin = try {
-                $self->game_client->get_building($am_rec->body_id, 'Trade');
-            }
-            catch {
-                $logger->error("Attempt to get trade min failed with: $_");
-                return;
-            };
-            $body_name ||= q{};
-            unless($trademin) {
-                $logger->info("No Trade Min exists on $body_name.");
-                return;
-            }
-
-            ### This is where I suspect IO's scheduler is blowing up, though I 
-            ### don't know why.
-            #my $glyphs_rv = $trademin->get_glyph_summary;
-            my $glyphs_rv = try {
-                $trademin->get_glyph_summary;
-            }
-            catch {
-                my $msg = (ref $_) ? $_->text : $_;
-                $logger->error("Could not get glyph summary: $msg");
-                return;
-            };
-            unless($glyphs_rv and ref $glyphs_rv eq 'HASH') {
-                $logger->info("No glyph summary means we're skipping this planet.");
-                return;
-            }
-
-            unless( defined $glyphs_rv->{'glyphs'} and @{$glyphs_rv->{'glyphs'}} ) {
-                $logger->info("No glyphs are on $body_name right now.");
-                return;
-            }
-            my $glyphs = $glyphs_rv->{'glyphs'};
-            $logger->debug( scalar @{$glyphs} . " glyphs onsite about to be pushed.");
-
-        
-            ### Add glyphs as cargo.  Make sure we don't add more than 
-            ### we have cargo space for.
-            my $cargo = [];
-            my $count = 0;
-            ADD_GLYPHS:
-            foreach my $g( @{$glyphs} ) {
-                $count += $g->{'quantity'};
-                if( $count * 100 > $hold_size ) { # Whoops
-                    $count -= $g->{'quantity'};
-                    $logger->info("Too many glyphs onsite to push them all right now.  We'll get the rest later.");
-                    last ADD_GLYPHS;
-                }
-                push @{$cargo}, {type => 'glyph', name => $g->{'name'}, quantity => $g->{'quantity'}};
-            }
-            if( scalar @{$cargo} ) { # Don't attempt the push with zero glyphs
-                my $rv = try {
-                    $trademin->push_items($am_rec->glyph_home_id, $cargo, {ship_id => $pusher_ship->{'id'}});
-                }
-                catch {
-                    $logger->error("Attempt to push glyphs failed with: $_");
-                    return;
-                };
-                $rv or return;
-            }
-            else {
-                $logger->info("Cargo is empty, so nothing is going to be pushed home.");
-                $logger->info("Pusher ship hold size is $hold_size.");
-            }
-            $logger->info("Pushed $count glyphs to $glyph_home_name.");
-            $total_pushed += $count;
-        }
-        else {
+        unless( $am_rec->glyph_home_id and $am_rec->pusher_ship_name ) {
             $logger->info("No glyph push requested.");
+            return;
         }
 
-        return $total_pushed;
+        my $glyph_home_name;
+        unless( $glyph_home_name = $self->_planet_exists($am_rec->glyph_home_id) ) {
+            $logger->info("Specified glyph home is invalid; perhaps it was abandoned?");
+        }
+        $logger->info("Planning to push to $glyph_home_name.");
+
+        my $pusher_ship = $self->_ship_exists($am_rec->pusher_ship_name, $am_rec->body_id);
+        unless($pusher_ship) {
+            $logger->info("Requested pusher ship " . $am_rec->pusher_ship_name . " either does not exist or is not currently available.");
+            return;
+        }
+        my $hold_size = $pusher_ship->{'hold_size'} || 0;
+        $logger->info("Pushing with ship " . $am_rec->pusher_ship_name . q{.});
+
+        my $glyphs;
+        unless( $glyphs = $self->_glyphs_available($am_rec->body_id) ) {
+            $logger->info("No glyphs are on $this_body_name right now.");
+            return;
+        }
+        $logger->debug( scalar @{$glyphs} . " glyphs onsite about to be pushed.");
+
+        my $cargo = $self->_load_glyphs_in_cargo($glyphs, $hold_size);
+        my $count = scalar @{$cargo};
+        unless( $count ) { # Don't attempt the push with zero glyphs
+            $logger->info("Cargo is empty, so nothing is going to be pushed home.");
+            return;
+        }
+
+        my $trademin = $self->_trademin($am_rec->body_id);
+        my $rv = try {
+            $trademin->push_items($am_rec->glyph_home_id, $cargo, {ship_id => $pusher_ship->{'id'}});
+        }
+        catch {
+            $logger->error("Attempt to push glyphs failed with: $_");
+            return;
+        };
+        $rv or return;
+
+        $logger->info("Pushed $count glyphs to $glyph_home_name.");
+
+        return $count;
     }#}}}
-    sub archmin_search {#{{{
+    sub _archmin_search {#{{{
         my $self    = shift;
         my $am_rec  = shift;
         my $logger  = shift;
@@ -341,6 +291,78 @@ package LacunaWaX::Schedule {
 
         return $rv;
     }#}}}
+    sub _glyphs_available {#{{{
+        my $self    = shift;
+        my $pid     = shift;
+
+        my $trademin = $self->_trademin($pid);
+        my $glyphs_rv = try {
+            $trademin->get_glyph_summary;
+        };
+
+        unless( ref $glyphs_rv eq 'HASH' and defined $glyphs_rv->{'glyphs'} and @{$glyphs_rv->{'glyphs'}} ) {
+            return;
+        }
+
+        return $glyphs_rv->{'glyphs'};
+    }#}}}
+    sub _load_glyphs_in_cargo {#{{{
+        my $self        = shift;
+        my $glyphs      = shift;
+        my $hold_size   = shift;
+
+=head2 _load_glyphs_in_cargo
+
+Accepts an arrayref of glyphs, as returned by get_glyph_summary, and an integer 
+hold size.
+
+Adds the glyphs as cargo up to the limit defined by the hold size, and returns 
+the cargo as an arrayref.
+
+If any glyphs are left over (they would have exceeded hold size), it's assumed 
+they'll simply be picked up on the next run.
+
+=cut
+
+        my $cargo = [];
+        my $count = 0;
+        ADD_GLYPHS:
+        foreach my $g( @{$glyphs} ) {
+            $count += $g->{'quantity'};
+            if( $count * GLYPH_CARGO_SIZE > $hold_size ) { # Whoops
+                $count -= $g->{'quantity'};
+                last ADD_GLYPHS;
+            }
+            push @{$cargo}, {type => 'glyph', name => $g->{'name'}, quantity => $g->{'quantity'}};
+        }
+        return $cargo;
+    }#}}}
+    sub _planet_exists {#{{{
+        my $self = shift;
+        my $pid  = shift;
+        my $glyph_home_name = $self->game_client->planet_name($pid);
+        return $glyph_home_name;    # undef if the pid wasn't found
+    }#}}}
+    sub _ship_exists {#{{{
+        my $self        = shift;
+        my $ship_name   = shift;
+        my $pid         = shift;
+
+        my $ships = $self->game_client->get_available_ships($pid);
+        my($ship) = first{ $_->{'name'} eq $ship_name }@{$ships};
+        return $ship;
+    }#}}}
+    sub _trademin {#{{{
+        my $self        = shift;
+        my $pid         = shift;
+
+        my $trademin = try {
+            $self->game_client->get_building($pid, 'Trade');
+        };
+
+        return $trademin;
+    }#}}}
+
     sub autovote {#{{{
         my $self = shift;
 
@@ -595,6 +617,7 @@ package LacunaWaX::Schedule {
         $logger->info("--- Lottery Run Complete ---");
         return;
     }#}}}
+
     sub train_spies {#{{{
         my $self = shift;
 
@@ -619,93 +642,129 @@ package LacunaWaX::Schedule {
                 next SERVER;
             }
 
-            PLANET:
+            my $trained = 0;
             foreach my $pid( values %{$self->game_client->planets} ) {
-                my $pname = $self->game_client->planet_name($pid);
-
-                ### Skip known stations
-                if( my $rec = $schema->resultset('BodyTypes')->search({ body_id => $pid, server_id => $server_rec->id, type_general => 'space station'})->single ) {
-                    $logger->info("$pname is an SS - no spy training possible.");
-                    next PLANET;
-                }
-
-                $logger->info("Attempting to train spies on $pname.");
-
-                ### Marshal training buildings on this planet.
-                my $training_bldgs = {};
-                foreach my $type( qw(Intel Mayhem Politics Theft) ) {
-                    my $name = $type . 'Training'; 
-
-                    my $bldg = try   { $self->game_client->get_building($pid, $name); }
-                               catch { return; };
-                    if( $bldg and ref $bldg eq "Games::Lacuna::Client::Buildings::$name" ) {
-                        $training_bldgs->{$type} = $bldg;
-                    }
-                }
-                unless(keys %{$training_bldgs}) {
-                    $logger->info("$pname has no spy training buildings; skipping.");
-                    next PLANET;
-                }
-
-                BUILDING:
-                foreach my $type(keys %{$training_bldgs}) {   # 'Intel', 'Mayhem', etc
-                    $logger->info("$pname has a $type training building.");
-
-                    my $bldg = $training_bldgs->{$type};
-                    my $view = try   { $bldg->view; }
-                               catch { return };
-                    $view and ref $view eq 'HASH' or next BUILDING;
-
-                    my $spies = [];
-                    ### $view->{'spies'}{'training_costs'}{'time'} is an AoH of 
-                    ### spies available to train.
-                    ### https://us1.lacunaexpanse.com/api/IntelTraining.html
-                    if( defined $view->{'spies'}{'training_costs'}{'time'} and ref $view->{'spies'}{'training_costs'}{'time'} eq 'ARRAY' ) {
-                        $spies = $view->{'spies'}{'training_costs'}{'time'};
-                    }
-
-                    $logger->info(@{$spies} . " spies are available to train at this building.");
-                    my $got_one = 0;
-                    SPY:
-                    foreach my $spy(@{$spies}) {
-
-                        if( my $rec = $schema->resultset('SpyTrainPrefs')->search({spy_id => $spy->{'spy_id'}, train => (lc $type)})->single ) {
-                            $got_one++;
-
-                            ### See the whiny POD just above sub set_memoize for 
-                            ### an explanation of this.
-                            unless( $self->is_idle($spy) ) {
-                                $logger->info("Spy $spy->{'name'} is available for training, but is set to Counter, so we won't train him.");
-                                next SPY;
-                            }
-
-                            my $rv = try {
-                                $bldg->train_spy($rec->spy_id);
-                            }
-                            catch {
-                                my $err = (ref $_ eq 'LacunaRPCException') ? $_->{'text'} : $_;
-                                $logger->error("Attempt to train spy returned '$err'.  Skipping spy.");
-                                return;
-                            };
-                            $rv or next SPY;
-
-                            if( $rv->{'trained'} ) {
-                                $logger->info("Spy $spy->{'name'} was trained in $type.");
-                            }
-                            else {
-                                $logger->error("Spy$spy->{'name'} was NOT trained.  This can only happen if you don't have enough resources to train, so this planet is now going to be skipped.");
-                                next PLANET;
-                            }
-                        }
-                    }
-                    unless($got_one) {
-                        $logger->info("No available spies wanted to train at this building.");
-                    }
-                }
+                $trained += $self->_train_spies_on_planet($pid, $server_rec->id, $logger);
             }
+            $logger->info("$trained spies trained on " . $server_rec->name . q{.});
         }
         $logger->info("--- Spy Training Run Complete ---");
         return;
+    }#}}}
+    sub _training_buildings_available {#{{{
+        my $self = shift;
+        my $pid  = shift;
+
+=head2 _training_buildings_available
+
+Returns a hashref of spy training buildings existing on $planet_id.
+
+The hashref is { type => building_obj }, eg:
+
+ {
+    Intel  => intel_bldg_obj,
+    Mayhem => mayhem_bldg_obj,
+    ...etc...
+ }
+
+If no training buildings exist on the planet, returns undef.
+  
+=cut
+
+        my $training_bldgs = {};
+        my $got_one = 0;
+        foreach my $type( TRAINING_TYPES ) {
+            my $name = $type . 'Training'; 
+            my $bldg = try   { $self->game_client->get_building($pid, $name); }
+                       catch { return; };
+            if( $bldg and ref $bldg eq "Games::Lacuna::Client::Buildings::$name" ) {
+                $training_bldgs->{$type} = $bldg;
+                $got_one++;
+            }
+        }
+        return $training_bldgs if $got_one;
+        return;
+    }#}}}
+    sub _train_spies_on_planet {#{{{
+        my $self    = shift;
+        my $pid     = shift;
+        my $sid     = shift;
+        my $logger  = shift;
+
+        my $pname   = $self->game_client->planet_name($pid);
+        my $schema  = $self->bb->resolve( service => '/Database/schema' );
+
+        ### Skip known stations
+        if( my $rec = $schema->resultset('BodyTypes')->search({ body_id => $pid, server_id => $sid, type_general => 'space station'})->single ) {
+            $logger->info("$pname is an SS - no spy training possible.");
+            return 0;
+        }
+        $logger->info("Attempting to train spies on $pname.");
+
+        my $training_bldgs;
+        unless( $training_bldgs = $self->_training_buildings_available($pid) ) {
+            $logger->info("$pname has no spy training buildings; skipping.");
+            return 0;
+        }
+
+        my $total_cnt = 0;
+        foreach my $type(keys %{$training_bldgs}) {   # 'Intel', 'Mayhem', etc
+            $logger->info("$pname has a $type training building.");
+            my $train_cnt = $self->_train_spies_at_building($type, $training_bldgs->{$type}, $logger) // 0;
+            $total_cnt += $train_cnt;
+            $logger->info("$train_cnt spies trained at this building.");
+        }
+
+        return $total_cnt;
+    }#}}}
+    sub _train_spies_at_building {#{{{
+        my $self    = shift;
+        my $type    = shift;
+        my $bldg    = shift;
+        my $logger  = shift;
+
+        my $view = try   { $bldg->view; }
+                   catch { return };
+        $view and ref $view eq 'HASH' or return;
+
+        my $schema = $self->bb->resolve( service => '/Database/schema' );
+        my $spies = [];
+        ### $view->{'spies'}{'training_costs'}{'time'} is an AoH
+        ### https://us1.lacunaexpanse.com/api/IntelTraining.html
+        if( defined $view->{'spies'}{'training_costs'}{'time'} and ref $view->{'spies'}{'training_costs'}{'time'} eq 'ARRAY' ) {
+            $spies = $view->{'spies'}{'training_costs'}{'time'};
+        }
+
+        $logger->info(@{$spies} . " spies are available to train at this building.");
+        my $trained = 0;
+        SPY:
+        foreach my $spy(@{$spies}) {
+            if( my $rec = $schema->resultset('SpyTrainPrefs')->search({spy_id => $spy->{'spy_id'}, train => (lc $type)})->single ) {
+                $trained++;
+                unless( $self->is_idle($spy) ) {
+                    $logger->info("Spy $spy->{'name'} is available for training, but is set to Counter, so we won't train him.");
+                    next SPY;
+                }
+                my $rv = try {
+                    $bldg->train_spy($rec->spy_id);
+                }
+                catch {
+                    my $err = (ref $_ eq 'LacunaRPCException') ? $_->{'text'} : $_;
+                    $logger->error("Attempt to train spy returned '$err'.  Skipping spy.");
+                    return;
+                };
+                $rv or next SPY;
+                if( $rv->{'trained'} ) {
+                    $logger->info("Spy $spy->{'name'} was trained in $type.");
+                }
+                else {
+                    $logger->error("Spy$spy->{'name'} was not trained.");
+                    return;
+                }
+            }
+        }
+
+        return $trained;
     }#}}}
 
     sub test {#{{{
@@ -718,7 +777,7 @@ package LacunaWaX::Schedule {
         return 1;
     }#}}}
 
-=pod
+=head2 Memoizing Spies
 
 $spy_training_building->view->{'spies'}{'training_costs'}{'time'} returns a list 
 of spies who are available to be trained by that $spy_training_building.
@@ -752,20 +811,12 @@ Counter, we have to:
 
 
 The first two steps of that are going to be expensive server calls.  Since we're 
-currently in a scheduled task, our Bread::Board container does not have our CHI 
+currently in a scheduled task, the Bread::Board container does not have a CHI 
 object in it.
 
 So, rather than using CHI, I'm memoizing the get_int_min() and get_spies() subs 
 (not methods!) below.  The first call to those two subs takes about 8 seconds; 
 subsequent calls with the same args are about instantaneous.
-
-"But Dumbass", you cry, "why not just call view_empire_spies() on a single Int 
-Min rather than trying to get each planet's Int Min individually?"  That would 
-be because, though view_empire_spies() would be exactly what we want here, and 
-though it's currently in the API documentation, it's also currently commented 
-out of the server code with the text:
-    # This call is too intensive for server at this time.  Disabled
-...so it's documented, but it doesn't actually work, or even exist.
 
 =cut
 
