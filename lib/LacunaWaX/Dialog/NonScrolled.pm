@@ -16,7 +16,7 @@ package LacunaWaX::Dialog::NonScrolled {
     has 'position'      => (is => 'rw', isa => 'Wx::Point',     lazy_build => 1);
     has 'size'          => (is => 'rw', isa => 'Wx::Size',      lazy_build => 1);
 
-    sub FOREIGNBUILDARGS {#{{{
+    sub FOREIGNBUILDARGS {## no critic qw(RequireArgUnpacking) {{{
         my $self = shift;
         my %args = @_;
 
@@ -47,7 +47,6 @@ package LacunaWaX::Dialog::NonScrolled {
     sub _build_position {#{{{
         my $self = shift;
         return Wx::Point->new(10, 10);
-        return wxDefaultPosition;
     }#}}}
     sub _build_size {#{{{
         my $self = shift;
@@ -58,6 +57,23 @@ package LacunaWaX::Dialog::NonScrolled {
         return 'Dialog Title';
     }#}}}
     sub _set_events { }
+
+    sub make_non_resizable {#{{{
+        my $self = shift;
+        my $style = $self->GetWindowStyleFlag;
+
+        $style = ($style ^ wxRESIZE_BORDER);
+        $self->SetWindowStyle($style);
+        return 1;
+    }#}}}
+    sub make_resizable {#{{{
+        my $self = shift;
+        my $style = $self->GetWindowStyleFlag;
+
+        $style = ($style | wxRESIZE_BORDER);
+        $self->SetWindowStyle($style);
+        return 1;
+    }#}}}
 
     sub init_screen {#{{{
         my $self = shift;
@@ -76,8 +92,11 @@ without testing it there first.
         $self->page_sizer->Add($self->main_sizer, 0, 0, 0);
         $self->SetSizer($self->page_sizer);
         $self->Layout;
+        return 1;
     }#}}}
 
+    no Moose;
+    __PACKAGE__->meta->make_immutable; 
 }
 
 1;
@@ -144,6 +163,12 @@ their constructors.
     ancestor    => $self->ancestor,
     parent      => $self->parent,
  );
+
+ # Optional - make your dialog non-resizable (default is resizable):
+ $object->make_non_resizable;
+
+ # Whoops - crap I didn't mean to do that...
+ $object->make_resizable;
 
 =head1 ARGUMENTS
 
