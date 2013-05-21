@@ -28,6 +28,7 @@ Simply calling $self->clear_dialog_status _will_ take care of that, due to the
 
 package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
     use v5.14;
+    use Carp;
     use Data::Dumper;   # just for debug
     use DateTime;
     use DateTime::Duration;
@@ -197,6 +198,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
         $self->main_sizer->Add($self->cast_sitters_sizer, 0, 0, 0);
 
         $self->app->Yield;
+        return $self;
     }
     sub _build_cast_me_sizer {#{{{
         my $self = shift;
@@ -330,8 +332,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
     }#}}}
     sub _build_main_sizer {#{{{
         my $self = shift;
-        my $v = $self->build_sizer($self->parent, wxHORIZONTAL, 'Main');
-        return $v;
+        return $self->build_sizer($self->parent, wxHORIZONTAL, 'Main');
     }#}}}
     sub _build_btn_me_yes {#{{{
         my $self = shift;
@@ -378,16 +379,13 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
     sub _build_btn_sitters_no {#{{{
         my $self = shift;
 
-        ### Not being used, and the sitters_yes button is taking up the space of 
-        ### two buttons.  Casting a 'no' vote for all of your sitters seems 
-        ### dangerous and probably not what anybody ever wants.
+        ### This method exists just to explain its absence (this space 
+        ### intentionally left blank).
+        ### 
+        ### Casting a 'no' vote for all of your sitters seems dangerous and 
+        ### probably not what anybody ever wants.
 
-        #my $v = Wx::Button->new($self->parent, -1, 
-        #    "No",
-        #    wxDefaultPosition, 
-        #    Wx::Size->new($self->button_width,$self->row_height)
-        #);
-        #return $v;
+        return 1;
     }#}}}
     sub _build_my_vote {#{{{
         my $self = shift;
@@ -419,6 +417,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
         EVT_BUTTON( $self->parent, $self->btn_me_yes->GetId,        sub{$self->OnMyVote(@_, 1)}         );
         EVT_BUTTON( $self->parent, $self->btn_me_no->GetId,         sub{$self->OnMyVote(@_, 0)}         );
         EVT_BUTTON( $self->parent, $self->btn_sitters_yes->GetId,   sub{$self->OnSittersVote(@_, 1)}    );
+        return 1;
     }#}}}
 
     sub attempt_vote {#{{{
@@ -464,7 +463,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
         my $rv = try {
             ### The call to cast_vote periodically stalls out.  The alarm 
             ### rescues us from that stall.
-            local $SIG{ALRM} = sub { die "voting stall"; };
+            local $SIG{ALRM} = sub { croak "voting stall"; };
             alarm 5;
             my $rv = $sitter_parl->cast_vote($self->prop->{'id'}, 1);
             alarm 0;
@@ -473,34 +472,30 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
         catch {
             alarm 0;
             my $msg = (ref $_) ? $_->text : $_;
-            if($msg =~ m/you have already voted/i) {
-                $self->dialog_status_say("$player has already voted on this prop.");
-                $self->ancestor->already_voted->{$player} = $sitter_rec;
+
+            given($msg) {
+                when( m/you have already voted/i ) {
+                    $self->dialog_status_say("$player has already voted on this prop.");
+                    $self->ancestor->already_voted->{$player} = $sitter_rec;
+                }
+                when( m/this proposition has already passed/i ) {
+                    return { passed => 1 };
+                }
+                when( m/(slow down|internal error)/i ) {
+                    $self->dialog_status_say("*** $player just hit the 60 RPC limit! ***");
+                }
+                when( m/stall/i ) {
+                    $self->dialog_status_say("Voting stalled.");
+                }
+                when( m/has already made the maximum number of requests/i ) {
+                    $self->dialog_status_say("*** $player has used all 10,000 RPCs for the day! ***");
+                    $self->ancestor->over_rpc->{$player}++;
+                }
+                default {
+                    $self->dialog_status_say("*** Attempt to vote for $player failed for an unexpected reason:\n\t$msg ***");
+                }
             }
-            elsif($msg =~ m/this proposition has already passed/i ) {
-                ### The current user may or may not have voted already.  
-                ### Whichever hashref we return here will be right sometimes 
-                ### and wrong others.  Either way doesn't matter terribly much, 
-                ### it will just show as an off-by-one in the Dialog::Status.
-                return { passed => 1, };
-                #return {
-                #    passed => 1, 
-                #    proposition => {my_vote => 1},
-                #};
-            }
-            elsif($msg =~ m/slow down/i or $msg =~ /internal error/i) {
-                $self->dialog_status_say("*** $player just hit the 60 RPC limit! ***");
-            }
-            elsif($msg =~ m/stall/i) {
-                $self->dialog_status_say("Voting stalled.");
-            }
-            elsif($msg =~ m/has already made the maximum number of requests/i) {
-                $self->dialog_status_say("*** $player has used all 10,000 RPCs for the day! ***");
-                $self->ancestor->over_rpc->{$player}++;
-            }
-            else {
-                $self->dialog_status_say("*** Attempt to vote for $player failed for an unexpected reason:\n\t$msg ***");
-            }
+
             return;
         };
         unless($rv) {
@@ -521,7 +516,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
                 $prop_has_passed = 1;
             }
         }
-        $self->dialog_status_say("Finished with " . $sitter_rec->player_name . '.');
+        $self->dialog_status_say("Finished with " . $sitter_rec->player_name . q{.});
         $self->dialog_status_say_recsep();
 
         return($voted_ok, $prop_has_passed);
@@ -534,6 +529,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
         if($self->has_dialog_status) {
             $self->dialog_status->close;
         }
+        return 1;
     };#}}}
 
     ### Wrappers around dialog_status's methods to first check for existence of 
@@ -544,12 +540,14 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
         if( $self->has_dialog_status ) {
             try{ $self->dialog_status->say($msg) };
         }
+        return 1;
     }#}}}
     sub dialog_status_say_recsep {#{{{
         my $self = shift;
         if( $self->has_dialog_status ) {
             try{ $self->dialog_status->say_recsep };
         }
+        return 1;
     }#}}}
 
     sub OnClose {#{{{
@@ -558,12 +556,14 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
         if($self->has_dialog_status) {
             $self->clear_dialog_status;
         }
+        return 1;
     }#}}}
     sub OnDialogEnter {#{{{
         my $self    = shift;
         my $parent  = shift;    # Wx::Dialog
         my $event   = shift;    # Wx::CommandEvent
         $self->waiting_for_enter(0);
+        return 1;
     }#}}}
     sub OnMyVote {#{{{
         my $self    = shift;
@@ -607,6 +607,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
         $self->btn_me_yes->Enable(0);
         $self->btn_me_no->Enable(0);
         $self->app->popmsg("Your vote of '$vote_text' has been recorded.", "Success!");
+        return 1;
     }#}}}
     sub OnSittersVote {#{{{
         my $self    = shift;
@@ -681,7 +682,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
             my $voted_ok;
             ($voted_ok, $prop_has_passed) = $self->attempt_vote($sitter_rec);
             if( $voted_ok ) {
-                push @$voting_members, $sitter_rec->player_name;
+                push @{$voting_members}, $sitter_rec->player_name;
                 $current_yes++;
                 $self->lbl_votes_yes->SetLabel($current_yes);
                 $prop_has_passed++ if $current_yes >= $total_needed;
@@ -703,7 +704,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
                 my $voted_ok;
                 ($voted_ok, $prop_has_passed) = $self->attempt_vote($sitter_rec);
                 if( $voted_ok ) {
-                    push @$voting_members, $sitter_rec->player_name;
+                    push @{$voting_members}, $sitter_rec->player_name;
                     $current_yes++;
                     $self->lbl_votes_yes->SetLabel($current_yes);
                     $prop_has_passed++ if $current_yes >= $total_needed;
@@ -712,10 +713,10 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
             }
         }
 
-        if(@$voting_members) {
-            my $votes_cast = @$voting_members;
+        if(@{$voting_members}) {
+            my $votes_cast = @{$voting_members};
             $self->dialog_status_say("\nVotes have been cast on this prop for the following $votes_cast players:\n");
-            $self->dialog_status_say( (join ', ', @$voting_members) . "\n" );
+            $self->dialog_status_say( (join q{, }, @{$voting_members}) . qq{\n} );
 
             if( $prop_has_passed ) {
                 $self->dialog_status_say(
@@ -730,12 +731,12 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
         }
 
         if( $self->ancestor->chk_close_status->IsChecked ) {
-#say "clearing dialog status because of checkbox";
             $self->clear_dialog_status; # also closes it
         }
 
         ### See comment at the other endthrob call top this method.
         $self->app->endthrob;
+        return 1;
     }#}}}
     sub OnDialogStatusClose {#{{{
         my $self    = shift;
@@ -749,11 +750,10 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
         ### $self->stop_voting ..." conditions to emulate an event.
 
         $self->stop_voting(1);
-#say "PropRow's OnDialogStatusClose called";
         if( $self->has_dialog_status ) {
-#say "PropRow still has dialog status; trying to clear it now.";
             $self->clear_dialog_status;
         }
+        return 1;
     }#}}}
 
     no Moose;

@@ -44,47 +44,43 @@ package LacunaWaX::MainFrame::MenuBar::Tools {
 
     sub _build_itm_logview {#{{{
         my $self = shift;
-        my $v = Wx::MenuItem->new(
+        return Wx::MenuItem->new(
             $self, 1,
             '&Log Viewer',
             'Log Viewer',
             wxITEM_NORMAL,
             undef   # if defined, this is a sub-menu
         );
-        return $v;
     }#}}}
     sub _build_itm_mail {#{{{
         my $self = shift;
-        my $v = Wx::MenuItem->new(
+        return Wx::MenuItem->new(
             $self, -1,
             '&Mail',
             'Mail',
             wxITEM_NORMAL,
             undef   # if defined, this is a sub-menu
         );
-        return $v;
     }#}}}
     sub _build_itm_sitter {#{{{
         my $self = shift;
-        my $v = Wx::MenuItem->new(
+        return Wx::MenuItem->new(
             $self, -1,
             '&Sitter Manager',
             'Sitter Manager',
             wxITEM_NORMAL,
             undef   # if defined, this is a sub-menu
         );
-        return $v;
     }#}}}
     sub _build_itm_test {#{{{
         my $self = shift;
-        my $v = Wx::MenuItem->new(
+        return Wx::MenuItem->new(
             $self, -1,
             '&Test Dialog',
             'Test Dialog',
             wxITEM_NORMAL,
             undef   # if defined, this is a sub-menu
         );
-        return $v;
     }#}}}
     sub _build_show_test {#{{{
         return 0;
@@ -95,6 +91,7 @@ package LacunaWaX::MainFrame::MenuBar::Tools {
         EVT_MENU($self->parent,  $self->itm_mail->GetId,    sub{$self->OnMail(@_)});
         EVT_MENU($self->parent,  $self->itm_sitter->GetId,  sub{$self->OnSitterManager(@_)});
         EVT_MENU($self->parent,  $self->itm_test->GetId,    sub{$self->OnTestDialog(@_)});
+        return 1;
     }#}}}
 
 
@@ -112,11 +109,13 @@ package LacunaWaX::MainFrame::MenuBar::Tools {
         my $self = shift;
         $self->Enable($self->itm_mail->GetId, 1);
         $self->Enable($self->itm_sitter->GetId, 1);
+        return 1;
     }#}}}
     sub show_not_connected {#{{{
         my $self = shift;
         $self->Enable($self->itm_mail->GetId, 0);
         $self->Enable($self->itm_sitter->GetId, 0);
+        return 1;
     }#}}}
 
     sub OnLogViewer {#{{{
@@ -132,6 +131,7 @@ package LacunaWaX::MainFrame::MenuBar::Tools {
             position    => $self_origin,
         );
         $log_viewer->Show(1);
+        return 1;
     }#}}}
     sub OnMail {#{{{
         my $self = shift;
@@ -155,6 +155,7 @@ package LacunaWaX::MainFrame::MenuBar::Tools {
         $mail->Show(1);
 
         $status->close();
+        return 1;
     }#}}}
     sub OnSitterManager {#{{{
         my $self = shift;
@@ -169,6 +170,7 @@ package LacunaWaX::MainFrame::MenuBar::Tools {
             position    => $self_origin,
         );
         $sitter_manager->Show(1);
+        return 1;
     }#}}}
     sub OnTestDialog {#{{{
         my $self = shift;
@@ -190,6 +192,7 @@ package LacunaWaX::MainFrame::MenuBar::Tools {
             ### New-style object which extends Wx::Dialog
             $test_dialog->Show(1);
         }
+        return 1;
     }#}}}
 
     no Moose;

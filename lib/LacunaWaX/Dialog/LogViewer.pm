@@ -103,6 +103,7 @@ package LacunaWaX::Dialog::LogViewer {
         EVT_CLOSE(      $self,                              sub{$self->OnClose(@_)});
         EVT_RADIOBOX(   $self, $self->rdo_component->GetId, sub{$self->OnRadio(@_)});
         EVT_SIZE(       $self,                              sub{$self->OnResize(@_)} );
+        return 1;
     }#}}}
 
     sub list_width {#{{{
@@ -118,6 +119,7 @@ package LacunaWaX::Dialog::LogViewer {
         my($self, $dialog, $event) = @_;
         $self->Destroy;
         $event->Skip();
+        return 1;
     }#}}}
     sub OnRadio {#{{{
         my $self    = shift;
@@ -152,7 +154,7 @@ package LacunaWaX::Dialog::LogViewer {
         $self->list_log->DeleteAllItems;
         my $row = 0;
         while(my $r = $rs->next) {
-            $self->list_log->InsertStringItem($row, $r->datetime->dmy . ' ' . $r->datetime->hms);
+            $self->list_log->InsertStringItem($row, $r->datetime->dmy . q{ } . $r->datetime->hms);
             $self->list_log->SetItem($row, 1, $r->run);
             $self->list_log->SetItem($row, 2, $r->component);
             $self->list_log->SetItem($row, 3, $r->message);
@@ -163,7 +165,7 @@ package LacunaWaX::Dialog::LogViewer {
         $self->list_log->SetColumnWidth(1, wxLIST_AUTOSIZE_USEHEADER);
         $self->list_log->SetColumnWidth(2, wxLIST_AUTOSIZE_USEHEADER);
         $self->list_log->SetColumnWidth(3, wxLIST_AUTOSIZE);
-        #$self->list_log->Layout;
+        return 1;
     }#}}}
     sub OnResize {#{{{
         my $self    = shift;
@@ -171,6 +173,7 @@ package LacunaWaX::Dialog::LogViewer {
         my $event   = shift;    # Wx::SizeEvent
 
         $self->list_log->SetSize( $self->list_width, $self->list_height );
+        return 1;
     }#}}}
 
     no Moose;

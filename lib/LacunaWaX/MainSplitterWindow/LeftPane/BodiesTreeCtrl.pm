@@ -10,21 +10,21 @@ package LacunaWaX::MainSplitterWindow::LeftPane::BodiesTreeCtrl {
     use Wx::Event qw(EVT_TREE_ITEM_ACTIVATED EVT_ENTER_WINDOW);
     with 'LacunaWaX::Roles::GuiElement';
 
-    has 'treectrl'      => (is => 'rw', isa => 'Wx::TreeCtrl',  lazy_build => 1                         );
+    has 'treectrl' => (is => 'rw', isa => 'Wx::TreeCtrl',  lazy_build => 1);
 
-    has 'root_item_id'  => (is => 'rw', isa => 'Wx::TreeItemId',
+    has 'root_item_id' => (is => 'rw', isa => 'Wx::TreeItemId',
         documentation => q{
             The true root item.  Not visisble because of the wxTR_HIDE_ROOT style.
         }
     );
 
-    has 'bodies_id'     => (is => 'rw', isa => 'Wx::TreeItemId',
+    has 'bodies_id' => (is => 'rw', isa => 'Wx::TreeItemId',
         documentation => q{
             The 'Bodies' leaf, which looks like the root item, as it's the top level item visible.
         }
     );
 
-    has 'expand_state'  => (is => 'rw', isa => 'Str',           lazy => 1,      default => 'collapsed', 
+    has 'expand_state' => (is => 'rw', isa => 'Str', lazy => 1, default => 'collapsed', 
         documentation => q{
             Starts out 'collapsed', the other option is 'expanded'.  Used to keep track of what we should
             do (expand or collapse) on a double-click on the visible root item.
@@ -50,6 +50,7 @@ package LacunaWaX::MainSplitterWindow::LeftPane::BodiesTreeCtrl {
         my $self = shift;
         EVT_TREE_ITEM_ACTIVATED($self->treectrl, $self->treectrl->GetId, sub{$self->OnTreeClick(@_)} );
         EVT_ENTER_WINDOW(   $self->treectrl,  sub{$self->OnMouseEnter(@_)}    );
+        return 1;
     }#}}}
 
     sub fill_tree {#{{{
@@ -60,7 +61,7 @@ package LacunaWaX::MainSplitterWindow::LeftPane::BodiesTreeCtrl {
         );
         if( $self->app->game_client and $self->app->game_client->ping ) {
 
-            my $b64_bodies = encode_base64(join ':', ('bodies'));
+            my $b64_bodies = encode_base64(join q{:}, ('bodies'));
             $self->bodies_id(
                 $self->treectrl->AppendItem( 
                     $self->root_item_id, 'Bodies', -1, -1, Wx::TreeItemData->new($b64_bodies)
@@ -82,8 +83,8 @@ package LacunaWaX::MainSplitterWindow::LeftPane::BodiesTreeCtrl {
                 my $pid = $self->app->game_client->planet_id($pname);
 
                 ### Set up the data that gets passed with a leaf click.
-                my $b64_planet      = encode_base64(join ':', ('name', $pid));
-                my $b64_rearrange   = encode_base64(join ':', ('rearrange', $pid));
+                my $b64_planet      = encode_base64(join q{:}, ('name', $pid));
+                my $b64_rearrange   = encode_base64(join q{:}, ('rearrange', $pid));
 
                 ### Planet name produces summary and should be bolded
                 my $planet_name_id  = $self->treectrl->AppendItem(
@@ -106,8 +107,8 @@ package LacunaWaX::MainSplitterWindow::LeftPane::BodiesTreeCtrl {
                     })->next
                 ) {
                     ### Space Station
-                    my $b64_props = encode_base64(join ':', ('propositions', $pid));
-                    my $b64_bfg   = encode_base64(join ':', ('bfg', $pid));
+                    my $b64_props = encode_base64(join q{:}, ('propositions', $pid));
+                    my $b64_bfg   = encode_base64(join q{:}, ('bfg', $pid));
 
                     ### Since BFG firing is now part of the game, this leaf no 
                     ### longer needs to be here.  However, IO mentioned that 
@@ -126,9 +127,9 @@ package LacunaWaX::MainSplitterWindow::LeftPane::BodiesTreeCtrl {
                 }
                 else {
                     ### Non Space Station
-                    my $b64_glyphs  = encode_base64(join ':', ('glyphs', $pid));
-                    my $b64_lottery = encode_base64(join ':', ('lottery', $pid));
-                    my $b64_spies   = encode_base64(join ':', ('spies', $pid));
+                    my $b64_glyphs  = encode_base64(join q{:}, ('glyphs', $pid));
+                    my $b64_lottery = encode_base64(join q{:}, ('lottery', $pid));
+                    my $b64_spies   = encode_base64(join q{:}, ('spies', $pid));
 
                     my $glyphs_id = $self->treectrl->AppendItem( 
                         $planet_name_id, 'Glyphs', -1, -1, Wx::TreeItemData->new($b64_glyphs)
@@ -146,6 +147,7 @@ package LacunaWaX::MainSplitterWindow::LeftPane::BodiesTreeCtrl {
             }#}}}
             $self->treectrl->Expand($self->bodies_id);
         }
+        return 1;
     }#}}}
     sub toggle_expansion_state {#{{{
         my $self = shift;
@@ -181,11 +183,13 @@ package LacunaWaX::MainSplitterWindow::LeftPane::BodiesTreeCtrl {
                 $self->expand_state('collapsed');
             }
         }
+        return 1;
     }#}}}
 
     sub OnTreeClick {#{{{
-        my $self = shift;
-        my($tree_ctrl, $tree_event) = @_;
+        my $self        = shift;
+        my $tree_ctrl   = shift;
+        my $tree_event  = shift;
 
         my $leaf = $tree_event->GetItem();
         my $root = $tree_ctrl->GetRootItem();
@@ -200,8 +204,9 @@ package LacunaWaX::MainSplitterWindow::LeftPane::BodiesTreeCtrl {
         my $text = $tree_ctrl->GetItemText($leaf);
         if( my $data = $tree_ctrl->GetItemData($leaf) ) {
 
-            my ($action, $pid, @args) = split /:/, decode_base64($data->GetData || q{});
-            my $planet = $self->app->game_client->planet_name($pid);
+            my ($action, $pid, @args)   = split /:/, decode_base64($data->GetData || q{});
+            my $planet                  = $self->app->game_client->planet_name($pid);
+            my $splitter                = $self->app->main_frame->splitter;
 
             given( $action || q{} ) {
                 when(/^bodies$/) {
@@ -210,38 +215,38 @@ package LacunaWaX::MainSplitterWindow::LeftPane::BodiesTreeCtrl {
 
                 ### All
                 when(/^default$/) {
-                    $self->app->main_frame->splitter->right_pane->show_right_pane(
+                    $splitter->right_pane->show_right_pane(
                         'LacunaWaX::MainSplitterWindow::RightPane::DefaultPane'
                     );
                 }
                 when(/^rearrange$/) {
-                    $self->app->main_frame->splitter->right_pane->show_right_pane(
+                    $splitter->right_pane->show_right_pane(
                         'LacunaWaX::MainSplitterWindow::RightPane::RearrangerPane', $planet
                     );
                 }
                 when(/^name$/) {
-                    $self->app->main_frame->splitter->right_pane->show_right_pane(
+                    $splitter->right_pane->show_right_pane(
                         'LacunaWaX::MainSplitterWindow::RightPane::SummaryPane', $planet
                     );
                 }
 
                 ### Planet only
                 when(/^glyphs$/) {
-                    $self->app->main_frame->splitter->right_pane->show_right_pane(
+                    $splitter->right_pane->show_right_pane(
                         'LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane',
                         $planet,
                         { required_buildings  => {'Archaeology Ministry' => undef}, }
                     );
                 }
                 when(/^lottery$/) {
-                    $self->app->main_frame->splitter->right_pane->show_right_pane(
+                    $splitter->right_pane->show_right_pane(
                         'LacunaWaX::MainSplitterWindow::RightPane::LotteryPane',
                         $planet,
                         { required_buildings  => {'Entertainment District' => undef}, }
                     );
                 }
                 when(/^spies$/) {
-                    $self->app->main_frame->splitter->right_pane->show_right_pane(
+                    $splitter->right_pane->show_right_pane(
                         'LacunaWaX::MainSplitterWindow::RightPane::SpiesPane',
                         $planet,
                         { required_buildings => {'Intelligence Ministry' => undef} } 
@@ -250,7 +255,7 @@ package LacunaWaX::MainSplitterWindow::LeftPane::BodiesTreeCtrl {
 
                 ### Space Station only
                 when(/^propositions$/) {
-                    $self->app->main_frame->splitter->right_pane->show_right_pane(
+                    $splitter->right_pane->show_right_pane(
                         'LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane',
                         $planet,
                         { 
@@ -260,7 +265,7 @@ package LacunaWaX::MainSplitterWindow::LeftPane::BodiesTreeCtrl {
                     );
                 }
                 when(/^bfg$/) {
-                    $self->app->main_frame->splitter->right_pane->show_right_pane(
+                    $splitter->right_pane->show_right_pane(
                         'LacunaWaX::MainSplitterWindow::RightPane::BFGPane',
                         $planet,
                         { required_buildings => {'Parliament' => 25} } 
@@ -273,6 +278,7 @@ package LacunaWaX::MainSplitterWindow::LeftPane::BodiesTreeCtrl {
             }
         }
 
+        return 1;
     }#}}}
     sub OnMouseEnter {#{{{
         my $self    = shift;
@@ -288,6 +294,7 @@ package LacunaWaX::MainSplitterWindow::LeftPane::BodiesTreeCtrl {
         }
 
         $event->Skip();
+        return 1;
     }#}}}
 
     no Moose;

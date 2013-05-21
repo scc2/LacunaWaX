@@ -82,18 +82,20 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane {
         $self->recipe_box->Add($self->halls_btn_sizer, 0, 0, 0);
         $self->recipe_box->AddSpacer(20);
 
-        foreach my $rname( sort keys %{$self->app->game_client->glyph_recipes} ) {
+        my $gc = $self->app->game_client;
+        foreach my $rname( sort keys %{$gc->glyph_recipes} ) {
             my $form = LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane::RecipeForm->new(
                 app                 => $self->app,
                 parent              => $self->parent,
                 ancestor            => $self,
                 recipe_name         => $rname,
-                recipe_ingredients  => $self->app->game_client->glyph_recipes->{$rname},
+                recipe_ingredients  => $gc->glyph_recipes->{$rname},
             );
             $self->recipe_box->Add($form->main_sizer, 0, 0, 0);
         }
         $self->content_sizer->Add($self->recipe_box, 0, 0, 0);
         $self->refocus_window_name( 'lbl_planet_name' );
+        return $self;
     }
     sub _build_auto_search_box {#{{{
         my $self = shift;
@@ -140,7 +142,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane {
         my $schema = $self->app->bb->resolve( service => '/Database/schema' );
         if( $self->prefs_rec ) {
             my $cnt = 0;
-            for my $o(@$ore_types) {
+            for my $o(@{$ore_types}) {
                 ### Yeah, increment first.  The selection subscript has to be 
                 ### one greater than the position in @sorted_planets, because 
                 ### we're hardcoding 'None' on the front of the select box.
@@ -155,7 +157,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane {
             $self->parent, -1, 
             wxDefaultPosition, 
             Wx::Size->new(110, 25), 
-            ['None', @$ore_types],
+            ['None', @{$ore_types}],
         );
         $v->SetSelection($selection_ss);
         $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
@@ -243,13 +245,11 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane {
     }#}}}
     sub _build_halls_btn_sizer {#{{{
         my $self = shift;
-        my $v = $self->build_sizer($self->parent, wxHORIZONTAL, 'All Halls');
-        return $v;
+        return $self->build_sizer($self->parent, wxHORIZONTAL, 'All Halls');
     }#}}}
     sub _build_header_sizer {#{{{
         my $self = shift;
-        my $sizer = $self->build_sizer($self->parent, wxVERTICAL, 'Header');
-        return $sizer;
+        return $self->build_sizer($self->parent, wxVERTICAL, 'Header');
     }#}}}
     sub _build_lbl_planet_name {#{{{
         my $self = shift;
@@ -290,7 +290,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane {
             |wxSUNKEN_BORDER
             |wxLC_SINGLE_SEL
         );
-        $list_ctrl->InsertColumn(0, '');
+        $list_ctrl->InsertColumn(0, q{});
         $list_ctrl->InsertColumn(1, 'Name');
         $list_ctrl->InsertColumn(2, 'Quantity');
         $list_ctrl->SetColumnWidth(0,75);
@@ -302,7 +302,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane {
 
         ### Add glyphs to the listctrl
         my $row = 0;
-        foreach my $hr( @$sorted_glyphs ) {#{{{
+        foreach my $hr( @{$sorted_glyphs} ) {#{{{
             ### $row is also the offset of the image in the ImageList, provided 
             ### @sorted_glyphs is a sorted list of all glyphs.
             my $row_idx = $list_ctrl->InsertImageItem($row, $row);
@@ -319,8 +319,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane {
     }#}}}
     sub _build_list_sizer {#{{{
         my $self = shift;
-        my $sizer = $self->build_sizer($self->parent, wxVERTICAL, 'Glyphs List');
-        return $sizer;
+        return $self->build_sizer($self->parent, wxVERTICAL, 'Glyphs List');
     }#}}}
     sub _build_planet_id {#{{{
         my $self = shift;
@@ -342,7 +341,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane {
             return $rec;
         }
 
-        return undef;
+        return 0;
     }#}}}
     sub _build_recipe_box {#{{{
         my $self = shift;
@@ -353,8 +352,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane {
             wxDefaultPosition, 
             wxDefaultSize, 
         );
-        my $sizer = Wx::StaticBoxSizer->new($box, wxVERTICAL);
-        return $sizer;
+        return Wx::StaticBoxSizer->new($box, wxVERTICAL);
     }#}}}
     sub _build_txt_pusher_ship {#{{{
         my $self = shift;
@@ -442,13 +440,12 @@ The problem here is:
 
 =cut
 
-        my $v = LacunaWaX::Dialog::Status->new( 
+        return LacunaWaX::Dialog::Status->new( 
             app         => $self->app,
             ancestor    => $self,
             title       => 'Building all halls',
             recsep      => '-=-=-=-=-=-=-',
         );
-        return $v;
     }#}}}
     sub _set_events {#{{{
         my $self = shift;
@@ -460,6 +457,7 @@ The problem here is:
         EVT_BUTTON(         $self->parent, $self->btn_auto_search->GetId,       sub{$self->OnSetAutoSearch(@_)} );
         EVT_BUTTON(         $self->parent, $self->btn_build_all_halls->GetId,   sub{$self->OnBuildAllHalls(@_)} );
         EVT_ENTER_WINDOW(   $self->list_glyphs,                                 sub{$self->OnMouseEnterGlyphsList(@_)}    );
+        return 1;
     }#}}}
 
     before 'clear_dialog_status' => sub {#{{{
@@ -470,6 +468,7 @@ The problem here is:
         if($self->has_dialog_status) {
             $self->dialog_status->close;
         }
+        return 1;
     };#}}}
 
     sub prep_halls_btn_sizer {#{{{
@@ -485,19 +484,21 @@ The problem here is:
         $self->halls_btn_sizer->AddStretchSpacer;
         $self->halls_btn_sizer->Add($self->btn_build_all_halls, 0, 0, 0);
         $self->halls_btn_sizer->AddStretchSpacer;
+        return 1;
     }#}}}
 
     ### Pseudo events
     sub OnClose {#{{{
         my $self = shift;
-        #$self->dialog_status->close if $self->has_dialog_status;
         $self->clear_dialog_status;
+        return 1;
     }#}}}
     sub OnDialogStatusClose {#{{{
         my $self = shift;
         if($self->has_dialog_status) {
             $self->clear_dialog_status;
         }
+        return 1;
     }#}}}
 
     sub OnListSelect {#{{{
@@ -507,6 +508,7 @@ The problem here is:
 
         my $item_idx  = $self->list_glyphs->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
         my $glyph_idx = $self->list_glyphs->GetItemData($item_idx);
+        return 1;
     }#}}}
     sub OnSetGlyphPush {#{{{
         my $self    = shift;
@@ -528,7 +530,7 @@ The problem here is:
         else {
             $self->app->popmsg("Your glyphs will be pushed to $glyph_home_str onboard $pusher_ship_name.");
         }
-
+        return 1;
     }#}}}
     sub OnSetAutoSearch {#{{{
         my $self    = shift;
@@ -548,11 +550,14 @@ The problem here is:
         else {
             $self->app->popmsg("Your Arch Min will not search for glyphs.");
         }
+        return 1;
     }#}}}
     sub OnBuildAllHalls {#{{{
         my $self    = shift;
         my $parent  = shift;    # Wx::ScrolledWindow
         my $event   = shift;    # Wx::CommandEvent
+
+        my $gc = $self->app->game_client;
 
         unless($self->has_dialog_status) {
             $self->dialog_status( $self->_make_dialog_status );
@@ -560,7 +565,7 @@ The problem here is:
         $self->dialog_status->show;
         my $total_built = 0;
         RECIPE:
-        foreach my $rname( sort keys %{$self->app->game_client->glyph_recipes} ) {
+        foreach my $rname( sort keys %{$gc->glyph_recipes} ) {
             $self->app->Yield;
             ### If the user closes the status dialog, calling ->say on it will 
             ### segfault.  So we're checking for its existence, and stopping 
@@ -578,9 +583,9 @@ The problem here is:
                     last RECIPE;
                 }
 
-                my $ingredients = $self->app->game_client->glyph_recipes->{$rname};
+                my $ingredients = $gc->glyph_recipes->{$rname};
                 my $rv = try {
-                    $self->app->game_client->cook_glyphs($self->planet_id, $ingredients);   # no quantity sent; make the max.
+                    $gc->cook_glyphs($self->planet_id, $ingredients);   # no quantity sent; make the max.
                 }
                 catch {
                     my $msg = (ref $_) ? $_->text : $_;
@@ -607,6 +612,7 @@ The problem here is:
             $self->dialog_status->erase;
         }
         $self->app->popmsg("Created $total_built Halls of Vrbansk $plan_plural.", 'Success!');
+        return 1;
     }#}}}
     sub OnMouseEnterGlyphsList {#{{{
         my $self    = shift;
@@ -617,6 +623,7 @@ The problem here is:
         ### activate the list, not the screen.
         $self->list_glyphs->SetFocus;
         $self->ancestor->has_focus(0);
+        return 1;
     }#}}}
 
     no Moose;

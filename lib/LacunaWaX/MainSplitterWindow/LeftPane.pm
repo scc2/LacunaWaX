@@ -37,9 +37,9 @@ package LacunaWaX::MainSplitterWindow::LeftPane {
         $self->main_sizer->Add($self->bodies_tree->treectrl, 1, wxEXPAND, 0);
         $self->main_panel->SetSizer($self->main_sizer);
         $self->main_sizer->SetMinSize(200, 1);
+        return $self;
     }
     sub _set_events { }
-
 
     no Moose;
     __PACKAGE__->meta->make_immutable; 

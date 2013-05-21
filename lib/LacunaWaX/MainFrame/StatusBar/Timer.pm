@@ -1,7 +1,8 @@
 
 =pod
 
-This is being use'd by StatusBar.pm, but it doesn't actually do anything.
+CHECK
+This is not being used by anything, and needs to go away.
 
 =cut
 

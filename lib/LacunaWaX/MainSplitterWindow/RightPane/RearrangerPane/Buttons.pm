@@ -1,6 +1,7 @@
 
 package LacunaWaX::MainSplitterWindow::RightPane::RearrangerPane::Buttons {
     use v5.14;
+    use Carp;
     use Moose;
     use Try::Tiny;
 
@@ -15,6 +16,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::RearrangerPane::Buttons {
         my $self = shift;
         my $butt = shift;
         $self->buttons->{$butt->GetId} = $butt;
+        return 1;
     }#}}}
     sub all {#{{{
         my $self = shift;
@@ -22,7 +24,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::RearrangerPane::Buttons {
     }#}}}
     sub by_id {#{{{
         my $self = shift;
-        my $id   = shift // die "ID is required";
+        my $id   = shift // croak "ID is required";
         return $self->buttons->{$id} // {};
     }#}}}
 

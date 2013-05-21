@@ -87,6 +87,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane {
         $self->content_sizer->Add($self->szr_close_status, 0, 0, 0);
         $self->content_sizer->AddSpacer(20);
         $self->content_sizer->Add($self->szr_props, 0, 0, 0);
+        return $self;
     }
     sub _build_parl {#{{{
         my $self = shift;
@@ -152,19 +153,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane {
     }#}}}
     sub _build_lbl_instructions_box {#{{{
         my $self = shift;
-
-        ### Debugging
-        #my $box = Wx::StaticBox->new(
-        #    $self->parent, -1, 
-        #    'Instructions', 
-        #    wxDefaultPosition, 
-        #    wxDefaultSize, 
-        #);
-        #my $sizer = Wx::StaticBoxSizer->new($box, wxHORIZONTAL);
-
-        ### Production
         my $sizer = Wx::BoxSizer->new(wxHORIZONTAL);
-
         $sizer->Add($self->lbl_instructions, 0, 0, 0);
         return $sizer;
     }#}}}
@@ -195,13 +184,11 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane {
     }#}}}
     sub _build_szr_header {#{{{
         my $self = shift;
-        my $v = $self->build_sizer($self->parent, wxVERTICAL, 'Header');
-        return $v;
+        return $self->build_sizer($self->parent, wxVERTICAL, 'Header');
     }#}}}
     sub _build_szr_close_status {#{{{
         my $self = shift;
-        my $v = $self->build_sizer($self->parent, wxHORIZONTAL, 'Close Status Window?', 0);
-        return $v;
+        return $self->build_sizer($self->parent, wxHORIZONTAL, 'Close Status Window?', 0);
     }#}}}
     sub _set_events { }
 
@@ -245,6 +232,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane {
         ### Yeah, we could just test if $v is undef.  Calling the auto-generated 
         ### has_parl() is just more Moosey.
         return unless $self->has_parl;
+        return 1;
     };#}}}
 
     sub OnClose {#{{{
@@ -253,6 +241,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane {
         foreach my $row( @{$self->rows} ) {
             $row->OnClose if $row->can('OnClose');
         }
+        return 1;
     }#}}}
 
     no Moose;

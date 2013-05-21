@@ -46,6 +46,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::BatchRenameForm {
         $self->szr_center_button->Add($self->btn_rename, 0, 0, 0);
 
         $self->szr_main->Add($self->szr_center_button, 0, 0, 0);
+        return $self;
     }
     sub _build_btn_rename {#{{{
         my $self = shift;
@@ -70,9 +71,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::BatchRenameForm {
     }#}}}
     sub _build_fix_labels {#{{{
         my $self = shift;
-        
-        my $v = ['Prefix', 'Suffix', 'None'];
-        return $v;
+        return ['Prefix', 'Suffix', 'None'];
     }#}}}
     sub _build_rdo_fix {#{{{
         my $self = shift;
@@ -91,21 +90,15 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::BatchRenameForm {
     }#}}}
     sub _build_szr_center_button {#{{{
         my $self = shift;
-
-        my $v = $self->build_sizer($self->parent, wxHORIZONTAL, 'Center Button');
-        return $v;
+        return $self->build_sizer($self->parent, wxHORIZONTAL, 'Center Button');
     }#}}}
     sub _build_szr_center_name {#{{{
         my $self = shift;
-
-        my $v = $self->build_sizer($self->parent, wxHORIZONTAL, 'Center Name');
-        return $v;
+        return $self->build_sizer($self->parent, wxHORIZONTAL, 'Center Name');
     }#}}}
     sub _build_szr_main {#{{{
         my $self = shift;
-
-        my $v = $self->build_sizer($self->parent, wxVERTICAL, 'Batch Rename', 1, undef, Wx::Size->new(200, 150));
-        return $v;
+        return $self->build_sizer($self->parent, wxVERTICAL, 'Batch Rename', 1, undef, Wx::Size->new(200, 150));
     }#}}}
     sub _build_txt_name {#{{{
         my $self = shift;
@@ -122,6 +115,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::BatchRenameForm {
     sub _set_events {#{{{
         my $self = shift;
         EVT_BUTTON( $self->parent,  $self->btn_rename->GetId,    sub{$self->OnRenameButtonClick(@_)} );
+        return 1;
     }#}}}
 
     ### Wrappers around dialog_status's methods to first check for existence of 
@@ -132,18 +126,21 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::BatchRenameForm {
         if( $self->has_dialog_status ) {
             try{ $self->dialog_status->say($msg) };
         }
+        return 1;
     }#}}}
     sub dialog_status_say_recsep {#{{{
         my $self = shift;
         if( $self->has_dialog_status ) {
             try{ $self->dialog_status->say_recsep };
         }
+        return 1;
     }#}}}
 
     ### Pseudo events
     sub OnClose {#{{{
         my $self = shift;
         $self->dialog_status->close if $self->has_dialog_status;
+        return 1;
     }#}}}
     sub OnDialogStatusClose {#{{{
         my $self = shift;
@@ -151,6 +148,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::BatchRenameForm {
             $self->clear_dialog_status;
         }
         $self->stop_renaming(1);
+        return 1;
     }#}}}
 
     ### Real events
@@ -256,7 +254,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::BatchRenameForm {
             ### cache so the new names show up on the next screen load.
             if( $self->app->wxbb ) {
                 my $chi  = $self->app->wxbb->resolve( service => '/Cache/raw_memory' );
-                my $key  = join ':', ('BODIES', 'SPIES', $self->ancestor->planet_id);
+                my $key  = join q{:}, ('BODIES', 'SPIES', $self->ancestor->planet_id);
                 $chi->remove($key);
             }
         }
@@ -266,6 +264,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::BatchRenameForm {
         $self->dialog_status_say("Renamed $renamed spies.");
         $self->dialog_status_say("You may now close this window.");
 
+        return 1;
     }#}}}
 
     no Moose;

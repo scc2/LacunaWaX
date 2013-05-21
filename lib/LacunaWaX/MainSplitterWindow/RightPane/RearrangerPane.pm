@@ -56,6 +56,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::RearrangerPane {
         $self->content_sizer->Add($self->gridszr_buttons, 0, 0, 0);
         $self->content_sizer->Add($self->szr_bottom_buttons, 0, 0, 0);
         $self->refocus_window_name( 'lbl_planet_name' );
+        return $self;
     }
     sub _build_blank_image {#{{{
         my $self = shift;
@@ -95,8 +96,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::RearrangerPane {
     }#}}}
     sub _build_gridszr_buttons {#{{{
         my $self = shift;
-        my $v = Wx::GridSizer->new(11, 11, 1, 1);
-        return $v;
+        return Wx::GridSizer->new(11, 11, 1, 1);
     }#}}}
     sub _build_lbl_planet_name {#{{{
         my $self = shift;
@@ -116,22 +116,21 @@ package LacunaWaX::MainSplitterWindow::RightPane::RearrangerPane {
     sub _build_saved_bldg {#{{{
         my $self = shift;
 
-        my $bldg = LacunaWaX::MainSplitterWindow::RightPane::RearrangerPane::SavedBuilding->new(
+        return LacunaWaX::MainSplitterWindow::RightPane::RearrangerPane::SavedBuilding->new(
             name   => 'Empty',
             bitmap => $self->blank_image
         );
-        return $bldg;
     }#}}}
     sub _build_szr_bottom_buttons {#{{{
         my $self = shift;
-        my $v = $self->build_sizer($self->parent, wxHORIZONTAL, 'Bottom Buttons');
-        return $v;
+        return $self->build_sizer($self->parent, wxHORIZONTAL, 'Bottom Buttons');
     }#}}}
     sub _set_events {#{{{
         my $self = shift;
         ### Events for individual plot buttons are set in set_surface_buttons
         EVT_BUTTON(         $self->parent,  $self->btn_rearrange->GetId,    sub{$self->OnRearrangeButtonClick(@_)}  );
         EVT_BUTTON(         $self->parent,  $self->btn_reload->GetId,       sub{$self->OnReloadButtonClick(@_)}     );
+        return 1;
     }#}}}
 
     sub OnPlotButtonClick {#{{{
@@ -147,6 +146,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::RearrangerPane {
 
         return if $bitmap_button->x == 0 and $bitmap_button->y == 0;    # PCC; can't be moved.
         $self->swap($bitmap_button);
+        return 1;
     }#}}}
     sub OnRearrangeButtonClick {#{{{
         my $self    = shift;
@@ -165,7 +165,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::RearrangerPane {
                 };
                 $b->orig_x( $b->x );
                 $b->orig_y( $b->y );
-                push @$layout, $loc;
+                push @{$layout}, $loc;
             }
         }
 
@@ -194,6 +194,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::RearrangerPane {
         }
 
         $event->Skip();
+        return 1;
     }#}}}
     sub OnReloadButtonClick {#{{{
         my $self    = shift;
@@ -205,14 +206,16 @@ package LacunaWaX::MainSplitterWindow::RightPane::RearrangerPane {
         $self->ancestor->show_right_pane(
             'LacunaWaX::MainSplitterWindow::RightPane::RearrangerPane', $self->planet_name
         );
+        return 1;
     }#}}}
 
     sub inc_gauge {#{{{
         my $self = shift;
         my $inc  = shift || 1;
         $self->gauge_value($self->gauge_value + $inc); 
-        $self->app->main_frame->status_bar->gauge->SetValue($self->gauge_value);
-        $self->app->main_frame->status_bar->gauge->Update();
+        my $sb = $self->app->main_frame->status_bar;
+        $sb->gauge->SetValue($self->gauge_value);
+        $sb->gauge->Update();
         return $self->gauge_value;
     }#}}}
     sub swap {#{{{
@@ -255,12 +258,14 @@ building, then makes the one the user just clicked out currently-saved.
 
         $button->SetBitmapLabel( $button->bitmap );
         $button->update_button_tooltip;
+        return 1;
     }#}}}
     sub reset_gauge {#{{{
         my $self = shift;
-        $self->app->main_frame->status_bar->gauge->SetRange(121);
+        my $sb = $self->app->main_frame->status_bar;
+        $sb->gauge->SetRange(121);
         $self->gauge_value(0); 
-        $self->app->main_frame->status_bar->gauge->SetValue($self->gauge_value);
+        $sb->gauge->SetValue($self->gauge_value);
         return $self->gauge_value;
     }#}}}
     sub set_surface_buttons {#{{{
@@ -310,6 +315,7 @@ building, then makes the one the user just clicked out currently-saved.
             }
         }
         $self->reset_gauge;
+        return 1;
     }#}}}
 
     no Moose;

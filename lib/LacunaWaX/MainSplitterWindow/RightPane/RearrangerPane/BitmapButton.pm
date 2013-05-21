@@ -23,7 +23,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::RearrangerPane::BitmapButton {
     has 'x'             => (is => 'rw', isa => 'Maybe[Int]' );
     has 'y'             => (is => 'rw', isa => 'Maybe[Int]' );
 
-    sub FOREIGNBUILDARGS {#{{{
+    sub FOREIGNBUILDARGS {## no critic qw(RequireArgUnpacking) {{{
         my $self = shift;
         my %args = @_;
         return ( $args{'parent'}, -1, $args{'bitmap'} );
@@ -34,6 +34,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::RearrangerPane::BitmapButton {
         return $self;
     };
     sub _set_events { }
+
     sub level_for_label {#{{{
         my $self = shift;
         return sprintf "%02d", $self->level;
@@ -53,6 +54,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::RearrangerPane::BitmapButton {
     sub update_button_tooltip {#{{{
         my $self = shift;
         $self->SetToolTip( $self->tooltip_contents );
+        return 1;
     }#}}}
 
     no Moose;

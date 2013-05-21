@@ -52,7 +52,6 @@ package LacunaWaX::MainFrame {
     has 'intro_panel_sizer' => (is => 'rw', isa => 'Wx::Sizer', lazy_build => 1 );
     has 'splitter_sizer'    => (is => 'rw', isa => 'Wx::Sizer', lazy_build => 1 );
 
-
     sub BUILD {
         my($self, @params) = @_;
 

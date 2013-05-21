@@ -74,8 +74,7 @@ package LacunaWaX::MainFrame::IntroPanel {
     }#}}}
     sub _build_bottom_panel_sizer {#{{{
         my $self = shift;
-        my $y = Wx::BoxSizer->new(wxVERTICAL);
-        return $y;
+        return Wx::BoxSizer->new(wxVERTICAL);
     }#}}}
     sub _build_buttons {#{{{
         return {};
@@ -87,21 +86,20 @@ package LacunaWaX::MainFrame::IntroPanel {
         ### rescaled.
         my $img  = $self->app->wxbb->resolve(service => '/Assets/images/app/logo-280x70.png');
         my $bmp  = Wx::Bitmap->new($img);
-        my $logo = Wx::StaticBitmap->new(
+        return Wx::StaticBitmap->new(
             $self->top_panel, -1, 
             $bmp,
             wxDefaultPosition,
             Wx::Size->new(-1, 150),
             wxFULL_REPAINT_ON_RESIZE
         );
-        return $logo;
     }#}}}
     sub _build_main_sizer {#{{{
-        Wx::BoxSizer->new(wxVERTICAL);
+        return Wx::BoxSizer->new(wxVERTICAL);
     }#}}}
     sub _build_main_panel {#{{{
         my $self = shift;
-        Wx::Panel->new(
+        return Wx::Panel->new(
             $self->parent, -1, 
             wxDefaultPosition, wxDefaultSize,
             0,
@@ -124,21 +122,19 @@ package LacunaWaX::MainFrame::IntroPanel {
     }#}}}
     sub _build_top_panel_center_sizer {#{{{
         my $self = shift;
-        my $y = Wx::BoxSizer->new(wxHORIZONTAL);
-        return $y;
+        return Wx::BoxSizer->new(wxHORIZONTAL);
     }#}}}
     sub _build_top_panel_sizer {#{{{
         my $self = shift;
-        my $y = Wx::BoxSizer->new(wxHORIZONTAL);
-        return $y;
+        return Wx::BoxSizer->new(wxHORIZONTAL);
     }#}}}
     sub _set_events {#{{{
         my $self = shift;
-
         foreach my $srvr_id(keys %{$self->buttons}) {
             my $btn = $self->buttons->{$srvr_id};
             EVT_BUTTON( $self->main_panel,  $btn->GetId,   sub{$self->app->main_frame->OnGameServerConnect($srvr_id, @_)} );
         }
+        return 1;
     }#}}}
 
     sub add_connect_buttons {#{{{
@@ -167,19 +163,23 @@ package LacunaWaX::MainFrame::IntroPanel {
             else { $b->Disable; }
             $self->buttons->{$srvr_id} = $b;
         }
+        return 1;
     }#}}}
     sub hide {#{{{
         my $self = shift;
         $self->main_panel->Show(0);
+        return 1;
     }#}}}
     sub remove {#{{{
         my $self = shift;
         $self->is_on(0);
         my $rv = $self->main_panel->Destroy();
+        return 1;
     }#}}}
     sub show {#{{{
         my $self = shift;
         $self->main_panel->Show(1);
+        return 1;
     }#}}}
 
     no Moose;

@@ -35,7 +35,7 @@ package LacunaWaX::Dialog::Test {
     has 'szr_instructions'  => (is => 'rw', isa => 'Wx::Sizer',         lazy_build => 1, documentation => q{vertical});
     has 'szr_main'          => (is => 'rw', isa => 'Wx::Sizer',         lazy_build => 1, documentation => q{vertical});
 
-    sub FOREIGNBUILDARGS {#{{{
+    sub FOREIGNBUILDARGS {## no critic qw(RequireArgUnpacking) {{{
         my $self = shift;
         my %args = @_;
 
@@ -116,6 +116,7 @@ package LacunaWaX::Dialog::Test {
     sub _set_events {#{{{
         my $self = shift;
         EVT_CLOSE(  $self,  sub{$self->OnClose(@_)}     );
+        return 1;
     }#}}}
 
     sub load_html_file {#{{{
@@ -130,6 +131,7 @@ package LacunaWaX::Dialog::Test {
         }
 
         $self->htm_window->LoadFile( $self->fs_html->GetPath() . $file );
+        return 1;
     }#}}}
 
     sub OnClose {#{{{
@@ -138,6 +140,7 @@ package LacunaWaX::Dialog::Test {
         my $event   = shift;
         $self->Destroy;
         $event->Skip();
+        return 1;
     }#}}}
 
     no Moose;

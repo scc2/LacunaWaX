@@ -6,8 +6,6 @@ package LacunaWaX::MainFrame::MenuBar::File::Connect {
     use Wx::Event qw(EVT_MENU);
     with 'LacunaWaX::Roles::GuiElement';
 
-    ### Wx::Menu is a non-hash object.  Extending such requires 
-    ### MooseX::NonMoose::InsideOut instead of plain MooseX::NonMoose.
     use MooseX::NonMoose::InsideOut;
     extends 'Wx::Menu';
 
@@ -54,6 +52,7 @@ package LacunaWaX::MainFrame::MenuBar::File::Connect {
             my $menu_item = $self->connections->{$server_id};
             EVT_MENU( $self->parent, $menu_item->GetId, sub{$self->app->main_frame->OnGameServerConnect($server_id)} );
         }
+        return 1;
     }#}}}
 
     no Moose;

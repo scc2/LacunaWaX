@@ -127,6 +127,7 @@ package LacunaWaX::Dialog::SitterManager {
         EVT_CLOSE(  $self,                                  sub{$self->OnClose(@_)}     );
         EVT_SIZE(   $self->swindow,                                  sub{$self->OnResize(@_)}    );
         EVT_BUTTON( $self->swindow, $self->btn_add_sitter->GetId,    sub{$self->OnAddSitter(@_)} );
+        return 1;
     }#}}}
 
     sub fill_sitters_sizer {#{{{
@@ -181,6 +182,7 @@ package LacunaWaX::Dialog::SitterManager {
 
         $self->sitters_sizer->AddSpacer(5);
         $self->sitters_sizer->Add($self->add_sitter_button_sizer, 0, 0, 0);
+        return 1;
     }#}}}
 
     sub OnAddSitter {#{{{
@@ -226,6 +228,7 @@ package LacunaWaX::Dialog::SitterManager {
         ### Calling SetFocus on that txt_name control isn't just convenient (and 
         ### it is), it also removes that artifact.
 
+        return 1;
     }#}}}
     sub OnClose {#{{{
         my $self    = shift;
@@ -233,11 +236,13 @@ package LacunaWaX::Dialog::SitterManager {
         my $event   = shift;    # Wx::CommandEvent
         $dialog->Destroy;
         $event->Skip();
+        return 1;
     }#}}}
     sub OnResize {#{{{
         my $self    = shift;
         my $dialog  = shift;    # Wx::ScrolledWindow
         my $event   = shift;    # Wx::SizeEvent
+        return 1;
     }#}}}
 
     no Moose;

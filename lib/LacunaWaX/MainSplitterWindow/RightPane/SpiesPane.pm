@@ -115,7 +115,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane {
         $self->content_sizer->AddSpacer(5);
 
         ### Actual spy list
-        foreach my $hr( @$spies ) {
+        foreach my $hr( @{$spies} ) {
             $self->app->Yield;
             my $spy = LacunaWaX::Model::Client::Spy->new(hr => $hr);
             my $row = LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::SpyRow->new(
@@ -189,7 +189,6 @@ see what you're doing.
 
 =cut # }#}}}
 
-
         $self->szr_batch_center->AddSpacer(50);
         $self->szr_batch_center->Add($self->batch_form->szr_main, 0, 0, 0); # probably needs to be in another horiz sizer with a spacer first
 
@@ -205,15 +204,16 @@ see what you're doing.
         $self->content_sizer->Add($self->szr_bottom_center, 0, 0, 0);
 
         $self->lbl_header->SetFocus();  # make sure we're scrolled to the top
+
+        return $self;
     }
     sub _build_batch_form {#{{{
         my $self = shift;
-        my $v = LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::BatchRenameForm->new(
+        return LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::BatchRenameForm->new(
             app         => $self->app,
             ancestor    => $self,
             parent      => $self->parent,
         );
-        return $v;
     }#}}}
     sub _build_btn_clear {#{{{
         my $self = shift;
@@ -401,19 +401,7 @@ see what you're doing.
     }#}}}
     sub _build_lbl_instructions_box {#{{{
         my $self = shift;
-
-        ### Debugging
-        #my $box = Wx::StaticBox->new(
-        #    $self->parent, -1, 
-        #    'Instructions', 
-        #    wxDefaultPosition, 
-        #    wxDefaultSize, 
-        #);
-        #my $sizer = Wx::StaticBoxSizer->new($box, wxHORIZONTAL);
-
-        ### Production
         my $y = Wx::BoxSizer->new(wxHORIZONTAL);
-
         $y->Add($self->lbl_instructions, 0, 0, 0);
         return $y;
     }#}}}
@@ -423,38 +411,31 @@ see what you're doing.
     }#}}}
     sub _build_szr_batch {#{{{
         my $self = shift;
-        my $v = $self->build_sizer($self->parent, wxHORIZONTAL, 'Batch Spy Rename');
-        return $v;
+        return $self->build_sizer($self->parent, wxHORIZONTAL, 'Batch Spy Rename');
     }#}}}
     sub _build_szr_batch_center {#{{{
         my $self = shift;
-        my $v = $self->build_sizer($self->parent, wxHORIZONTAL, 'Batch Centering');
-        return $v;
+        return $self->build_sizer($self->parent, wxHORIZONTAL, 'Batch Centering');
     }#}}}
     sub _build_szr_bottom_center {#{{{
         my $self = shift;
-        my $v = $self->build_sizer($self->parent, wxHORIZONTAL, 'Bottom Centering');
-        return $v;
+        return $self->build_sizer($self->parent, wxHORIZONTAL, 'Bottom Centering');
     }#}}}
     sub _build_szr_bottom_right {#{{{
         my $self = shift;
-        my $v = $self->build_sizer($self->parent, wxVERTICAL, 'Bottom Right');
-        return $v;
+        return $self->build_sizer($self->parent, wxVERTICAL, 'Bottom Right');
     }#}}}
     sub _build_szr_buttons {#{{{
         my $self = shift;
-        my $v = $self->build_sizer($self->parent, wxHORIZONTAL, 'Bottom Buttons');
-        return $v;
+        return $self->build_sizer($self->parent, wxHORIZONTAL, 'Bottom Buttons');
     }#}}}
     sub _build_szr_header {#{{{
         my $self = shift;
-        my $v = $self->build_sizer($self->parent, wxVERTICAL, 'Header');
-        return $v;
+        return $self->build_sizer($self->parent, wxVERTICAL, 'Header');
     }#}}}
     sub _build_szr_train {#{{{
         my $self = shift;
-        my $v = $self->build_sizer($self->parent, wxHORIZONTAL, 'Training');
-        return $v;
+        return $self->build_sizer($self->parent, wxHORIZONTAL, 'Training');
     }#}}}
 
     sub _set_events {#{{{
@@ -478,6 +459,7 @@ see what you're doing.
             sub{$self->OnStaticTextClick(@_)},
         );
 
+        return 1;
     }#}}}
 
     ### Wrappers around dialog_status's methods to first check for existence of 
@@ -488,12 +470,14 @@ see what you're doing.
         if( $self->has_dialog_status ) {
             try{ $self->dialog_status->say($msg) };
         }
+        return 1;
     }#}}}
     sub dialog_status_say_recsep {#{{{
         my $self = shift;
         if( $self->has_dialog_status ) {
             try{ $self->dialog_status->say_recsep };
         }
+        return 1;
     }#}}}
 
     sub OnAllTrainChoice {#{{{
@@ -520,6 +504,7 @@ see what you're doing.
                 }
             }
         }
+        return 1;
     }#}}}
     sub OnClearButton {#{{{
         my $self    = shift;
@@ -535,7 +520,7 @@ see what you're doing.
             $row->chc_train->SetSelection( $selection );
         }
         $self->app->endthrob();
-
+        return 1;
     }#}}}
     sub OnRenameButton {#{{{
         my $self    = shift;
@@ -549,7 +534,7 @@ see what you're doing.
         my $cnt = 0;
         SPY_ROW:
         foreach my $row( @{$self->spy_table} ) {
-            next SPY_ROW unless( $row->new_name and $row->new_name ne $row->spy->name );
+            next SPY_ROW if( $row->new_name and $row->new_name eq $row->spy->name );
 
             if( $self->stop_renaming ) {
                 ### User closed the status dialog box, so get out.
@@ -582,7 +567,7 @@ see what you're doing.
             ### cache so the new names show up on the next screen load.
             if( $self->app->wxbb ) {
                 my $chi  = $self->app->wxbb->resolve( service => '/Cache/raw_memory' );
-                my $key  = join ':', ('BODIES', 'SPIES', $self->planet_id);
+                my $key  = join q{:}, ('BODIES', 'SPIES', $self->planet_id);
                 $chi->remove($key);
             }
         }
@@ -591,7 +576,7 @@ see what you're doing.
             "$cnt spies have been renamed.",
             "Success!"
         );
-
+        return 1;
     }#}}}
     sub OnSaveButton {#{{{
         my $self    = shift;
@@ -617,7 +602,7 @@ see what you're doing.
             "Your spy training preferences have been saved.",
             "Success!"
         );
-
+        return 1;
     }#}}}
     sub OnStaticTextClick {#{{{
         my $self   = shift;
@@ -625,6 +610,7 @@ see what you're doing.
         my $event  = shift;    # Wx::MouseEvent
 
         $lbl->SetFocus();
+        return 1;
     }#}}}
     sub OnDialogStatusClose {#{{{
         my $self    = shift;
@@ -634,6 +620,7 @@ see what you're doing.
         ### Dialog::Status's OnClose event.
         $self->clear_dialog_status;
         $self->stop_renaming(1);
+        return 1;
     }#}}}
 
     sub int_min_exists_here {#{{{
@@ -645,6 +632,7 @@ see what you're doing.
         ### Yeah, we could just test if $v is undef.  Calling the 
         ### auto-generated has_int_min() is just more Moosey.
         return unless $self->has_int_min;
+        return 1;
     };#}}}
 
     no Moose;

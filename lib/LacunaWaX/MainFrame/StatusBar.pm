@@ -50,6 +50,7 @@ package LacunaWaX::MainFrame::StatusBar {
     sub _set_events {#{{{
         my $self = shift;
         EVT_SIZE(   $self->status_bar,                  sub{$self->OnResize(@_)}    );
+        return 1;
     }#}}}
 
     sub bar_reset {#{{{
@@ -78,14 +79,15 @@ package LacunaWaX::MainFrame::StatusBar {
         my($self, $status_bar, $event) = @_;
 
         if( $self->app->has_main_frame ) {
-            my $current_size = $self->app->main_frame->frame->GetSize;
+            my $mf = $self->app->main_frame;
+            my $current_size = $mf->frame->GetSize;
             if( $current_size->width != $self->old_w or $current_size->height != $self->old_h ) {
                 $self->bar_reset;    # otherwise the throbber gauge gets all screwy
                 $self->old_w( $current_size->width );
                 $self->old_h( $current_size->height );
             } 
         }
-
+        return 1;
     }#}}}
 
     no Moose;

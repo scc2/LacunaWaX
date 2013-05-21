@@ -1,6 +1,7 @@
 
 package LacunaWaX::MainSplitterWindow::RightPane::RearrangerPane::Buildings {
     use v5.14;
+    use Carp;
     use Moose;
     use Try::Tiny;
 
@@ -16,19 +17,18 @@ package LacunaWaX::MainSplitterWindow::RightPane::RearrangerPane::Buildings {
         my $bldgs = shift;
 
         my $b_hr = {};
-        foreach my $bid( keys %$bldgs ) {
+        foreach my $bid( keys %{$bldgs} ) {
             my $hr                                  = $bldgs->{$bid};
             $hr->{bldg_id}                          = $bid;
             $self->buildings->{$hr->{x}}{$hr->{y}}  = $hr;
         }
-        
         return $self;
     }
 
     sub by_loc {#{{{
         my $self = shift;
-        my $x    = shift // die "x and y coords are required";
-        my $y    = shift // die "x and y coords are required";
+        my $x    = shift // croak "x and y coords are required";
+        my $y    = shift // croak "x and y coords are required";
         return $self->buildings->{$x}{$y} // {};
     }#}}}
 

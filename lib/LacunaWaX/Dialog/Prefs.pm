@@ -33,6 +33,7 @@ package LacunaWaX::Dialog::Prefs {
     
         $self->SetTitle( $self->title );
         $self->SetSize( $self->size );
+        $self->make_non_resizable;
 
         $self->notebook->AddPage($self->tab_server->pnl_main, "Server");
         $self->notebook->AddPage($self->tab_autovote->pnl_main, "AutoVote") if $self->tab_autovote;
@@ -94,6 +95,7 @@ package LacunaWaX::Dialog::Prefs {
     sub _set_events {#{{{
         my $self = shift;
         EVT_CLOSE($self, sub{$self->OnClose(@_)});
+        return 1;
     }#}}}
 
     sub OnSavePrefs {#{{{
@@ -148,27 +150,31 @@ package LacunaWaX::Dialog::Prefs {
 
         ### Enable/Disable connection widgets.
         ### Menu item, two Connect buttons (on the Intro page).
-        my $srvr_menu_id = $self->app->main_frame->menu_bar->menu_file->itm_connect->connections->{ $server_account->server_id }->GetId;
+        my $main_frame = $self->app->main_frame;
+        my $menu_file  = $main_frame->menu_bar->menu_file;
+        my $srvr_menu_id = $menu_file->itm_connect->connections->{ $server_account->server_id }->GetId;
         if( $username_str and $password_str ) {
-            if( $self->app->main_frame->has_intro_panel ) {
-                $self->app->main_frame->intro_panel->buttons->{ $server_account->server->id }->Enable(1);
+            if( $main_frame->has_intro_panel ) {
+                $main_frame->intro_panel->buttons->{ $server_account->server->id }->Enable(1);
             }
-            $self->app->main_frame->menu_bar->menu_file->itm_connect->Enable($srvr_menu_id, 1);
+            $menu_file->itm_connect->Enable($srvr_menu_id, 1);
         }
         else {
-            if( $self->app->main_frame->has_intro_panel ) {
-                $self->app->main_frame->intro_panel->buttons->{ $server_account->server->id }->Disable();
+            if( $main_frame->has_intro_panel ) {
+                $main_frame->intro_panel->buttons->{ $server_account->server->id }->Disable();
             }
-            $self->app->main_frame->menu_bar->menu_file->itm_connect->Enable($srvr_menu_id, 0);
+            $menu_file->itm_connect->Enable($srvr_menu_id, 0);
         }
 
-        Wx::MessageBox(	"Your preferences have been saved.", 'Success!',  wxOK );
+        Wx::MessageBox("Your preferences have been saved.", 'Success!',  wxOK );
         $self->Destroy;
+        return 1;
     }#}}}
     sub OnClose {#{{{
         my($self, $dialog, $event) = @_;
         $self->Destroy;
         $event->Skip();
+        return 1;
     }#}}}
 
     no Moose;

@@ -22,12 +22,11 @@ package LacunaWaX::MainSplitterWindow::RightPane::DefaultPane {
         $self->content_sizer->AddSpacer(20);
         $self->content_sizer->Add($self->lbl_text, 0, 0, 0);
         $self->refocus_window_name( 'lbl_header' );
+        return $self;
     }
     sub _build_header_sizer {#{{{
         my $self = shift;
-        ### Production
-        my $v = $self->build_sizer($self->parent, wxVERTICAL, 'Header');
-        return $v;
+        return $self->build_sizer($self->parent, wxVERTICAL, 'Header');
     }#}}}
     sub _build_lbl_header {#{{{
         my $self = shift;

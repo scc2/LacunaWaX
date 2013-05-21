@@ -166,7 +166,7 @@ package LacunaWaX::Dialog::Mail {
     }#}}}
     sub _build_chk_alert {#{{{
         my $self = shift;
-        my $v = Wx::CheckBox->new(
+        return Wx::CheckBox->new(
             $self, -1, 
             'Alert',
             wxDefaultPosition, 
@@ -178,7 +178,7 @@ package LacunaWaX::Dialog::Mail {
 
         my @allies = map{ $_->{'name'} }@{$self->ally_members};
 
-        my $v = Wx::Choice->new(
+        return Wx::Choice->new(
             $self, -1, 
             wxDefaultPosition, 
             Wx::Size->new(200, $self->addy_height), 
@@ -187,7 +187,7 @@ package LacunaWaX::Dialog::Mail {
     }#}}}
     sub _build_chk_attacks {#{{{
         my $self = shift;
-        my $v = Wx::CheckBox->new(
+        return Wx::CheckBox->new(
             $self, -1, 
             'Attacks',
             wxDefaultPosition, 
@@ -196,7 +196,7 @@ package LacunaWaX::Dialog::Mail {
     }#}}}
     sub _build_chk_corr {#{{{
         my $self = shift;
-        my $v = Wx::CheckBox->new(
+        return Wx::CheckBox->new(
             $self, -1, 
             'Correspondence',
             wxDefaultPosition, 
@@ -205,7 +205,7 @@ package LacunaWaX::Dialog::Mail {
     }#}}}
     sub _build_chk_excav {#{{{
         my $self = shift;
-        my $v = Wx::CheckBox->new(
+        return Wx::CheckBox->new(
             $self, -1, 
             'Excavator',
             wxDefaultPosition, 
@@ -214,7 +214,7 @@ package LacunaWaX::Dialog::Mail {
     }#}}}
     sub _build_chk_parl {#{{{
         my $self = shift;
-        my $v = Wx::CheckBox->new(
+        return Wx::CheckBox->new(
             $self, -1, 
             'Parliament',
             wxDefaultPosition, 
@@ -223,7 +223,7 @@ package LacunaWaX::Dialog::Mail {
     }#}}}
     sub _build_chk_probe {#{{{
         my $self = shift;
-        my $v = Wx::CheckBox->new(
+        return Wx::CheckBox->new(
             $self, -1, 
             'Probe',
             wxDefaultPosition, 
@@ -281,7 +281,7 @@ package LacunaWaX::Dialog::Mail {
         ### any string label, so this is essentially just a shim.
         my $y = Wx::StaticText->new(
             $self, -1, 
-            "",
+            q{},
             wxDefaultPosition, 
             Wx::Size->new(50, $self->addy_height)
         );
@@ -369,53 +369,43 @@ package LacunaWaX::Dialog::Mail {
     }#}}}
     sub _build_szr_ally {#{{{
         my $self = shift;
-        my $v = $self->build_sizer($self, wxHORIZONTAL, 'Allies:');
-        return $v;
+        return $self->build_sizer($self, wxHORIZONTAL, 'Allies:');
     }#}}}
     sub _build_szr_body {#{{{
         my $self = shift;
-        my $v = $self->build_sizer($self, wxHORIZONTAL, 'Body:');
-        return $v;
+        return $self->build_sizer($self, wxHORIZONTAL, 'Body:');
     }#}}}
     sub _build_szr_btn_send {#{{{
         my $self = shift;
-        my $v = $self->build_sizer($self, wxHORIZONTAL, 'Send Button');
-        return $v;
+        return $self->build_sizer($self, wxHORIZONTAL, 'Send Button');
     }#}}}
     sub _build_szr_clear {#{{{
         my $self = shift;
-        my $v = $self->build_sizer($self, wxVERTICAL, 'Clear Sizer');
-        return $v;
+        return $self->build_sizer($self, wxVERTICAL, 'Clear Sizer');
     }#}}}
     sub _build_szr_check {#{{{
         my $self = shift;
-        my $v = $self->build_sizer($self, wxHORIZONTAL, 'Checkbox Sizer');
-        return $v;
+        return $self->build_sizer($self, wxHORIZONTAL, 'Checkbox Sizer');
     }#}}}
     sub _build_szr_header {#{{{
         my $self = shift;
-        my $v = $self->build_sizer($self, wxVERTICAL, 'Header Sizer');
-        return $v;
+        return $self->build_sizer($self, wxVERTICAL, 'Header Sizer');
     }#}}}
     sub _build_szr_instructions {#{{{
         my $self = shift;
-        my $v = $self->build_sizer($self, wxVERTICAL, 'Instructions Sizer');
-        return $v;
+        return $self->build_sizer($self, wxVERTICAL, 'Instructions Sizer');
     }#}}}
     sub _build_szr_send {#{{{
         my $self = shift;
-        my $v = $self->build_sizer($self, wxVERTICAL, 'Send Message Sizer');
-        return $v;
+        return $self->build_sizer($self, wxVERTICAL, 'Send Message Sizer');
     }#}}}
     sub _build_szr_subject {#{{{
         my $self = shift;
-        my $v = $self->build_sizer($self, wxHORIZONTAL, 'Subject:');
-        return $v;
+        return $self->build_sizer($self, wxHORIZONTAL, 'Subject:');
     }#}}}
     sub _build_szr_to {#{{{
         my $self = shift;
-        my $v = $self->build_sizer($self, wxHORIZONTAL, 'To:');
-        return $v;
+        return $self->build_sizer($self, wxHORIZONTAL, 'To:');
     }#}}}
     sub _build_title {#{{{
         my $self = shift;
@@ -426,7 +416,7 @@ package LacunaWaX::Dialog::Mail {
         ### The 300 width wraps the body just a hair before the game's client 
         ### does.  So a 'line' typed in this text box should also be a line in 
         ### the game client.
-        my $v = Wx::TextCtrl->new(
+        return Wx::TextCtrl->new(
             $self, -1, 
             q{},
             wxDefaultPosition, Wx::Size->new(300,300),
@@ -435,7 +425,7 @@ package LacunaWaX::Dialog::Mail {
     }#}}}
     sub _build_txt_subject {#{{{
         my $self = shift;
-        my $v = Wx::TextCtrl->new(
+        return Wx::TextCtrl->new(
             $self, -1, 
             q{},
             wxDefaultPosition, 
@@ -444,7 +434,7 @@ package LacunaWaX::Dialog::Mail {
     }#}}}
     sub _build_txt_to {#{{{
         my $self = shift;
-        my $v = Wx::TextCtrl->new(
+        return Wx::TextCtrl->new(
             $self, -1, 
             q{},
             wxDefaultPosition, 
@@ -460,13 +450,15 @@ package LacunaWaX::Dialog::Mail {
         EVT_CHECKBOX(   $self, $self->chk_corr->GetId,          sub{$self->OnCorrespondenceCheckbox(@_)} );
         EVT_CHOICE(     $self, $self->chc_ally->GetId,          sub{$self->OnAllyChoice(@_)} );
         EVT_CLOSE(      $self,                                  sub{$self->OnClose(@_)});
+        return 1;
     }#}}}
 
     sub clear_mail_form {#{{{
         my $self = shift;
-        $self->txt_to->SetValue('');
-        $self->txt_subject->SetValue('');
-        $self->txt_body->SetValue('');
+        $self->txt_to->SetValue(q{});
+        $self->txt_subject->SetValue(q{});
+        $self->txt_body->SetValue(q{});
+        return 1;
     }#}}}
     sub fix_profanity {#{{{
         my $self = shift;
@@ -504,12 +496,12 @@ This should really only be used for in-alliance mail.  We don't want people to
                     push @good_words, $word;
                 }
 
-                $line = join ' ', @good_words;
+                $line = join q{ }, @good_words;
             }
             push @good_lines, $line;
         }
 
-        $body = join "\n", @good_lines;
+        $body = join qq{\n}, @good_lines;
         return $body;
     }#}}}
     sub sacren {#{{{
@@ -557,36 +549,29 @@ already used 'bless'.
             $to_hash = {'@ally' => 1};
         }
 
-        my $to_out = join ', ', sort keys %$to_hash;
+        my $to_out = join q{, }, sort keys %{$to_hash};
         $self->txt_to->SetValue($to_out);
+        return 1;
     }#}}}
-    sub OnClearMail {#{{{
+    sub _get_trash_messages {#{{{
         my $self            = shift;
-        my $dialog          = shift;
-        my $event           = shift;
-        my $tags_to_trash   = [];
+        my $tags_to_trash   = shift;
+        my $status          = shift;
+        my $trash_these     = [];
 
-        foreach my $checkbox( $self->chk_alert, $self->chk_attacks, $self->chk_corr, $self->chk_excav, $self->chk_parl, $self->chk_probe ) {
-            push @$tags_to_trash, $checkbox->GetLabel if $checkbox->GetValue;
-        }
-        unless( @$tags_to_trash ) {
-            $self->app->poperr(
-                "I should remove nothing?  You got it.",
-                "No checkboxes checked",
+        my $created_own_status = 0;
+        unless( $status ) {
+            $created_own_status = 1;
+            $status = LacunaWaX::Dialog::Status->new(
+                app      => $self->app,
+                ancestor => $self,
+                title    => 'Clear Mail',
             );
-            $self->btn_clear_inbox->SetFocus;
-            return;
+            $status->show;
         }
 
-        my $status = LacunaWaX::Dialog::Status->new(
-            app      => $self->app,
-            ancestor => $self,
-            title    => 'Clear Mail',
-        );
-        $status->show;
-
-        ### We always have to get the first page of messages, which will tell us 
-        ### how many messages (and therefore pages) there are in total.
+        ### We always have to get the first page of messages, which will tell 
+        ### us how many messages (and therefore pages) there are in total.
         $status->say("Reading page 1");
         my $contents = try {
             $self->inbox->view_inbox({page_number => 1, tags => $tags_to_trash});
@@ -598,10 +583,9 @@ already used 'bless'.
         } or return;
         my $msg_count   = $contents->{'message_count'};
         my $msgs        = $contents->{'messages'};
-        my $trash_these = [];
-        foreach my $m(@$msgs) {
+        foreach my $m(@{$msgs}) {
             next if $self->chk_read->GetValue and not $m->{'has_read'};
-            push @$trash_these, $m->{'id'};
+            push @{$trash_these}, $m->{'id'};
         }
 
         ### Get subsequent pages if necessary.
@@ -618,13 +602,87 @@ already used 'bless'.
                 return;
             } or return;
             my $msgs = $contents->{'messages'};
-
             my $found_count = 0;
-            foreach my $m(@$msgs) {
+            foreach my $m(@{$msgs}) {
                 next if $self->chk_read->GetValue and not $m->{'has_read'};
-                push @$trash_these, $m->{'id'};
+                push @{$trash_these}, $m->{'id'};
             }
         }
+
+        if( $created_own_status ) {
+            $status->close();
+        }
+
+        return $trash_these;
+    }#}}}
+    sub OnClearMail {#{{{
+        my $self            = shift;
+        my $dialog          = shift;
+        my $event           = shift;
+        my $tags_to_trash   = [];
+
+        foreach my $checkbox( $self->chk_alert, $self->chk_attacks, $self->chk_corr, $self->chk_excav, $self->chk_parl, $self->chk_probe ) {
+            push @{$tags_to_trash}, $checkbox->GetLabel if $checkbox->GetValue;
+        }
+        unless( @{$tags_to_trash} ) {
+            $self->app->poperr(
+                "I should remove nothing?  You got it.",
+                "No checkboxes checked",
+            );
+            $self->btn_clear_inbox->SetFocus;
+            return;
+        }
+
+        my $status = LacunaWaX::Dialog::Status->new(
+            app      => $self->app,
+            ancestor => $self,
+            title    => 'Clear Mail',
+        );
+        $status->show;
+
+
+        my $trash_these = $self->_get_trash_messages($tags_to_trash, $status);
+=pod
+        ### We always have to get the first page of messages, which will tell us 
+        ### how many messages (and therefore pages) there are in total.
+        $status->say("Reading page 1");
+        my $contents = try {
+            $self->inbox->view_inbox({page_number => 1, tags => $tags_to_trash});
+        }
+        catch {
+            my $msg = (ref $_) ? $_->text : $_;
+            $self->app->poperr("Unable to get page 1: $msg");
+            return;
+        } or return;
+        my $msg_count   = $contents->{'message_count'};
+        my $msgs        = $contents->{'messages'};
+        my $trash_these = [];
+        foreach my $m(@{$msgs}) {
+            next if $self->chk_read->GetValue and not $m->{'has_read'};
+            push @{$trash_these}, $m->{'id'};
+        }
+
+        ### Get subsequent pages if necessary.
+        my $max_page = int($msg_count / 25);
+        $max_page++ if $msg_count % 25;
+        for my $page(2..$max_page) {    # already got page 1
+            $status->say("Reading page $page");
+            my $contents = try {
+                $self->inbox->view_inbox({page_number => $page, tags => $tags_to_trash});
+            }
+            catch {
+                my $msg = (ref $_) ? $_->text : $_;
+                $self->app->poperr("Unable to get page $page: $msg");
+                return;
+            } or return;
+            my $msgs = $contents->{'messages'};
+            my $found_count = 0;
+            foreach my $m(@{$msgs}) {
+                next if $self->chk_read->GetValue and not $m->{'has_read'};
+                push @{$trash_these}, $m->{'id'};
+            }
+        }
+=cut
 
         $status->say("Deleting selected messages");
         my $rv = try {
@@ -638,22 +696,25 @@ already used 'bless'.
         my $trashed     = scalar @{$rv->{'success'}} || 0;
         my $not_trashed = scalar @{$rv->{'failure'}} || 0;
 
-        my $t_pl  = ($trashed == 1) ? ' was' : 's were';
-        my $nt_pl = ($not_trashed == 1) ? '' : 's';
+        my $t_pl  = ($trashed == 1) ? q{ was} : q{s were};
+        my $nt_pl = ($not_trashed == 1) ? q{} : q{s};
         my $msg  = "$trashed message${t_pl} moved to the trash.";
            $msg .= "\n\n$not_trashed message${nt_pl} could not be moved to the trash." if $not_trashed;
         $status->say($msg);
         $status->say_recsep;
         $status->say("Mail clearing complete.");
+        return 1;
     }#}}}
     sub OnClearTo {#{{{
         my $self = shift;
-        $self->txt_to->SetValue('');
+        $self->txt_to->SetValue(q{});
+        return 1;
     }#}}}
     sub OnClose {#{{{
         my($self, $dialog, $event) = @_;
         $self->Destroy;
         $event->Skip();
+        return 1;
     }#}}}
     sub OnCorrespondenceCheckbox {#{{{
         my $self = shift;
@@ -662,6 +723,7 @@ already used 'bless'.
                 $self->chk_corr->SetValue(0);
             }
         }
+        return 1;
     }#}}}
     sub OnSendMail {#{{{
         my $self   = shift;
@@ -684,6 +746,7 @@ already used 'bless'.
         else {
             $self->app->poperr("Unknown error sending message.");
         }
+        return 1;
     }#}}}
 
     no Moose;

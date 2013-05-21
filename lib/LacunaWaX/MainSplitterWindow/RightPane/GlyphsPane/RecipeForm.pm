@@ -51,17 +51,11 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane::RecipeForm {
         $self->main_sizer->Add($self->lbl_recipe,       0, 0, 0);
         $self->main_sizer->Add($self->spin_quantity,    0, 0, 0);
         $self->main_sizer->Add($self->btn_assemble,     0, 0, 0);
+        return $self;
     }
     sub _build_main_sizer {#{{{
         my $self = shift;
-
-        ### production
-        my $v = Wx::BoxSizer->new(wxHORIZONTAL);
-        ### debugging
-        #my $box = Wx::StaticBox->new($self->parent, -1, 'Form Sizer', wxDefaultPosition, wxDefaultSize);
-        #my $v = Wx::StaticBoxSizer->new($box, wxHORIZONTAL);
-
-        return $v;
+        return Wx::BoxSizer->new(wxHORIZONTAL);
     }#}}}
     sub _build_lbl_name {#{{{
         my $self = shift;
@@ -88,7 +82,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane::RecipeForm {
     sub _build_spin_quantity {#{{{
         my $self = shift;
         my $v = Wx::SpinCtrl->new(
-            $self->parent, -1, '', 
+            $self->parent, -1, q{}, 
             wxDefaultPosition, 
             Wx::Size->new(65, $self->height), 
             wxSP_ARROW_KEYS, 
@@ -129,7 +123,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane::RecipeForm {
             |wxSUNKEN_BORDER
             |wxLC_SINGLE_SEL
         );
-        $list_ctrl->InsertColumn(0, '');
+        $list_ctrl->InsertColumn(0, q{});
         $list_ctrl->InsertColumn(1, 'Name');
         $list_ctrl->InsertColumn(2, 'Quantity');
         $list_ctrl->SetColumnWidth(0,75);
@@ -141,7 +135,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane::RecipeForm {
 
         ### Add glyphs to the listctrl
         my $row = 0;
-        foreach my $hr( @$sorted_glyphs ) {#{{{
+        foreach my $hr( @{$sorted_glyphs} ) {#{{{
             ### $row is also the offset of the image in the ImageList, provided 
             ### @sorted_glyphs is a sorted list of all glyphs.
             my $row_idx = $list_ctrl->InsertImageItem($row, $row);
@@ -178,31 +172,33 @@ arg is not necessary there.
 
 =cut
 
-        my $v = LacunaWaX::Dialog::Status->new( 
+        return LacunaWaX::Dialog::Status->new( 
             app         => $self->app,
             ancestor    => $self,
             title       => "Building up to $quantity halls per recipe",
             recsep      => '-=-=-=-=-=-=-',
             size        => Wx::Size->new(500,300),
         );
-        return $v;
     }#}}}
     sub _set_events {#{{{
         my $self = shift;
         my $btn_id  = $self->btn_assemble->GetId;
         EVT_BUTTON( $self->parent, $btn_id, sub{$self->OnAssembleButtonClick($btn_id, @_)} );
+        return 1;
     }#}}}
 
     ### Pseudo events
     sub OnClose {#{{{
         my $self = shift;
         $self->dialog_status->close if $self->has_dialog_status;
+        return 1;
     }#}}}
     sub OnDialogStatusClose {#{{{
         my $self = shift;
         if($self->has_dialog_status) {
             $self->clear_dialog_status;
         }
+        return 1;
     }#}}}
 
     sub OnAssembleButtonClick {#{{{
@@ -221,6 +217,8 @@ arg is not necessary there.
             $self->app->endthrob();
             return;
         }
+
+        my $gc = $self->app->game_client;
 
         ### 'Halls of Vrbansk (all)' is not a recipe, it's an indication that 
         ### we're supposed to build each of the 5 halls recipes.
@@ -246,7 +244,7 @@ arg is not necessary there.
             my @recipes_to_build = ();
             my $total_built = 0;
             RECIPE:
-            foreach my $rname( sort keys %{$self->app->game_client->glyph_recipes} ) {
+            foreach my $rname( sort keys %{$gc->glyph_recipes} ) {
                 if( $rname =~ /Halls of Vrbansk \((\d)\)/ ) {
 
                     if( $self->has_dialog_status ) {
@@ -256,10 +254,10 @@ arg is not necessary there.
                         last RECIPE;
                     }
 
-                    my $ringredients = $self->app->game_client->glyph_recipes->{$rname};
+                    my $ringredients = $gc->glyph_recipes->{$rname};
                     $self->app->Yield;
                     my $rv = try {
-                        $self->app->game_client->cook_glyphs($self->ancestor->planet_id, $ringredients, $quantity);
+                        $gc->cook_glyphs($self->ancestor->planet_id, $ringredients, $quantity);
                     }
                     catch {
                         $self->app->poperr($_->text);
@@ -293,9 +291,9 @@ arg is not necessary there.
         else {#{{{
             my $plan_plural = ($quantity == 1) ? 'plan' : 'plans';
             $self->app->Yield;
-            my $ringredients = $self->app->game_client->glyph_recipes->{$recipe_name};
+            my $ringredients = $gc->glyph_recipes->{$recipe_name};
             my $built = try {
-                $self->app->game_client->cook_glyphs($self->ancestor->planet_id, $ringredients, $quantity);
+                $gc->cook_glyphs($self->ancestor->planet_id, $ringredients, $quantity);
             }
             catch {
                 $self->app->poperr($_->text);
@@ -324,7 +322,7 @@ arg is not necessary there.
         $self->app->Yield;   # allow throbber to update if it's on
         $self->app->endthrob();
         $self->app->popmsg($response, "Success!");
-
+        return 1;
     }#}}}
 
     no Moose;

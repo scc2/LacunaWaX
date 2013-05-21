@@ -280,24 +280,26 @@ package LacunaWaX::Dialog::Status {
         my $self = shift;
         EVT_CLOSE(  $self->dialog, sub{$self->OnClose(@_)}  );
         EVT_SIZE(   $self->dialog, sub{$self->OnResize(@_)} );
+        return 1;
     }#}}}
 
-    sub close {#{{{
+    sub close {## no critic qw(ProhibitBuiltinHomonyms NamingConventions) {{{
         my $self = shift;
-#say "dialog status close()";
         if($self->has_dialog) { 
-#say "dialog status does still have a dialog; destroying it.";
             my $crv = $self->dialog->DestroyChildren;
             my $rv = $self->dialog->Destroy;
         }
+        return 1;
     }#}}}
     sub erase {#{{{
         my $self = shift;
-        $self->txt_status->SetValue('') if $self->has_txt_status;
+        $self->txt_status->SetValue(q{}) if $self->has_txt_status;
+        return 1;
     }#}}}
     sub hide {#{{{
         my $self = shift;
         $self->dialog->Show(0);
+        return 1;
     }#}}}
     sub get_content_size {#{{{
         my $self = shift;
@@ -356,7 +358,7 @@ package LacunaWaX::Dialog::Status {
         my $size = Wx::Size->new($width, $height);
         return $size;
     }#}}}
-    sub say {#{{{
+    sub say {## no critic qw(ProhibitBuiltinHomonyms) {{{
         my $self = shift;
         my $text = shift // q{};
         $self->txt_status->AppendText("$text\n");
@@ -377,6 +379,7 @@ package LacunaWaX::Dialog::Status {
         my $self = shift;
         $self->dialog->Show(1);
         $self->dialog->Layout();
+        return 1;
     }#}}}
 
     sub OnClose {#{{{
@@ -390,6 +393,7 @@ package LacunaWaX::Dialog::Status {
         }
         $self->close;
         $event->Skip();
+        return 1;
     }#}}}
     sub OnResize {#{{{
         my $self    = shift;
@@ -403,6 +407,7 @@ package LacunaWaX::Dialog::Status {
         $self->sizers->{'Content'}->{'box'}->SetSize( $self->get_content_size ) if defined $self->sizers->{'Content'}->{'box'};
 
         $self->txt_status->SetSize( $self->get_txt_size );
+        return 1;
     }#}}}
 
     no Moose;

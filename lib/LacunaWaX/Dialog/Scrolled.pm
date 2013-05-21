@@ -17,7 +17,7 @@ package LacunaWaX::Dialog::Scrolled {
     has 'position'      => (is => 'rw', isa => 'Wx::Point',             lazy_build => 1);
     has 'size'          => (is => 'rw', isa => 'Wx::Size',              lazy_build => 1);
 
-    sub FOREIGNBUILDARGS {#{{{
+    sub FOREIGNBUILDARGS {## no critic qw(RequireArgUnpacking) {{{
         my $self = shift;
         my %args = @_;
 
@@ -90,8 +90,11 @@ this way here too just for consistency.
 =cut
 
         $self->swindow->FitInside();
+        return 1;
     }#}}}
 
+    no Moose;
+    __PACKAGE__->meta->make_immutable; 
 }
 
 1;

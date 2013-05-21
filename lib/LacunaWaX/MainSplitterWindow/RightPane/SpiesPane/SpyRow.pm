@@ -104,7 +104,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::SpyRow {
                 train       => { w => $self->train_width, l => 'Training: ' },
             };#}}}
 
-            foreach my $head_type( @$headers_order ) {
+            foreach my $head_type( @{$headers_order} ) {
                 my $header = $head_type . '_header';
                 my $hr     = $headers->{$head_type};
 
@@ -143,6 +143,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::SpyRow {
         $self->szr_main->Add($self->szr_train, 0, 0, 0);
 
         $self->app->Yield;
+        return $self;
     }
     sub _build_chc_train {#{{{
         my $self = shift;
@@ -275,7 +276,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::SpyRow {
             my $now     = DateTime->now();
             my $dur     = DateTime::Duration->new( seconds => $self->spy->seconds_remaining );
             my $avail   = $now + $dur;
-            my $tt      = Wx::ToolTip->new("Available " . $avail->ymd . ' ' . $avail->hms );
+            my $tt      = Wx::ToolTip->new("Available " . $avail->ymd . q{ } . $avail->hms );
             $y->SetToolTip($tt);
         }
 
@@ -312,13 +313,12 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::SpyRow {
         ### briefly empty and so it briefly collapses.
         ### Adding this placeholder into szr_name and then not touching it keeps 
         ### szr_name from ever being empty and therefore it never collapses.
-        my $y = Wx::StaticText->new(
+        return Wx::StaticText->new(
             $self->parent, -1, 
             q{},
             wxDefaultPosition, 
             Wx::Size->new(1, 1)
         );
-        return $y;
     }#}}}
     sub _build_lbl_theft {#{{{
         my $self = shift;
@@ -333,33 +333,27 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::SpyRow {
     }#}}}
     sub _build_szr_task {#{{{
         my $self = shift;
-        my $v = $self->build_sizer($self->parent, wxHORIZONTAL, 'Task');
-        return $v;
+        return $self->build_sizer($self->parent, wxHORIZONTAL, 'Task');
     }#}}}
     sub _build_szr_level {#{{{
         my $self = shift;
-        my $v = $self->build_sizer($self->parent, wxHORIZONTAL, 'Level');
-        return $v;
+        return $self->build_sizer($self->parent, wxHORIZONTAL, 'Level');
     }#}}}
     sub _build_szr_loc {#{{{
         my $self = shift;
-        my $v = $self->build_sizer($self->parent, wxHORIZONTAL, 'Loc');
-        return $v;
+        return $self->build_sizer($self->parent, wxHORIZONTAL, 'Loc');
     }#}}}
     sub _build_szr_offense {#{{{
         my $self = shift;
-        my $v = $self->build_sizer($self->parent, wxHORIZONTAL, 'Offense');
-        return $v;
+        return $self->build_sizer($self->parent, wxHORIZONTAL, 'Offense');
     }#}}}
     sub _build_szr_defense {#{{{
         my $self = shift;
-        my $v = $self->build_sizer($self->parent, wxHORIZONTAL, 'Defense');
-        return $v;
+        return $self->build_sizer($self->parent, wxHORIZONTAL, 'Defense');
     }#}}}
     sub _build_szr_intel {#{{{
         my $self = shift;
-        my $v = $self->build_sizer($self->parent, wxHORIZONTAL, 'Intel');
-        return $v;
+        return $self->build_sizer($self->parent, wxHORIZONTAL, 'Intel');
     }#}}}
     sub _build_szr_main {#{{{
         my $self = shift;
@@ -369,8 +363,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::SpyRow {
     }#}}}
     sub _build_szr_mayhem {#{{{
         my $self = shift;
-        my $v = $self->build_sizer($self->parent, wxHORIZONTAL, 'Mayhem');
-        return $v;
+        return $self->build_sizer($self->parent, wxHORIZONTAL, 'Mayhem');
     }#}}}
     sub _build_szr_name {#{{{
         my $self = shift;
@@ -381,18 +374,15 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::SpyRow {
     }#}}}
     sub _build_szr_politics {#{{{
         my $self = shift;
-        my $v = $self->build_sizer($self->parent, wxHORIZONTAL, 'Politics');
-        return $v;
+        return $self->build_sizer($self->parent, wxHORIZONTAL, 'Politics');
     }#}}}
     sub _build_szr_theft {#{{{
         my $self = shift;
-        my $v = $self->build_sizer($self->parent, wxHORIZONTAL, 'Theft');
-        return $v;
+        return $self->build_sizer($self->parent, wxHORIZONTAL, 'Theft');
     }#}}}
     sub _build_szr_train {#{{{
         my $self = shift;
-        my $v = $self->build_sizer($self->parent, wxHORIZONTAL, 'Train');
-        return $v;
+        return $self->build_sizer($self->parent, wxHORIZONTAL, 'Train');
     }#}}}
     sub _build_tt_name {#{{{
         my $self = shift;
@@ -441,11 +431,12 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::SpyRow {
             );
         }
 
+        return 1;
+
         ### The OnChange event for the txt_name is set up in OnNameLabelClick, 
         ### /after/ the txt_name is created.  Doing it here would cause 
-        ### txt_name's lazy builder to be called, which would end up putting the 
-        ### stupid thing in the wrong place if the screen has been scrolled.
-
+        ### txt_name's lazy builder to be called, which would end up putting 
+        ### it in the wrong place if the screen has been scrolled.
     }#}}}
 
     sub change_name {#{{{
@@ -459,6 +450,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::SpyRow {
         ### Clear the current tooltip, then recreate and reassign it.
         $self->clear_tt_name;
         $self->lbl_name->SetToolTip( $self->tt_name );
+        return 1;
     }#}}}
 
     sub OnNameLabelClick {#{{{
@@ -475,14 +467,15 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::SpyRow {
         ### sizers and positions.
         ### So Layout() has to be called on the ScrolledWindow, which 
         ### understands how to deal with its own scrolling.
-        $self->ancestor->ancestor->main_panel->Layout();
+        my $grandparent = $self->ancestor->ancestor;
+        $grandparent->main_panel->Layout();
 
         $self->txt_name->Show(1);
         $self->txt_name->SetFocus();
         $self->txt_name->SetSelection(-1, -1);
         $self->szr_name->Layout();
         $self->szr_main->Layout();
-
+        return 1;
     }#}}}
     sub OnNonNameClick {#{{{
         my $self     = shift;
@@ -500,13 +493,15 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::SpyRow {
         ### sizers and positions.
         ### So Layout() has to be called on the ScrolledWindow, which 
         ### understands how to deal with its own scrolling.
-        $self->ancestor->ancestor->main_panel->Layout();
+        my $grandparent = $self->ancestor->ancestor;
+        $grandparent->main_panel->Layout();
 
         $self->lbl_name->Show(1);
         $self->szr_name->Layout();
         $self->szr_main->Layout();
 
         $event->Skip;
+        return 1;
     }#}}}
     sub OnSpyNameChanged {#{{{
         my $self    = shift;
@@ -518,6 +513,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::SpyRow {
         $self->lbl_name->SetLabel($new_name);
 
         $event->Skip;
+        return 1;
     }#}}}
 
     no Moose;

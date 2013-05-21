@@ -5,17 +5,24 @@ package LacunaWax::Dialog::Prefs::TabAutovote {
     use Wx qw(:everything);
     use Wx::Event qw(EVT_BUTTON);
 
-    has 'app'               => (is => 'rw', isa => 'LacunaWaX',                 required => 1,  weak_ref => 1);
-    has 'parent'            => (is => 'rw', isa => 'Wx::Notebook',              required => 1);
-    has 'ancestor'          => (is => 'rw', isa => 'LacunaWaX::Dialog::Prefs',  required => 1);
-    has 'main_sizer'        => (is => 'rw', isa => 'Wx::Sizer',                 lazy_build => 1);
-    has 'pnl_main'          => (is => 'rw', isa => 'Wx::Panel',                 lazy_build => 1);
+    has 'app'      => (is => 'rw', isa => 'LacunaWaX',                 required => 1,  weak_ref => 1);
+    has 'parent'   => (is => 'rw', isa => 'Wx::Notebook',              required => 1);
+    has 'ancestor' => (is => 'rw', isa => 'LacunaWaX::Dialog::Prefs',  required => 1);
+
+    has 'box_height' => (is => 'rw', isa => 'Int', lazy => 1, default => 140,
+        documentation => q{
+            Height of the radio and listctrl boxes in the middle of the screen.
+        }
+    );
+
+    has 'btn_save'          => (is => 'rw', isa => 'Wx::Button',                lazy_build => 1);
     has 'lbl_instructions'  => (is => 'rw', isa => 'Wx::StaticText',            lazy_build => 1);
     has 'list_known_ss'     => (is => 'rw', isa => 'Wx::ListCtrl',              lazy_build => 1);
+    has 'main_sizer'        => (is => 'rw', isa => 'Wx::Sizer',                 lazy_build => 1);
+    has 'pnl_main'          => (is => 'rw', isa => 'Wx::Panel',                 lazy_build => 1);
     has 'rdo_autovote'      => (is => 'rw', isa => 'Wx::RadioBox',              lazy_build => 1);
-    has 'btn_save'          => (is => 'rw', isa => 'Wx::Button',                lazy_build => 1);
 
-    sub BUILD {#{{{
+    sub BUILD {
         my($self, @params) = @_;
 
         my $szr_av = Wx::BoxSizer->new(wxVERTICAL);
@@ -38,7 +45,7 @@ package LacunaWax::Dialog::Prefs::TabAutovote {
         $self->_set_events;
 
         return $self;
-    }#}}}
+    }
     sub _build_main_sizer {#{{{
         my $self = shift;
         my $v = Wx::BoxSizer->new(wxHORIZONTAL);
@@ -51,13 +58,17 @@ package LacunaWax::Dialog::Prefs::TabAutovote {
     }#}}}
     sub _build_lbl_instructions {#{{{
         my $self = shift;
-        my $autovote_instructions = "Autovote settings here apply to all space stations you have visited in this app.\n\n"
-                                . "If stations are missing from the list on the right, 'visit' the missing stations by "
-                                . "double-clicking their names in the left pane of the app, then come back here."
-                                . "You'll only need to do this once per station.";
-        my $v = Wx::StaticText->new($self->pnl_main, -1, $autovote_instructions, wxDefaultPosition, Wx::Size->new(375,75));
+
+        my $inst = "Autovote settings here apply to all space stations you have visited in this app.  "
+                . "See the Help menu for more information.";
+
+        my $v = Wx::StaticText->new(
+            $self->pnl_main, -1, 
+            $inst, 
+            wxDefaultPosition, 
+            Wx::Size->new(365,25)
+        );
         $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
-        $v->Wrap($self->pnl_main->GetClientSize->width - 10);
         return $v;
     }#}}}
     sub _build_list_known_ss {#{{{
@@ -66,7 +77,7 @@ package LacunaWax::Dialog::Prefs::TabAutovote {
         my $v = Wx::ListCtrl->new(
             $self->pnl_main, -1, 
             wxDefaultPosition, 
-            Wx::Size->new(150,99), 
+            Wx::Size->new(150,$self->box_height), 
             wxLC_REPORT
             |wxSUNKEN_BORDER
             |wxLC_SINGLE_SEL
@@ -112,7 +123,7 @@ package LacunaWax::Dialog::Prefs::TabAutovote {
             $self->pnl_main, -1, 
             "Autovote", 
             wxDefaultPosition, 
-            Wx::Size->new(100,100), 
+            Wx::Size->new(100, $self->box_height), 
             $choices,
             0,
             wxRA_SPECIFY_ROWS
@@ -124,6 +135,7 @@ package LacunaWax::Dialog::Prefs::TabAutovote {
     sub _set_events {#{{{
         my $self = shift;
         EVT_BUTTON( $self->pnl_main,  $self->btn_save->GetId,     sub{$self->ancestor->OnSavePrefs(@_)} );
+        return 1;
     }#}}}
 
     no Moose;

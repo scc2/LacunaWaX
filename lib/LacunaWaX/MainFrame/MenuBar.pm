@@ -5,8 +5,6 @@ package LacunaWaX::MainFrame::MenuBar {
     use Wx qw(:everything);
     with 'LacunaWaX::Roles::GuiElement';
 
-    ### Wx::MenuBar is a non-hash object.  Extending such requires 
-    ### MooseX::NonMoose::InsideOut instead of plain MooseX::NonMoose.
     use MooseX::NonMoose::InsideOut;
     extends 'Wx::MenuBar';
 
@@ -24,10 +22,10 @@ package LacunaWaX::MainFrame::MenuBar {
         }
     );
 
-    has 'menu_file'     => (is => 'rw', isa => 'LacunaWaX::MainFrame::MenuBar::File',          lazy_build => 1);
-    has 'menu_edit'     => (is => 'rw', isa => 'LacunaWaX::MainFrame::MenuBar::Edit',          lazy_build => 1);
-    has 'menu_tools'    => (is => 'rw', isa => 'LacunaWaX::MainFrame::MenuBar::Tools',         lazy_build => 1);
-    has 'menu_help'     => (is => 'rw', isa => 'LacunaWaX::MainFrame::MenuBar::Help',          lazy_build => 1);
+    has 'menu_file'     => (is => 'rw', isa => 'LacunaWaX::MainFrame::MenuBar::File',   lazy_build => 1);
+    has 'menu_edit'     => (is => 'rw', isa => 'LacunaWaX::MainFrame::MenuBar::Edit',   lazy_build => 1);
+    has 'menu_tools'    => (is => 'rw', isa => 'LacunaWaX::MainFrame::MenuBar::Tools',  lazy_build => 1);
+    has 'menu_help'     => (is => 'rw', isa => 'LacunaWaX::MainFrame::MenuBar::Help',   lazy_build => 1);
 
     has 'menu_list'     => (is => 'rw', isa => 'ArrayRef', lazy => 1,
         default => sub {
@@ -58,49 +56,44 @@ package LacunaWaX::MainFrame::MenuBar {
     }
     sub _build_menu_file {#{{{
         my $self = shift;
-        my $v = LacunaWaX::MainFrame::MenuBar::File->new(
+        return LacunaWaX::MainFrame::MenuBar::File->new(
             ancestor    => $self,
             app         => $self->app,
             parent      => $self->parent,   # MainFrame, not this Menu, is the parent.
         );
-        return $v;
     }#}}}
     sub _build_menu_file_connect {#{{{
         my $self = shift;
-        my $v = LacunaWaX::MainFrame::MenuBar::File::Connect->new(
+        return LacunaWaX::MainFrame::MenuBar::File::Connect->new(
             ancestor    => $self,
             app         => $self->app,
             parent      => $self->parent,   # MainFrame, not this Menu, is the parent.
         );
-        return $v;
     }#}}}
     sub _build_menu_edit {#{{{
         my $self = shift;
-        my $v = LacunaWaX::MainFrame::MenuBar::Edit->new(
+        return LacunaWaX::MainFrame::MenuBar::Edit->new(
             ancestor    => $self,
             app         => $self->app,
             parent      => $self->parent,   # MainFrame, not this Menu, is the parent.
         );
-        return $v;
     }#}}}
     sub _build_menu_help {#{{{
         my $self = shift;
-        my $v = LacunaWaX::MainFrame::MenuBar::Help->new(
+        return LacunaWaX::MainFrame::MenuBar::Help->new(
             ancestor    => $self,
             app         => $self->app,
             parent      => $self->parent,   # MainFrame, not this Menu, is the parent.
         );
-        return $v;
     }#}}}
     sub _build_menu_tools {#{{{
         my $self = shift;
-        my $v = LacunaWaX::MainFrame::MenuBar::Tools->new(
+        return LacunaWaX::MainFrame::MenuBar::Tools->new(
             ancestor    => $self,
             app         => $self->app,
             parent      => $self->parent,   # MainFrame, not this Menu, is the parent.
             show_test   => $self->show_test,
         );
-        return $v;
     }#}}}
     sub _set_events { }
 
@@ -112,12 +105,14 @@ package LacunaWaX::MainFrame::MenuBar {
         foreach my $submenu( @{$self->menu_list} ) {
             $self->$submenu->show_connected if $self->$submenu->can('show_connected');
         }
+        return 1;
     }#}}}
     sub show_not_connected {#{{{
         my $self = shift;
         foreach my $submenu( @{$self->menu_list} ) {
             $self->$submenu->show_connected if $self->$submenu->can('show_connected');
         }
+        return 1;
     }#}}}
 
     no Moose;

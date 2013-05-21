@@ -37,11 +37,11 @@ package LacunaWaX::MainSplitterWindow::RightPane::SummaryPane {
         $self->content_sizer->Add($self->szr_header, 0, 0, 0);
         $self->content_sizer->AddSpacer(20);
         $self->content_sizer->Add($self->lbl_text, 0, 0, 0);
+        return $self;
     }
     sub _build_szr_header {#{{{
         my $self = shift;
-        my $v = $self->build_sizer($self->parent, wxVERTICAL, 'Header');
-        return $v;
+        return $self->build_sizer($self->parent, wxVERTICAL, 'Header');
     }#}}}
     sub _build_lbl_header {#{{{
         my $self = shift;

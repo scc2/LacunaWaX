@@ -1,6 +1,7 @@
 
 package LacunaWaX::Dialog::SitterManager::SitterRow {
     use v5.14;
+    use Carp;
     use DateTime;
     use DateTime::Duration;
     use Moose;
@@ -12,7 +13,7 @@ package LacunaWaX::Dialog::SitterManager::SitterRow {
     has 'parent'        => (is => 'rw', isa => 'Wx::Window',                        required => 1                   );
     has 'ancestor'      => (is => 'rw', isa => 'LacunaWaX::Dialog::SitterManager',  required => 1, weak_ref => 1    );
 
-    has 'main_sizer'    => (is => 'rw', isa => 'Wx::BoxSizer',  lazy_build => 1, documentation => 'vertical');
+    has 'main_sizer' => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1, documentation => 'vertical');
 
     has 'row_panel'         => (is => 'rw', isa => 'Wx::Panel',     lazy_build => 1                             );
     has 'row_panel_sizer'   => (is => 'rw', isa => 'Wx::BoxSizer',  lazy_build => 1, documentation => 'vertical');
@@ -47,6 +48,9 @@ package LacunaWaX::Dialog::SitterManager::SitterRow {
     has 'btn_test'      => (is => 'rw', isa => 'Wx::Button',       lazy_build => 1);
 
 =pod
+
+
+Fix this broken nasty pod.
 
 
 Hands back a single row as shown on the Sitter Password manager.
@@ -127,28 +131,15 @@ over the dialog while the row is being created.
         $self->app->Yield;
 
         $self->_set_events;
+        return $self;
     }
     sub _build_main_sizer {#{{{
         my $self = shift;
-
-        #### Production
-        my $y = Wx::BoxSizer->new(wxHORIZONTAL);
-        ### Debugging
-        #my $box = Wx::StaticBox->new($self->row_panel, -1, 'Spy Row', wxDefaultPosition, wxDefaultSize);
-        #my $y = Wx::StaticBoxSizer->new($box, wxHORIZONTAL);
-
-        return $y;
+        return Wx::BoxSizer->new(wxHORIZONTAL);
     }#}}}
     sub _build_row_panel_sizer {#{{{
         my $self = shift;
-
-        #### Production
-        my $y = Wx::BoxSizer->new(wxHORIZONTAL);
-        ### Debugging
-        #my $box = Wx::StaticBox->new($self->row_panel, -1, 'Spy Row', wxDefaultPosition, wxDefaultSize);
-        #my $y = Wx::StaticBoxSizer->new($box, wxHORIZONTAL);
-
-        return $y;
+        return Wx::BoxSizer->new(wxHORIZONTAL);
     }#}}}
     sub _build_row_panel {#{{{
         my $self = shift;
@@ -167,38 +158,33 @@ over the dialog while the row is being created.
         my $self = shift;
 
         my $player_name = ($self->player_rec) ? $self->player_rec->player_name : q{};
-        my $v = Wx::TextCtrl->new(
+        return Wx::TextCtrl->new(
             $self->row_panel, -1, 
             $player_name, 
             wxDefaultPosition, 
             Wx::Size->new($self->input_width,$self->input_height),
         );
-
-        return $v;
     }#}}}
     sub _build_txt_sitter {#{{{
         my $self = shift;
 
         my $sitter = ($self->player_rec) ? $self->player_rec->sitter : q{};
-        my $v = Wx::TextCtrl->new(
+        return Wx::TextCtrl->new(
             $self->row_panel, -1, 
             $sitter, 
             wxDefaultPosition, 
             Wx::Size->new($self->input_width,$self->input_height),
         );
-
-        return $v;
     }#}}}
     sub _build_btn_save {#{{{
         my $self = shift;
         my $text = ($self->player_rec) ? "Update" : "Add";
-        my $v = Wx::Button->new(
+        return Wx::Button->new(
             $self->row_panel, -1, 
             $text,
             wxDefaultPosition,
             Wx::Size->new($self->button_width,$self->button_height),
         );
-        return $v;
     }#}}}
     sub _build_btn_delete {#{{{
         my $self = shift;
@@ -249,6 +235,7 @@ over the dialog while the row is being created.
         EVT_BUTTON( $self->row_panel, $self->btn_save->GetId,      sub{$self->OnSave(@_)} );
         EVT_BUTTON( $self->row_panel, $self->btn_test->GetId,      sub{$self->OnTest(@_)} );
         EVT_BUTTON( $self->row_panel, $self->btn_delete->GetId,    sub{$self->OnDelete(@_)} );
+        return 1;
     }#}}}
 
     sub find_player_id {#{{{
@@ -256,10 +243,11 @@ over the dialog while the row is being created.
         my $name = shift;
 
         my $hr = try {
-            $self->app->game_client->empire->find($name);
+            $self->app->game_client->empire->find($name);   ## no critic qw(ProhibitLongChainsOfMethodCalls)
         }
         catch {
-            $self->app->poperr($_, "Error");
+            my $msg = (ref $_) ? $_->text : $_;
+            $self->app->poperr($msg, "Error");
             return;
         };
 
@@ -273,15 +261,16 @@ over the dialog while the row is being created.
 # empires is defined but points to empty arref if name not found.
 
         return $hr->{'empires'}[0]{'id'} // undef;
-
     }#}}}
     sub hide {#{{{
         my $self = shift;
         $self->row_panel->Show(0);
+        return 1;
     }#}}}
     sub show {#{{{
         my $self = shift;
         $self->row_panel->Show(1);
+        return 1;
     }#}}}
     sub test_sitter {#{{{
         my $self = shift;
@@ -332,9 +321,9 @@ test_sitter_gui(), is unacceptable.
             return $status->{'empire'}{'id'};
         }
         else {
-            die "Could not get empire status; this should be unreachable.";
+            croak "Could not get empire status; this should be unreachable.";
         }
-
+        return 1;
     }#}}}
     sub test_sitter_gui {#{{{
         my $self = shift;
@@ -380,6 +369,7 @@ else {
         my $event   = shift;    # Wx::CommandEvent
         my $vis = ( $self->txt_name->GetLineText(0) and $self->txt_sitter->GetLineText(0) ) ? 1 : 0;
         $self->btn_test->Enable($vis);
+        return 1;
     }#}}}
     sub OnSave {#{{{
         my $self    = shift;
@@ -449,6 +439,7 @@ else {
         }
         $self->btn_delete->Enable(1);
         $self->app->popmsg("Sitter credentials have been saved.", "Success!");
+        return 1;
     }#}}}
     sub OnTest {#{{{
         my $self    = shift;
@@ -461,7 +452,7 @@ else {
         if( $self->test_sitter_gui($name, $pass) ) {
             $self->app->popmsg("Credentials are valid.", "Success!");
         }
-
+        return 1;
     }#}}}
     sub OnDelete {#{{{
         my $self    = shift;
@@ -473,14 +464,17 @@ else {
 
         $self->player_rec->delete;
         $self->player_rec( undef );
-        $self->txt_name->SetValue('');
-        $self->txt_sitter->SetValue('');
+        $self->txt_name->SetValue(q{});
+        $self->txt_sitter->SetValue(q{});
         $self->btn_save->SetLabel('Add Sitter');
         $self->btn_delete->Enable(0);
 
         $self->app->popmsg("The sitter has been deleted.", "Success!");
+        return 1;
     }#}}}
 
+    no Moose;
+    __PACKAGE__->meta->make_immutable;
 }
 
 1;

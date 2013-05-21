@@ -3,7 +3,6 @@
 package LacunaWaX::MainSplitterWindow::RightPane {
     use v5.14;
     use Moose;
-    use Moose::Util::TypeConstraints;
     use English qw( -no_match_vars );
     use Time::HiRes qw(usleep);
     use Try::Tiny;
@@ -23,10 +22,12 @@ package LacunaWaX::MainSplitterWindow::RightPane {
     sub BUILD {
         my $self = shift;
         $self->show_right_pane( 'LacunaWaX::MainSplitterWindow::RightPane::DefaultPane' );
+        return $self;
     }
     sub _set_events {#{{{
         my $self = shift;
         EVT_CLOSE( $self->main_panel,  sub{$self->OnClose(@_)}             );
+        return 1;
     }#}}}
 
     sub OnClose {#{{{
@@ -35,6 +36,7 @@ package LacunaWaX::MainSplitterWindow::RightPane {
         if( $self->has_panel_obj ) {
             $self->panel_obj->OnClose if $self->panel_obj->can('OnClose');
         }
+        return 1;
     }#}}}
 
     sub clear_pane {#{{{
@@ -82,6 +84,7 @@ Should be called after modifying anything in the right pane.
         $self->main_panel->FitInside(); # Force the scrollbars to reset
         return 1;
     }#}}}
+
     sub show_right_pane {#{{{
         my $self  = shift;
         my $class = shift;
@@ -118,75 +121,17 @@ Displays one of the RightPane/*.pm panels in the splitter window's right pane.
         $self->main_panel->Show(0);
         $self->app->Yield;
 
-        my $pid = $self->app->game_client->planet_id($pname) if $pname;
+        my $mf = $self->app->main_frame;
 
-        if( defined $args->{'required_buildings'} ) {#{{{
+        if( defined $args->{'required_buildings'} ) {
             foreach my $bldg_name( keys %{$args->{'required_buildings'}} ) {
-                my $bldg_lvl = $args->{'required_buildings'}{$bldg_name} // 0;
-                my $bldg = try {
-                    $self->app->game_client->get_building($pid, $bldg_name);
-                }
-                catch {
-                    my $msg = (ref $_) ? $_->text : $_;
-                    $self->app->poperr($msg);
-                    return;
-                };
-                $self->app->Yield;
-
-                ### Need to hit the server again to determine its level; don't 
-                ### bother doing that unless a min level is required.
-                if( $bldg_lvl ) {
-                    my $b_view = try {
-                        $self->app->game_client->get_building_view($pid, $bldg);
-                    }
-                    catch {
-                        my $msg = (ref $_) ? $_->text : $_;
-                        $self->app->poperr($msg);
-                        return;
-                    };
-
-                    unless( $b_view->{'building'}{'level'} >= $bldg_lvl ) {
-                        $self->app->popmsg(
-                            "This pane requires that a $bldg_name exist at level $bldg_lvl or above.", 
-                            "Missing $bldg_name at required level"
-                        );
-                        if( $pname ) {
-                            $self->app->main_frame->splitter->right_pane->show_right_pane(
-                                'LacunaWaX::MainSplitterWindow::RightPane::SummaryPane',
-                                $pname
-                            );
-                        }
-                        else {
-                            $self->app->main_frame->splitter->right_pane->show_right_pane(
-                                'LacunaWaX::MainSplitterWindow::RightPane::DefaultPane'
-                            );
-                        }
-                        return;
-                    }
-                }
-
-                ### No level req, but the building must exist
-                unless( $bldg and (ref $bldg) =~ m/^Games::Lacuna::Client::Buildings::/ ) {
-                    $self->app->popmsg(
-                        "This pane requires that a $bldg_name exist on this body, and there isn't one.", 
-                        "Missing $bldg_name"
-                    );
-                    if( $pname ) {
-                        $self->app->main_frame->splitter->right_pane->show_right_pane(
-                            'LacunaWaX::MainSplitterWindow::RightPane::SummaryPane',
-                            $pname
-                        );
-                    }
-                    else {
-                        $self->app->main_frame->splitter->right_pane->show_right_pane(
-                            'LacunaWaX::MainSplitterWindow::RightPane::DefaultPane'
-                        );
-                    }
-                    return;
-
-                }
+                $self->_validate_required_building(
+                    $pname, 
+                    $bldg_name, 
+                    $args->{'required_buildings'}{$bldg_name}   # the required bldg lvl
+                ) or return;
             }
-        }#}}}
+        }
 
         my $panel = $class->new(
             app         => $self->app,
@@ -195,23 +140,7 @@ Displays one of the RightPane/*.pm panels in the splitter window's right pane.
             planet_name => $pname,
         );
         unless( $panel ) {
-            ### We're probably just missing a required building, though that 
-            ### should have already been caught.  Regardless, show one of the 
-            ### default-y panels, unless that's the one we're already trying to 
-            ### show - don't recurse in that case.
-            if( $pname and $class ne 'LacunaWaX::MainSplitterWindow::RightPane::SummaryPane' ) {
-                $self->app->main_frame->splitter->right_pane->show_right_pane(
-                    'LacunaWaX::MainSplitterWindow::RightPane::SummaryPane', $pname
-                );
-            }
-            elsif( $class ne 'LacunaWaX::MainSplitterWindow::RightPane::DefaultPane' ) {
-                $self->app->main_frame->splitter->right_pane->show_right_pane(
-                    'LacunaWaX::MainSplitterWindow::RightPane::DefaultPane'
-                );
-            }
-            else {
-                $self->app->poperr("Something horribly wrong has happened.", "Error!");
-            }
+            $self->_show_default_panel($pname, $class);
             return;
         }
 
@@ -226,7 +155,85 @@ Displays one of the RightPane/*.pm panels in the splitter window's right pane.
 
         $self->main_panel->Show(1);
         $self->finish_pane();
+        return 1;
     }#}}}
+    sub _planet_has_building {#{{{
+        my $self        = shift;
+        my $pid         = shift;
+        my $bldg_name   = shift;
+
+        my $bldg = try {
+            $self->app->game_client->get_building($pid, $bldg_name);
+        };
+        $self->app->Yield;
+        return $bldg || undef;
+    }#}}}
+    sub _show_default_panel {#{{{
+        my $self = shift;
+        my $pname = shift || q{};
+        my $class = shift || q{};
+
+        my $mf = $self->app->main_frame;
+        if( $pname and $class ne 'LacunaWaX::MainSplitterWindow::RightPane::SummaryPane' ) {
+            $mf->splitter->right_pane->show_right_pane(
+                'LacunaWaX::MainSplitterWindow::RightPane::SummaryPane',
+                $pname
+            );
+        }
+        elsif( $class ne 'LacunaWaX::MainSplitterWindow::RightPane::DefaultPane' ) {
+            $mf->splitter->right_pane->show_right_pane(
+                'LacunaWaX::MainSplitterWindow::RightPane::DefaultPane'
+            );
+        }
+        else {
+            ### wtf?
+            $self->app->poperr("Something has gone horribly wrong.");
+            return;
+        }
+
+        return 1;
+    }#}}}
+    sub _validate_required_building {#{{{
+        my $self        = shift;
+        my $pname       = shift;
+        my $bldg_name   = shift;
+        my $bldg_lvl    = shift || 0;
+
+        my $error = q{};
+        my $mf    = $self->app->main_frame;
+        my $pid   = $self->app->game_client->planet_id($pname) if $pname;
+
+        my $bldg = $self->_planet_has_building($pid, $bldg_name);
+        unless($bldg) {
+            $error = "This pane requires that a $bldg_name exist on this body, and there isn't one."; 
+        }
+
+        if( $bldg and $bldg_lvl ) {
+            my $b_view = try {
+                $self->app->game_client->get_building_view($pid, $bldg);
+            }
+            catch {
+                my $msg = (ref $_) ? $_->text : $_;
+                $self->app->poperr($msg);
+                return;
+            };
+            $b_view or return;
+            if( $b_view->{'building'}{'level'} < $bldg_lvl ) {
+                $error = "This pane requires that a $bldg_name exist at level $bldg_lvl or above.";
+            }
+        }
+
+        if( $error ) {
+            $self->app->popmsg( $error, "Missing building requirements" );
+            $self->_show_default_panel($pname);
+            return;
+        }
+
+        return $bldg;
+    }#}}}
+
+    no Moose;
+    __PACKAGE__->meta->make_immutable; 
 }
 
 1;

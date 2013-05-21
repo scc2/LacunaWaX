@@ -90,14 +90,16 @@ package LacunaWaX::MainSplitterWindow::RightPane::LotteryPane {
     sub BUILD {
         my $self = shift;
 
+        my $sp = $self->app->main_frame->splitter;
+
         my $l = try {
             $self->_make_links
         }
         catch {
             my $msg = (ref $_) ? $_->text : $_;
             $self->app->poperr("I was unable to access the lottery links: $msg");
-            $self->app->main_frame->splitter->right_pane->clear_pane;
-            $self->app->main_frame->splitter->right_pane->show_right_pane(
+            $sp->right_pane->clear_pane;
+            $sp->right_pane->show_right_pane(
                 'LacunaWaX::MainSplitterWindow::RightPane::DefaultPane'
             );
             return;
@@ -133,12 +135,13 @@ package LacunaWaX::MainSplitterWindow::RightPane::LotteryPane {
         $self->content_sizer->Add($self->lbl_links_inst, 0, 0, 0);
         $self->content_sizer->AddSpacer(10);
         $self->content_sizer->Add( $self->_make_hard_link_szr, 0, 0, 0 );
+
+        return $self;
     }
 
     sub _build_btn_assign {#{{{
         my $self = shift;
-        my $v = Wx::Button->new($self->parent, -1, "Assign");
-        return $v;
+        return Wx::Button->new($self->parent, -1, "Assign");
     }#}}}
     sub _build_btn_clear {#{{{
         my $self = shift;
@@ -148,7 +151,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::LotteryPane {
     }#}}}
     sub _build_hard_links {#{{{
         my $self = shift;
-        my $v = [
+        return [
             { name => "A Free Gaming",                  url => "http://www.afreegaming.com/vote/the-lacuna-expanse/" },
             { name => "Browser Based Games",            url => "HTTP://gamelist.bbgsite.com/goto/the_32_lacuna_32_expanse.shtml" },
             { name => "Browser MMORPG",                 url => "http://browsermmorpg.com/vote.php?id=648" },
@@ -165,7 +168,6 @@ package LacunaWaX::MainSplitterWindow::RightPane::LotteryPane {
             { name => "TopBBGS",                        url => "http://www.topbbgs.com/index.php?view=vote&id=273" },
             { name => "World Online Games",             url => "http://worldonlinegames.com/game/strategy/1565/the-lacuna-expanse.aspx" },
         ];
-        return $v;
     }#}}}
     sub _build_lbl_header {#{{{
         my $self = shift;
@@ -227,7 +229,6 @@ show up in this list until a new version of LacunaWaX is released.";
         );
         $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_2') );
         return $v;
-
     }#}}}
     sub _build_lbl_other {#{{{
         my $self  = shift;
@@ -298,13 +299,11 @@ show up in this list until a new version of LacunaWaX is released.";
     }#}}}
     sub _build_szr_mine {#{{{
         my $self = shift;
-        my $v = $self->build_sizer($self->parent, wxHORIZONTAL, 'My Assignments');
-        return $v;
+        return $self->build_sizer($self->parent, wxHORIZONTAL, 'My Assignments');
     }#}}}
     sub _build_szr_header {#{{{
         my $self = shift;
-        my $v = $self->build_sizer($self->parent, wxVERTICAL, 'Header');
-        return $v;
+        return $self->build_sizer($self->parent, wxVERTICAL, 'Header');
     }#}}}
     sub _build_assigned_other {#{{{
         my $self  = shift;
@@ -312,7 +311,7 @@ show up in this list until a new version of LacunaWaX is released.";
         my $schema = $self->app->bb->resolve( service => '/Database/schema' );
         my $other_rs = $schema->resultset('LotteryPrefs')->search({
             server_id   => $self->app->server->id,
-            body_id     => { '!=' => $self->planet_id },
+            body_id     => { q{!=} => $self->planet_id },
         });
 
         my $other_cnt = 0;
@@ -344,6 +343,7 @@ show up in this list until a new version of LacunaWaX is released.";
         ### controls below.  The conditionals stop that from happening.
         EVT_BUTTON( $self->parent, $self->btn_assign->GetId,    sub{$self->OnAssignButton(@_)}   ) if $self->has_btn_assign;
         EVT_BUTTON( $self->parent, $self->btn_clear->GetId,     sub{$self->OnClearButton(@_)}   )  if $self->has_btn_clear;
+        return 1;
 
         ### The hyperlink mouseover and mouseout events are set in 
         ### _make_hard_link_szr().
@@ -355,11 +355,10 @@ show up in this list until a new version of LacunaWaX is released.";
         ### confusion.
         ### This is because this constructor could fail, so I'm wrapping the 
         ### call in try/catch (in BUILD).
-        my $l = LacunaWaX::Model::Lottery::Links->new(
+        return LacunaWaX::Model::Lottery::Links->new(
             client      => $self->app->game_client,
             planet_id   => $self->planet_id,
         );
-        return $l;
     }#}}}
     sub _make_hard_link_szr {#{{{
         my $self = shift;
@@ -449,7 +448,6 @@ far in tests, and a bullet getting through this is not fatal.
             : "are " . $self->assigned_other . " lottery links";
         my $text = "There $pl assigned to be played at other colonies.";
         return $text;
-        $self->lbl_other->SetLabel($text);
     }#}}}
 
     sub OnAssignButton {#{{{
@@ -479,6 +477,7 @@ far in tests, and a bullet getting through this is not fatal.
   "$to_be_assigned lottery links will be clicked from this planet.\n"
 . "Don't forget to set up Schedule_lottery.exe to run twice per day!"
         );
+        return 1;
     }#}}}
     sub OnClearButton {#{{{
         my $self    = shift;
@@ -498,24 +497,25 @@ far in tests, and a bullet getting through this is not fatal.
         $self->lbl_other->SetLabel( $self->update_lbl_other_assignments );
 
         $self->app->popmsg("All lottery assignments have been cleared.  Don't forget to reset them.");
+        return 1;
     }#}}}
     sub OnMouseOverLink {#{{{
         my $self    = shift;
         my $ctrl    = shift;    # Wx::HyperlinkCtrl
         my $event   = shift;    # Wx::MouseEvent
 
-#say 'OnMouseOver';
         my $url = $ctrl->GetURL;
         my $old_caption = $self->app->caption($url);
         $self->save_caption( $old_caption ) unless $self->save_caption;
+        return 1;
     }#}}}
     sub OnMouseOutLink {#{{{
         my $self    = shift;
         my $ctrl    = shift;    # Wx::HyperlinkCtrl
         my $event   = shift;    # Wx::MouseEvent
 
-#say 'OnMouseOut';
         $self->app->caption($self->save_caption);
+        return 1;
     }#}}}
 
     no Moose;

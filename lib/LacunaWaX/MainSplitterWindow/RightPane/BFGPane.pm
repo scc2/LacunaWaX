@@ -1,6 +1,4 @@
 
-### st zagora - 471577
-
 package LacunaWaX::MainSplitterWindow::RightPane::BFGPane {
     use v5.14;
     use LacunaWaX::Model::Client;
@@ -60,6 +58,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::BFGPane {
         $self->content_sizer->Add($self->szr_header, 0, 0, 0);
         $self->content_sizer->AddSpacer(10);
         $self->content_sizer->Add($self->szr_form, 0, 0, 0);
+        return $self;
     }
     sub _build_btn_fire {#{{{
         my $self = shift;
@@ -206,13 +205,11 @@ ${indent}Remember that this form only creates a proposition to fire the BFG, and
     }#}}}
     sub _build_szr_form {#{{{
         my $self = shift;
-        my $y = $self->build_sizer($self->parent, wxVERTICAL, 'Fire BFG Form');
-        return $y;
+        return $self->build_sizer($self->parent, wxVERTICAL, 'Fire BFG Form');
     }#}}}
     sub _build_szr_header {#{{{
         my $self = shift;
-        my $y = $self->build_sizer($self->parent, wxVERTICAL, 'Header');
-        return $y;
+        return $self->build_sizer($self->parent, wxVERTICAL, 'Header');
     }#}}}
     sub _build_szr_lbl_instructions {#{{{
         my $self = shift;
@@ -222,18 +219,15 @@ ${indent}Remember that this form only creates a proposition to fire the BFG, and
     }#}}}
     sub _build_szr_name_orbit {#{{{
         my $self = shift;
-        my $y = $self->build_sizer($self->parent, wxHORIZONTAL, 'Star Name and Orbit', 1);
-        return $y;
+        return $self->build_sizer($self->parent, wxHORIZONTAL, 'Star Name and Orbit', 1);
     }#}}}
     sub _build_szr_reason {#{{{
         my $self = shift;
-        my $y = $self->build_sizer($self->parent, wxHORIZONTAL, 'Reason');
-        return $y;
+        return $self->build_sizer($self->parent, wxHORIZONTAL, 'Reason');
     }#}}}
     sub _build_szr_target_id {#{{{
         my $self = shift;
-        my $y = $self->build_sizer($self->parent, wxHORIZONTAL, 'Target ID', 1);
-        return $y;
+        return $self->build_sizer($self->parent, wxHORIZONTAL, 'Target ID', 1);
     }#}}}
     sub _build_txt_reason {#{{{
         my $self = shift;
@@ -279,6 +273,7 @@ ${indent}Remember that this form only creates a proposition to fire the BFG, and
     sub _set_events {#{{{
         my $self = shift;
         EVT_BUTTON( $self->parent, $self->btn_fire->GetId, sub{$self->OnFire(@_)}  );
+        return 1;
     }#}}}
 
     sub fill_szr_form {#{{{
@@ -380,7 +375,7 @@ without ever having to probe them.
         ### moved around, the order will not match the orbits.
         my $orbit = $self->chc_orbit->GetSelection + 1;
         my $bodies = $star->{'star'}{'bodies'};
-        my $target = first{ $_->{'orbit'} eq $orbit }@$bodies;
+        my $target = first{ $_->{'orbit'} eq $orbit }@{$bodies};
 
         return $target;
     }#}}}
@@ -393,12 +388,14 @@ without ever having to probe them.
         ###
         ### So start by just referring to $self->parl, which will call the lazy 
         ### builder if needed, which returns undef if no parl
-        my $v = $self->parl;
+        $self->parl;
 
         ### Now we know that parl's builder has run.  If there's still no parl 
         ### object in $self, it's because there's no Parliament building on the 
         ### surface.
         return unless $self->has_parl;
+
+        return 1;
     };#}}}
     sub trim {#{{{
         my $self = shift;
@@ -408,7 +405,7 @@ without ever having to probe them.
         return $str;
     }#}}}
 
-    sub OnFire {#{{{
+    sub OnFire {    ### AAAAAAHHHHHHHHHHHHH!!!!!!!!!! #{{{
         my $self    = shift;
         my $parent  = shift;    # Wx::ScrolledWindow
         my $event   = shift;    # Wx::CommandEvent
@@ -440,6 +437,7 @@ without ever having to probe them.
         } or return;
 
         $self->app->popmsg("Proposal to fire the BFG at $target_name has been submitted; don't forget to vote.", "Success!"); 
+        return 1;
     }#}}}
 
     no Moose;

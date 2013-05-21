@@ -26,18 +26,18 @@ package LacunaWaX::MainFrame::MenuBar::Edit {
 
     sub _build_itm_prefs {#{{{
         my $self = shift;
-        my $v = Wx::MenuItem->new(
+        return Wx::MenuItem->new(
             $self, -1,
             '&Preferences',
             'Preferences',
             wxITEM_NORMAL,
             undef   # if defined, this is a sub-menu
         );
-        return $v;
     }#}}}
     sub _set_events {#{{{
         my $self = shift;
         EVT_MENU($self->parent,  $self->itm_prefs->GetId, sub{$self->OnPrefs(@_)});
+        return 1;
     }#}}}
 
     sub OnPrefs {#{{{
@@ -54,6 +54,7 @@ package LacunaWaX::MainFrame::MenuBar::Edit {
             position    => $self_origin,
         );
         $prefs_frame->Show(1);
+        return 1;
     }#}}}
 
     no Moose;

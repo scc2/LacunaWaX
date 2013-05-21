@@ -27,7 +27,7 @@ package LacunaWax::Dialog::Prefs::TabServer {
     has 'txtbox_pass'   => (is => 'rw', isa => 'Wx::TextCtrl',          lazy_build => 1);
     has 'btn_save'      => (is => 'rw', isa => 'Wx::Button',            lazy_build => 1);
 
-    sub BUILD {#{{{
+    sub BUILD {
         my($self, @params) = @_;
 
         my $szr_vert = Wx::BoxSizer->new(wxVERTICAL);
@@ -45,7 +45,7 @@ package LacunaWax::Dialog::Prefs::TabServer {
         $self->_set_events;
 
         return $self;
-    }#}}}
+    }
     sub _build_server_list {#{{{
         my $self = shift;
         my $schema = $self->app->bb->resolve( service => '/Database/schema' );
@@ -53,7 +53,7 @@ package LacunaWax::Dialog::Prefs::TabServer {
 
         my $list = [];
         while(my $rec = $rs_servers->next) {
-            push @$list, $rec->name;
+            push @{$list}, $rec->name;
         }
         return $list;
     }#}}}
@@ -104,8 +104,7 @@ package LacunaWax::Dialog::Prefs::TabServer {
     }#}}}
     sub _build_btn_save {#{{{
         my $self = shift;
-        my $v = Wx::Button->new($self->pnl_main, -1, "Save");
-        return $v;
+        return Wx::Button->new($self->pnl_main, -1, "Save");
     }#}}}
     sub _build_chc_server {#{{{
         my $self = shift;
@@ -115,7 +114,7 @@ package LacunaWax::Dialog::Prefs::TabServer {
     }#}}}
     sub _build_rdo_protocol {#{{{
         my $self = shift;
-        my $v = Wx::RadioBox->new(
+        return Wx::RadioBox->new(
             $self->pnl_main, -1, 
             "Connect with", 
             wxDefaultPosition, 
@@ -124,7 +123,6 @@ package LacunaWax::Dialog::Prefs::TabServer {
             1, 
             wxRA_SPECIFY_ROWS
         );
-        return $v;
     }#}}}
     sub _build_rdo_http {#{{{
         my $self = shift;
@@ -157,28 +155,25 @@ package LacunaWax::Dialog::Prefs::TabServer {
     }#}}}
     sub _build_txtbox_user {#{{{
         my $self = shift;
-        my $v = Wx::TextCtrl->new($self->pnl_main, -1, "", wxDefaultPosition, Wx::Size->new(150,25));
-        return $v;
+        return Wx::TextCtrl->new($self->pnl_main, -1, q{}, wxDefaultPosition, Wx::Size->new(150,25));
     }#}}}
     sub _build_txtbox_pass {#{{{
         my $self = shift;
-        my $v = Wx::TextCtrl->new($self->pnl_main, -1, "", wxDefaultPosition, Wx::Size->new(150,25));
-        return $v;
+        return Wx::TextCtrl->new($self->pnl_main, -1, q{}, wxDefaultPosition, Wx::Size->new(150,25));
     }#}}}
     sub _build_main_sizer {#{{{
         my $self = shift;
-        my $v = Wx::BoxSizer->new(wxHORIZONTAL);
-        return $v;
+        return Wx::BoxSizer->new(wxHORIZONTAL);
     }#}}}
     sub _build_pnl_main {#{{{
         my $self = shift;
-        my $v = Wx::Panel->new($self->parent, -1, wxDefaultPosition, wxDefaultSize);
-        return $v;
+        return Wx::Panel->new($self->parent, -1, wxDefaultPosition, wxDefaultSize);
     }#}}}
     sub _set_events {#{{{
         my $self = shift;
         EVT_BUTTON(     $self->pnl_main,  $self->btn_save->GetId,     sub{$self->ancestor->OnSavePrefs(@_)} );
         EVT_CHOICE(     $self->pnl_main,  $self->chc_server->GetId,   sub{$self->OnChooseServer()} );
+        return 1;
     }#}}}
 
     sub get_server_protocol {#{{{
@@ -200,6 +195,7 @@ package LacunaWax::Dialog::Prefs::TabServer {
         else {
             $self->rdo_http->SetValue(1);
         }
+        return 1;
     }#}}}
     sub set_txtbox_user {#{{{
         my $self        = shift;
@@ -216,6 +212,7 @@ package LacunaWax::Dialog::Prefs::TabServer {
         if( my $r = $rs->next ) {
             $self->txtbox_user->SetValue($r->username);
         }
+        return 1;
     }#}}}
     sub set_pass {#{{{
         my $self = shift;
@@ -234,6 +231,7 @@ package LacunaWax::Dialog::Prefs::TabServer {
             $password = $rec->password;
         }
         $self->txtbox_pass->SetValue( $password );
+        return 1;
     }#}}}
     sub set_default_account {#{{{
         my $self = shift;
@@ -268,8 +266,8 @@ package LacunaWax::Dialog::Prefs::TabServer {
             unless( $rs->count ) {
                 $state = 1;
             }
-
         }
+        return 1;
     }#}}}
 
     sub OnChooseServer {#{{{
@@ -278,16 +276,17 @@ package LacunaWax::Dialog::Prefs::TabServer {
         $self->set_txtbox_user();
         $self->set_default_account();
         $self->set_pass();
+        return 1;
     }#}}}
     sub OnChooseUser {#{{{
         my $self = shift;
         $self->set_default_account();
         $self->set_pass();
+        return 1;
     }#}}}
 
     no Moose;
     __PACKAGE__->meta->make_immutable; 
-
 }
 
 1;
