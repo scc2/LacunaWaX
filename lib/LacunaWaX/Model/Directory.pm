@@ -15,8 +15,9 @@ inside will be locked and cause explosions.
 =cut
 
 package LacunaWaX::Model::Directory {
-    use English qw( -no_match_vars );
+    use Carp;
     use Cwd qw(abs_path);
+    use English qw( -no_match_vars );
     use File::Spec;
     use File::Which;
     use POSIX ":sys_wait_h";
@@ -39,7 +40,7 @@ package LacunaWaX::Model::Directory {
     sub _make_path_absolute {#{{{
         my $self = shift;
         unless(-e $self->path) {
-            die $self->path . ": No such file or directory.";
+            croak $self->path . ": No such file or directory.";
         }
         my $ap = abs_path($self->path);
         $self->{'path'} = $ap;
@@ -48,7 +49,7 @@ package LacunaWaX::Model::Directory {
     sub make_world_writable {#{{{
         my $self = shift;
         unless($self->path and -e $self->path) {
-            die "You must set the path attribute to a file or directory before calling make_world_writable.";
+            croak "You must set the path attribute to a file or directory before calling make_world_writable.";
         }
 
         my @args;
@@ -68,17 +69,19 @@ package LacunaWaX::Model::Directory {
 
         my $rv = 0;
         if( $self->cacls ) {
-            open my $cperr, '>&', STDERR;
-            open my $cpout, '>&', STDOUT;
-            open STDOUT, File::Spec->devnull;
-            open STDERR, File::Spec->devnull;
+            open my $cperr, '>&', STDERR or croak $ERRNO;       ## no critic qw(RequireBriefOpen)
+            open my $cpout, '>&', STDOUT or croak $ERRNO;       ## no critic qw(RequireBriefOpen)
+            open STDOUT, File::Spec->devnull or croak $ERRNO;   ## no critic qw(ProhibitTwoArgOpen)
+            open STDERR, File::Spec->devnull or croak $ERRNO    ## no critic qw(ProhibitTwoArgOpen)
             $rv = system $self->cacls, @args;
-            open STDERR, '>&', $cperr;
-            open STDOUT, '>&', $cpout;
+            open STDERR, '>&', $cperr or croak $ERRNO;
+            open STDOUT, '>&', $cpout or croak $ERRNO;
         }
         return $rv; # 0 on success, > 0 on failure.
     }#}}}
 
+    no Moose;
+    __PACKAGE__->meta->make_immutable; 
 }
 
 1;

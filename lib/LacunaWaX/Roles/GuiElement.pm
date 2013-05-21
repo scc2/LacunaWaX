@@ -88,6 +88,7 @@ package LacunaWaX::Roles::GuiElement {
     after BUILD => sub {
         my $self = shift;
         $self->_set_events;
+        return 1;
     };
 
     sub build_sizer {#{{{
@@ -112,6 +113,8 @@ package LacunaWaX::Roles::GuiElement {
 
         return $hr->{'sizer'};
     }#}}}
+
+    no Moose::Role;
 }
 
 1;

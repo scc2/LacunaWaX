@@ -193,28 +193,27 @@ package LacunaWaX::Roles::MainSplitterWindow::RightPane {
         $self->main_horiz_sizer->Add($self->content_sizer, 0, 0, 0);
 
         $self->parent->SetSizer($self->main_sizer);
+        return $self;
     };
-    after _set_events => sub {
+    after _set_events => sub {#{{{
         my $self = shift;
-        EVT_ENTER_WINDOW(   $self->parent,                                  sub{$self->OnMouseEnterScreen(@_)}      );
-        EVT_LEAVE_WINDOW(   $self->parent,                                  sub{$self->OnMouseLeaveScreen(@_)}      );
-        EVT_KILL_FOCUS(     $self->parent,                                  sub{$self->OnAppLoseFocus(@_)}          );
-    };
+        EVT_ENTER_WINDOW(   $self->parent,  sub{$self->OnMouseEnterScreen(@_)}      );
+        EVT_LEAVE_WINDOW(   $self->parent,  sub{$self->OnMouseLeaveScreen(@_)}      );
+        EVT_KILL_FOCUS(     $self->parent,  sub{$self->OnAppLoseFocus(@_)}          );
+        return 1;
+    };#}}}
 
     sub _build_content_sizer {#{{{
         my $self = shift;
-        my $y = $self->build_sizer($self->parent, wxVERTICAL, 'Content Sizer');
-        return $y;
+        return $self->build_sizer($self->parent, wxVERTICAL, 'Content Sizer');
     }#}}}
     sub _build_main_sizer {#{{{
         my $self = shift;
-        my $y = $self->build_sizer($self->parent, wxVERTICAL, 'Main Vert Sizer');
-        return $y;
+        return $self->build_sizer($self->parent, wxVERTICAL, 'Main Vert Sizer');
     }#}}}
     sub _build_main_horiz_sizer {#{{{
         my $self = shift;
-        my $y = $self->build_sizer($self->parent, wxHORIZONTAL, 'Main Horiz Sizer');
-        return $y;
+        return $self->build_sizer($self->parent, wxHORIZONTAL, 'Main Horiz Sizer');
     }#}}}
     sub _build_refocus_window_name {#{{{
         my $self = shift;
@@ -235,6 +234,7 @@ package LacunaWaX::Roles::MainSplitterWindow::RightPane {
         $self->scroll_y($y);
 
         $event->Skip;
+        return 1;
     }#}}}
     sub OnMouseEnterScreen {#{{{
         my $self    = shift;
@@ -256,6 +256,7 @@ package LacunaWaX::Roles::MainSplitterWindow::RightPane {
             $parent->Scroll( $self->scroll_x, $self->scroll_y );
             $self->parent->Show(1);
         }
+        return 1;
     }#}}}
     sub OnMouseLeaveScreen {#{{{
         my $self    = shift;
@@ -265,8 +266,10 @@ package LacunaWaX::Roles::MainSplitterWindow::RightPane {
         my($x,$y) = $parent->GetViewStart;
         $self->scroll_x($x);
         $self->scroll_y($y);
+        return 1;
     }#}}}
 
+    no Moose::Role;
 }
 
 1;

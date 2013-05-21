@@ -13,6 +13,7 @@ This container has no caching at all.
 package LacunaWaX::Model::Container {
     use v5.14;
     use Bread::Board;
+    use Carp;
     use Moose;
     use MooseX::NonMoose;
 
@@ -48,7 +49,7 @@ package LacunaWaX::Model::Container {
 
     sub _build_help_index {#{{{
         my $self = shift;
-        return join '/', ($self->root_dir, 'user', 'doc', 'html', 'html.idx');
+        return join q{/}, ($self->root_dir, 'user', 'doc', 'html', 'html.idx');
     }#}}}
     sub _check_caller_type {#{{{
         ### This trigger is emulating an enum, which we could get out of 
@@ -59,8 +60,9 @@ package LacunaWaX::Model::Container {
         my $new_type = shift;
         my $old_type = shift;
         unless( $new_type ~~ [qw(web local)] ) {
-            die "Invalid caller_type '$new_type'; must be 'web' or 'local'."
+            croak "Invalid caller_type '$new_type'; must be 'web' or 'local'."
         }
+        return 1;
     }#}}}
     sub _check_log_file_min_level {#{{{
         ### This trigger is emulating an enum, which we could get out of 
@@ -71,8 +73,9 @@ package LacunaWaX::Model::Container {
         my $new_type = shift;
         my $old_type = shift;
         unless( $new_type ~~ [ $self->valid_log_levels ] ) {
-            die "Invalid log_file_min_level '$new_type'; see valid_log_levels() for valid options.";
+            croak "Invalid log_file_min_level '$new_type'; see valid_log_levels() for valid options.";
         }
+        return 1;
     }#}}}
     sub valid_log_levels {#{{{
         return qw(debug info notice warning error critical alert emergency);
@@ -82,7 +85,6 @@ package LacunaWaX::Model::Container {
         my $self = shift;
 
         container $self => as {
-
             container 'Database' => as {#{{{
                 service 'db_file'       => $self->db_file;
                 service 'sql_options'   => $self->sql_options;
@@ -179,12 +181,12 @@ package LacunaWaX::Model::Container {
                 );#}}}
             };#}}}
             container 'Directory' => as {#{{{
-                service 'assets'    => join '/', $self->root_dir, 'user', 'assets';
-                service 'bin'       => join '/', $self->root_dir, 'bin';
-                service 'html'      => join '/', $self->root_dir, 'user', 'doc', 'html';
-                service 'ico'       => join '/', $self->root_dir, 'user', 'ico';
+                service 'assets'    => join q{/}, $self->root_dir, 'user', 'assets';
+                service 'bin'       => join q{/}, $self->root_dir, 'bin';
+                service 'html'      => join q{/}, $self->root_dir, 'user', 'doc', 'html';
+                service 'ico'       => join q{/}, $self->root_dir, 'user', 'ico';
                 service 'root'      => $self->root_dir;
-                service 'user'      => join '/', $self->root_dir, 'user';
+                service 'user'      => join q{/}, $self->root_dir, 'user';
             };#}}}
             container 'Globals' => as {#{{{
                 service 'api_key' => $self->api_key;
@@ -261,7 +263,12 @@ package LacunaWaX::Model::Container {
                 ];
             };#}}}
         };
+
+        return $self;
     }
+
+    no Moose;
+    __PACKAGE__->meta->make_immutable; 
 }
 
 1;

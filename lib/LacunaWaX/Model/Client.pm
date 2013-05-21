@@ -157,12 +157,13 @@ actually Games::Lacuna::Client methods.
 
 package LacunaWaX::Model::Client {
     use v5.14;
-    use Moose;
+    use Carp;
     use Data::Dumper;   # used for actual output, not just debugging.  Don't remove.
     use DateTime;
     use Games::Lacuna::Client;
     use List::Util qw(first);
     use Math::BigFloat;
+    use Moose;
     use Try::Tiny;
 
     use LacunaWaX::Model::Client::Spy;
@@ -243,15 +244,16 @@ package LacunaWaX::Model::Client {
 
     sub BUILD {
         my $self = shift;
+        return $self;
     }
-    sub AUTOLOAD {#{{{
+    sub AUTOLOAD {## no critic qw(RequireArgUnpacking ProhibitAutoloading) {{{
         my $self = shift;
         my @args = @_;
 
-        ### This is meant as a convenience to users of this module.  Calls to 
-        ### the game server client that occur from within this module _are_ 
-        ### explicitly calling $self->client - no need to pass through autoload 
-        ### if we know damn well that's what we're going to be doing.
+        ### This is meant as a convenience.  Calls to the game server client 
+        ### that occur from within this module _are_ explicitly calling 
+        ### $self->client - no need to pass through autoload if we know damn 
+        ### well that's what we're going to be doing.
 
         ### So a call to
         ###     $self->app->game_client->flurble
@@ -272,7 +274,7 @@ package LacunaWaX::Model::Client {
         my $rec = $schema->resultset('ServerAccounts')->search({
             server_id           => $self->server_id,
             default_for_server  => '1'
-        })->single or die "Could not find default account for server " . $self->server_rec->name;
+        })->single or croak "Could not find default account for server " . $self->server_rec->name;
 
         ### The user may have switched up his password from sitter to full and 
         ### attempted to reconnect.
@@ -369,7 +371,7 @@ package LacunaWaX::Model::Client {
         my $schema = $self->bb->resolve( service => '/Database/schema' );
         my $rec = $schema->resultset('Servers')->find({
             id => $self->server_id
-        }) or die "Could not find server with id '" . $self->server_id . "'.";
+        }) or croak "Could not find server with id '" . $self->server_id . q{'.};
 
         return $rec;
     }#}}}
@@ -379,7 +381,7 @@ package LacunaWaX::Model::Client {
     }#}}}
     sub _build_warships {#{{{
         my $self = shift;
-        my $list = [sort qw(
+        return [sort qw(
             bleeder
             detonator
             fighter
@@ -402,22 +404,27 @@ package LacunaWaX::Model::Client {
             thud
         )];
     }#}}}
-sub _change_allow_sleep {#{{{
-    my $self      = shift;
-    my $new_sleep = shift;
-    my $old_sleep = shift;
-    $self->client->allow_sleep( $new_sleep );
-}#}}}
-sub _change_rpc_sleep {#{{{
-    my $self      = shift;
-    my $new_sleep = shift;
-    my $old_sleep = shift;
-    $self->client->rpc_sleep( $new_sleep );
-}#}}}
+    sub _change_allow_sleep {#{{{
+        my $self      = shift;
+        my $new_sleep = shift;
+        my $old_sleep = shift;
+        $self->client->allow_sleep( $new_sleep );
+        return 1;
+    }#}}}
+    sub _change_rpc_sleep {#{{{
+        my $self      = shift;
+        my $new_sleep = shift;
+        my $old_sleep = shift;
+        $self->client->rpc_sleep( $new_sleep );
+        return 1;
+    }#}}}
 
     sub cartesian_distance {#{{{
         my $self = shift;
-        my($ox, $oy, $tx, $ty) = @_;
+        my $ox = shift;
+        my $oy = shift;
+        my $tx = shift;
+        my $ty = shift;
 
 =head2 cartesian_distance
 
@@ -451,6 +458,10 @@ Returns the number of halls needed to get from one level to another.
 =cut
 
         return $self->triangle($max) - $self->triangle($current);
+    }#}}}
+    sub make_key {## no critic qw(RequireArgUnpacking) {{{
+        my $self = shift;
+        return join q{:}, @_;
     }#}}}
     sub ping {#{{{
         my $self = shift;
@@ -504,7 +515,6 @@ false and never die.
             return;
         };
         return $rv;
-
     }#}}}
     sub planet_id {#{{{
         my $self  = shift;
@@ -568,7 +578,7 @@ doing so returns much more quickly than having to recreate them.
 
 =cut
 
-        my $key = join ':', ($name, $pass);
+        my $key = $self->make_key($name, $pass);
         unless($force) {
             if( defined $self->sitter_clients->{$key} ) {
                 return $self->sitter_clients->{$key};
@@ -603,10 +613,10 @@ doing so returns much more quickly than having to recreate them.
         my $self = shift;
 
         my $target_time = shift;
-        ref $target_time eq 'DateTime' or die "target_time arg must be a DateTime object.";
+        ref $target_time eq 'DateTime' or croak "target_time arg must be a DateTime object.";
 
         my $origin_time = shift || DateTime->now(time_zone => $target_time->time_zone);
-        ref $origin_time eq 'DateTime' or die "optional origin_time arg must be undef or a DateTime object.";
+        ref $origin_time eq 'DateTime' or croak "optional origin_time arg must be undef or a DateTime object.";
 
 =head2 seconds_till
 
@@ -692,7 +702,6 @@ Returns the triangle sum of a given int.
 =cut
 
         return( $int * ($int+1) / 2 ); 
-
     }#}}}
 
 ### These require hitting the game server, so try/catch as needed.
@@ -705,7 +714,7 @@ Returns the triangle sum of a given int.
         my $alliance_id;
         if( $self->wxbb ) {
             my $chi  = $self->wxbb->resolve( service => '/Cache/raw_memory' );
-            my $key  = join ':', ('ALLIANCE_ID');
+            my $key  = $self->make_key('ALLIANCE_ID');
             $alliance_id = $chi->compute($key, '1 hour', sub {
                 my $emp = $self->client->empire;
                 my $my_emp_id = $self->empire_status->{'empire'}{'id'};
@@ -732,7 +741,7 @@ Returns the triangle sum of a given int.
         ### Find the current user's alliance ID...
         my $alliance_id = $self->get_alliance_id();
         unless($alliance_id) {
-            die "You are not in an alliance.";
+            croak "You are not in an alliance.";
         }
 
         ### ...get the alliance object for that ID...
@@ -740,12 +749,12 @@ Returns the triangle sum of a given int.
         my $alliance_profile;
         if( $self->wxbb ) {
             my $chi  = $self->wxbb->resolve( service => '/Cache/raw_memory' );
-            my $a_key  = join ':', ('ALLIANCE', $alliance_id);
+            my $a_key  = join q{:}, ('ALLIANCE', $alliance_id);
             $alliance = $chi->compute($a_key, '1 hour', sub {
                 $self->app->game_client->alliance( id => $alliance_id );
             });
 
-            my $ap_key = join ':', ('ALLIANCE_PROFILE', $alliance_id);
+            my $ap_key = join q{:}, ('ALLIANCE_PROFILE', $alliance_id);
             $alliance_profile = $chi->compute($ap_key, '1 hour', sub {
                 $alliance->view_profile($alliance_id);
             });
@@ -796,7 +805,7 @@ of the hashref:
 
         ### Rework alliance_members arrayref into simply {id => 'name'}
         my $ally_hash = {};
-        map{ $ally_hash->{$_->{'id'} } = $_->{'name'} }@$alliance_members;
+        map{ $ally_hash->{$_->{'id'} } = $_->{'name'} }@{$alliance_members};
         return $ally_hash;
     }#}}}
     sub get_available_ships {#{{{
@@ -826,7 +835,7 @@ If you want just a subset, send an arrayref of the types you're interested in:
         my $ships;
         if( $self->wxbb ) {
             my $chi  = $self->wxbb->resolve( service => '/Cache/raw_memory' );
-            my $key  = join ':', ('BODIES', 'SHIPS', 'AVAILABLE', (sort @$types), $pid);
+            my $key  = $self->make_key('BODIES', 'SHIPS', 'AVAILABLE', (sort @{$types}), $pid);
             $filter->{type} = $types;
             $self->app->Yield if $self->app;
             $ships = $chi->compute($key, '1 hour', sub {
@@ -847,7 +856,7 @@ If you want just a subset, send an arrayref of the types you're interested in:
         my $body;
         if( $self->wxbb ) {
             my $chi  = $self->wxbb->resolve( service => '/Cache/raw_memory' );
-            my $key  = join ':', ('BODIES', $pid);
+            my $key  = $self->make_key('BODIES', $pid);
             $body = $chi->compute($key, '1 hour', sub {
                 $self->client->body(id => $pid);
             });
@@ -902,13 +911,13 @@ planet.
         my $bs;
         if( $self->wxbb ) {
             my $chi = $self->wxbb->resolve( service => '/Cache/raw_memory' );
-            my $key = join ':', ('BODIES', 'STATUS', $pid);
+            my $key = $self->make_key('BODIES', 'STATUS', $pid);
             $bs     = $chi->compute($key, '1 hour', $code_to_cache);
             ### Something failed; don't keep the failure in the cache.
             $bs or $chi->remove($key);
         }
         else {
-            $bs = &$code_to_cache;
+            $bs = &{$code_to_cache};
         }
 
         return $bs || {};   # always return a hashref
@@ -939,7 +948,7 @@ Caveat progammor.
         ### No caching needed here; both get_buildings and get_building_object 
         ### are managing their own caches.
         my $bldgs_hr = $self->get_buildings( $pid, $type, $force );
-        my($id, $bldg_hr) = each %$bldgs_hr;
+        my($id, $bldg_hr) = each %{$bldgs_hr};
         return $self->get_building_object($pid, $bldg_hr);
     }#}}}
     sub get_buildings {#{{{
@@ -973,16 +982,16 @@ sending a true value as the third ('force') arg:
 
 
         my $code_to_cache = sub {
-            my $b = $pobj->get_buildings;
-            ref $b eq 'HASH' and defined $b->{'buildings'} or return;
-            $b = $b->{'buildings'};
+            my $bldg = $pobj->get_buildings;
+            ref $bldg eq 'HASH' and defined $bldg->{'buildings'} or return;
+            $bldg = $bldg->{'buildings'};
         };
 
 
         my $all_bldgs;
         if( $self->wxbb ) {
             my $chi = $self->wxbb->resolve( service => '/Cache/raw_memory' );
-            my $key = join ':', ('BODIES', 'BULIDINGS', $pid);
+            my $key = $self->make_key('BODIES', 'BULIDINGS', $pid);
             $chi->remove($key) if $force;
             $all_bldgs = $chi->compute($key, '1 hour', $code_to_cache);
             ### Something failed; don't keep failure in the cache.
@@ -992,14 +1001,14 @@ sending a true value as the third ('force') arg:
             }
         }
         else {
-            $all_bldgs = &$code_to_cache;
+            $all_bldgs = &{$code_to_cache};
         }
 
         $self->app->Yield if $self->app;
         return $all_bldgs unless $type;
 
         my $type_bldgs = {};
-        foreach my $id( keys %$all_bldgs ) {
+        foreach my $id( keys %{$all_bldgs} ) {
             $self->app->Yield if $self->app;
             my $this_bldg = $all_bldgs->{$id};
             if( 
@@ -1037,7 +1046,7 @@ GLC building object.
         if( $self->wxbb ) {
             ### wxbb only present from the GUI; it's where the cache lives.
             my $chi = $self->wxbb->resolve( service => '/Cache/raw_memory' );
-            my $key = join ':', ('BODIES', 'BULIDINGS', 'OBJECTS', $pid, $id);
+            my $key = $self->make_key('BODIES', 'BULIDINGS', 'OBJECTS', $pid, $id);
             $chi->remove($key) if $force;
             $obj = $chi->compute($key, '1 hour', sub {
                 $self->client->building(id => $id, type => $type);
@@ -1093,7 +1102,7 @@ Returns a hashref containing 'status' (sigh) and 'building', which is what you w
         if( $self->wxbb ) {
             ### wxbb only present from the GUI; it's where the cache lives.
             my $chi = $self->wxbb->resolve( service => '/Cache/raw_memory' );
-            my $key = join ':', ('BODIES', 'BULIDINGS', 'VIEWS', $pid, $bid);
+            my $key = $self->make_key('BODIES', 'BULIDINGS', 'VIEWS', $pid, $bid);
             $view = $chi->compute($key, '1 hour', sub {
                 $bldg_obj->view();
             });
@@ -1155,7 +1164,7 @@ game, this returns all glyphs, including those we have zero of.
         my $am = $self->get_building($pid, 'Archaeology Ministry');
         $self->app->Yield if $self->app;
         unless( $am and $am->isa('Games::Lacuna::Client::Buildings::Archaeology') ) {
-            die "No Archaeology Ministry exists on this body, so you can't assemble glyphs here.";
+            croak "No Archaeology Ministry exists on this body, so you can't assemble glyphs here.";
         }
 
         my $code_to_cache = sub {
@@ -1170,7 +1179,7 @@ game, this returns all glyphs, including those we have zero of.
 
             ### Get glyphs we've got nonzero of; remove those oretypes from 
             ### the ore hash.
-            foreach my $glyphs_hr(@$glyphs_on_planet) {
+            foreach my $glyphs_hr(@{$glyphs_on_planet}) {
                 delete $all_ores{ $glyphs_hr->{'name'}  };
                 $self->app->Yield if $self->app;
             }
@@ -1181,10 +1190,10 @@ game, this returns all glyphs, including those we have zero of.
                     name     => $remaining_ore,
                     quantity => 0,
                 };
-                push @$glyphs_on_planet, $hr;
+                push @{$glyphs_on_planet}, $hr;
                 $self->app->Yield if $self->app;
             }
-            my $sorted_glyphs = [ sort{ $a->{'name'} cmp $b->{'name'} }@$glyphs_on_planet ];
+            my $sorted_glyphs = [ sort{ $a->{'name'} cmp $b->{'name'} }@{$glyphs_on_planet} ];
             $self->app->Yield if $self->app;
             return $sorted_glyphs;
         };
@@ -1192,19 +1201,19 @@ game, this returns all glyphs, including those we have zero of.
         my $sorted_glyphs;
         if( $self->wxbb ) {
             my $chi = $self->wxbb->resolve( service => '/Cache/raw_memory' );
-            my $key = join ':', ('BODIES', 'GLYPHS', $pid);
+            my $key = $self->make_key('BODIES', 'GLYPHS', $pid);
             $sorted_glyphs = $chi->compute($key, '1 hour', $code_to_cache);
             $self->app->Yield if $self->app;
         }
         else {
-            $sorted_glyphs = &$code_to_cache;
+            $sorted_glyphs = &{$code_to_cache};
         }
 
         return $sorted_glyphs;
     }#}}}
     sub get_lottery_links {#{{{
         my $self     = shift;
-        my $pid      = shift || die "planet_id required";
+        my $pid      = shift || croak "planet_id required";
         my $ent_dist = shift || q{};
 
 =head2 get_lottery_links
@@ -1256,7 +1265,7 @@ access those links in the first place; hence the need for the planet_id.
 
 
         my $chi;
-        my $key  = join ':', ('LOTTERY', 'OPTIONS');
+        my $key = $self->make_key('LOTTERY', 'OPTIONS');
         if( $self->wxbb ) {
             $chi  = $self->wxbb->resolve( service => '/Cache/raw_memory' );
         }
@@ -1274,7 +1283,7 @@ access those links in the first place; hence the need for the planet_id.
             $ent_dist = $self->get_building($pid, 'Entertainment')
         }
         ref $ent_dist eq 'Games::Lacuna::Client::Buildings::Entertainment'
-            or die "No entertainment district found.";
+            or croak "No entertainment district found.";
 
         my $opts;
         if( $chi ) {
@@ -1306,7 +1315,7 @@ ship can attain.
 =cut
 
         my $min_speed = 9_999_999;
-        foreach my $s( @$ships ) {
+        foreach my $s( @{$ships} ) {
             $min_speed = $s->{'speed'} if $s->{'speed'} < $min_speed;
         }
         return $min_speed;
@@ -1348,7 +1357,7 @@ by GLC's view_all_ships.  The filter for get_ships() differs in that:
         my $ships;
         if( $self->wxbb ) {
             my $chi  = $self->wxbb->resolve( service => '/Cache/raw_memory' );
-            my $key  = join ':', ('BODIES', 'SHIPS', $pid);
+            my $key  = $self->make_key('BODIES', 'SHIPS', $pid);
             $ships = $chi->compute($key, '1 hour', sub {
                 $sp->view_all_ships({no_paging => 1})->{'ships'};
             });
@@ -1362,7 +1371,7 @@ by GLC's view_all_ships.  The filter for get_ships() differs in that:
         defined $filter->{type} and ref $filter->{type} eq 'ARRAY' or delete $filter->{type};
 
         my $ret_ships = [];
-        if( keys %$filter ) {
+        if( keys %{$filter} ) {
             foreach my $s( @{$ships} ) {
                 $self->app->Yield if $self->app;
                 my $save = 1;
@@ -1409,7 +1418,7 @@ hashref of the counts of each ship type.
 =cut
 
         my $ship_counts = {};
-        foreach my $s( @$ships ) {
+        foreach my $s( @{$ships} ) {
             $ship_counts->{ $s->{'type'} }++;
             $self->app->Yield if $self->app;
         }
@@ -1435,7 +1444,6 @@ Returns an AoH, one spy per H.
         return unless $im and ref $im eq 'Games::Lacuna::Client::Buildings::Intelligence';
 
         my $code_to_cache = sub {
-            #my $rv = $self->call($im, 'view_all_spies');
             my $rv = $im->view_all_spies;
             defined $rv->{'spies'} and ref $rv->{'spies'} eq 'ARRAY' and return $rv->{'spies'};
             return [];
@@ -1445,12 +1453,12 @@ Returns an AoH, one spy per H.
         my $spies;
         if( $self->wxbb ) {
             my $chi  = $self->wxbb->resolve( service => '/Cache/raw_memory' );
-            my $key  = join ':', ('BODIES', 'SPIES', $pid);
+            my $key  = $self->make_key('BODIES', 'SPIES', $pid);
             $spies = $chi->compute($key, '1 hour', $code_to_cache);
             $self->app->Yield if $self->app;
         }
         else {
-            $spies = &$code_to_cache;
+            $spies = &{$code_to_cache};
         }
 
         return $spies;

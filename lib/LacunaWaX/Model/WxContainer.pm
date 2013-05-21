@@ -13,6 +13,8 @@ package LacunaWaX::Model::WxContainer {
     use Archive::Zip;
     use Archive::Zip::MemberRead;
     use Bread::Board;
+    use Carp;
+    use English qw( -no_match_vars );
     use Moose;
     use MooseX::NonMoose;
     use Try::Tiny;
@@ -33,7 +35,7 @@ package LacunaWaX::Model::WxContainer {
 
         container $self => as {
             container 'Assets' => as {#{{{
-                my $zipfile         = join '/', $self->root_dir, 'user/assets.zip';
+                my $zipfile         = join q{/}, $self->root_dir, 'user/assets.zip';
                 my $zip             = Archive::Zip->new($zipfile);
                 service 'zip'       => $zip;
                 service 'zipfile'   => $zipfile;
@@ -150,9 +152,9 @@ which should save some space and time.
                                             $binary .= $buffer;
                                             last unless $read;
                                         }
-                                        open my $sfh, '<', \$binary or die $!;
+                                        open my $sfh, '<', \$binary or croak "Unable to open stream: $ERRNO";
                                         my $img = Wx::Image->new($sfh, wxBITMAP_TYPE_ANY);
-                                        close $sfh;
+                                        close $sfh or croak "Unable to close stream: $ERRNO";
                                         return(wantarray) ? ($img, $binary) : $img;
                                     }
                                 );
@@ -217,7 +219,12 @@ which should save some space and time.
                 service 'header_7'   => Wx::Font->new(10, wxSWISS, wxNORMAL, wxBOLD, 0);
             };#}}}
         };
+
+        return $self;
     }
+
+    no Moose;
+    __PACKAGE__->meta->make_immutable; 
 }
 
 1;

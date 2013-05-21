@@ -1,6 +1,7 @@
 
 package LacunaWaX::Model::DefaultData {
     use v5.14;
+    use Carp;
     use Moose;
     use Try::Tiny;
 
@@ -84,7 +85,7 @@ package LacunaWaX::Model::DefaultData {
         my $schema  = shift;
 
         unless( ref $schema eq 'LacunaWaX::Model::Schema' ) {
-            die "Incorrect schema passed to add_servers."
+            croak "Incorrect schema passed to add_servers."
         }
 
         my $hr = $self->servers;
@@ -98,14 +99,14 @@ package LacunaWaX::Model::DefaultData {
                 { key => 'unique_by_name' }
             );
         }
-
+        return 1;
     }#}}}
     sub add_stations {#{{{
         my $self    = shift;
         my $schema  = shift;
 
         unless( ref $schema eq 'LacunaWaX::Model::Schema' ) {
-            die "Incorrect schema passed to add_servers."
+            croak "Incorrect schema passed to add_servers."
         }
 
         foreach my $sid(@{ $self->stations }) {
@@ -119,6 +120,7 @@ package LacunaWaX::Model::DefaultData {
             $row->type_general('space station');
             $row->update;
         }
+        return 1;
     }#}}}
 
     no Moose;

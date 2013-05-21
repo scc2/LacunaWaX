@@ -44,6 +44,7 @@ package LacunaWaX::Model::Schema::ArchMinPrefs {#{{{
         my $table = shift;
         $table->add_index(name => 'ArchMinPrefs_server_id', fields => ['server_id']);
         $table->add_index(name => 'ArchMinPrefs_body_id',   fields => ['body_id']);
+        return 1;
     }#}}}
 
 }#}}}
@@ -66,6 +67,7 @@ package LacunaWaX::Model::Schema::BodyTypes {#{{{
         my $table = shift;
         $table->add_index(name => 'BodyTypes_body_id', fields => ['body_id']);
         $table->add_index(name => 'BodyTypes_type_general', fields => ['type_general']);
+        return 1;
     }#}}}
     
 }#}}}
@@ -181,6 +183,7 @@ package LacunaWaX::Model::Schema::SpyTrainPrefs {#{{{
         my $table = shift;
         $table->add_index(name => 'SpyTrainPrefs_spy_id',   fields => ['spy_id']);
         $table->add_index(name => 'SpyTrainPrefs_train',    fields => ['train']);
+        return 1;
     }#}}}
 
 }#}}}
@@ -211,11 +214,11 @@ package LacunaWaX::Model::Schema::TestTableAgain {#{{{
 }#}}}
 
 package LacunaWaX::Model::Schema {
+    use v5.14;
+    use warnings;
     use base qw(DBIx::Class::Schema);
 
-    use version;
-    my $rev = '$Rev: 297 $';
-    our $VERSION = version->declare( join '.', ('0.1', $rev =~ s/\D//gr) );
+    our $VERSION = '0.1';
 
     __PACKAGE__->load_classes(qw/
         AppPrefsKeystore

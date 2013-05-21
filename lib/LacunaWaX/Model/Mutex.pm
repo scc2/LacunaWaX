@@ -1,6 +1,8 @@
 
 package LacunaWaX::Model::Mutex {
     use v5.14;
+    use Carp;
+    use English qw( -no_match_vars );
     use LacunaWaX::Model::Container;
     use Moose;
     use Try::Tiny;
@@ -13,22 +15,24 @@ package LacunaWaX::Model::Mutex {
     sub BUILD {
         my $self = shift;
         $self->filehandle;
+        return $self;
     }
     sub DEMOLISH {#{{{
         my $self = shift;
         $self->lock_un;
+        return 1;
     }#}}}
     sub _build_filehandle {#{{{
         my $self = shift;
-        open my $fh, '>', $self->lockfile or die $!;
-        close $fh;
-        open $fh, '<', $self->lockfile or die $!;
+        open my $fh, q{>}, $self->lockfile or croak $ERRNO;
+        close $fh or croak $ERRNO;
+        open $fh, q{<}, $self->lockfile or croak $ERRNO;    ## no critic qw(RequireBriefOpen)
         return $fh;
     }#}}}
     sub _build_lockfile {#{{{
         my $self = shift;
         my $dir = $self->bb->resolve( service => '/Directory/user' );
-        my $f = join '/', ($dir, $self->name);
+        my $f = join q{/}, ($dir, $self->name);
         return $f;
     }#}}}
 
@@ -60,15 +64,17 @@ package LacunaWaX::Model::Mutex {
         ### about that either.
         ### Try::Tiny isn't catching the warning, 'no warnings' is.  The try 
         ### blocks are just for good measure.
-        no warnings;
+        no warnings;    ## no critic qw(ProhibitNoWarnings)
         my $rv1 = try { flock $self->filehandle, 8; };
-        my $rv2 = try { close $self->filehandle; };
+        my $rv2 = try { close $self->filehandle or croak $ERRNO; };
         my $rv3 = try { unlink $self->lockfile; };
         use warnings;
 
         return $rv1;
     }#}}}
 
+    no Moose;
+    __PACKAGE__->meta->make_immutable; 
 }
 
 1;

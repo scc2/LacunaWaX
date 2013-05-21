@@ -1,8 +1,9 @@
 use v5.14;
 use utf8;
 
-package LacunaWaX::Model::DBILogger {#{{{
+package LacunaWaX::Model::DBILogger {
     use warnings    qw(FATAL utf8);    # fatalize encoding glitches
+    use Carp;
     use Data::Dumper;
     use DateTime;
     use DateTime::Format::ISO8601;
@@ -21,9 +22,10 @@ package LacunaWaX::Model::DBILogger {#{{{
         my $maxrun = 0;
 
         my $sth  = $self->{'dbh'}->prepare("SELECT MAX(run) FROM $self->{'table'}");
-        $sth->execute() or die DBI::errstr;
+        $sth->execute() or croak DBI::errstr;
         $maxrun = $sth->fetchrow_array() || 0;
-        $maxrun + 1;
+        $maxrun += 1;
+        return 1;
     }#}}}
     sub create_statement {#{{{
         my $self = shift;
@@ -32,7 +34,7 @@ INSERT INTO $self->{table} ('run', 'component', 'level', 'datetime', 'message') 
 SQL
         return $sth;
     }#}}}
-    sub log_message {#{{{
+    sub log_message {## no critic qw(RequireArgUnpacking) {{{
         my $self = shift;
         my %params = @_;
 
@@ -45,7 +47,7 @@ SQL
                 $date = $params{'datetime'};    # it's already in correct format
             }
             else {
-                die "'datetime' parameter must be a DateTime object or ISO8601 format.";
+                croak "'datetime' parameter must be a DateTime object or ISO8601 format.";
             }
         }
         else {
@@ -59,6 +61,7 @@ SQL
             $date,
             $params{'message'}
         );
+        return 1;
     }#}}}
     sub prune_bydate {#{{{
         my $self = shift;
@@ -71,7 +74,7 @@ SQL
 
     no Moose;
     __PACKAGE__->meta->make_immutable;
-}#}}}
+}
 
 ### Add some methods to Log::Dispatch so we can dick around with the output 
 ### channel's settings.
@@ -79,6 +82,7 @@ sub Log::Dispatch::component {#{{{
     my $self        = shift;
     my $component   = shift;
     $self->{'outputs'}{'dbi'}->component( $component );
+    return 1;
 }#}}}
 sub Log::Dispatch::prune_bydate {#{{{
     my $self    = shift;
@@ -90,6 +94,7 @@ sub Log::Dispatch::time_zone {#{{{
     my $self        = shift;
     my $time_zone   = shift;
     $self->{'outputs'}{'dbi'}->time_zone( $time_zone );
+    return 1;
 }#}}}
 
 1;

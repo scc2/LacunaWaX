@@ -2,6 +2,7 @@
 package LacunaWaX::Model::LogsSchema::Logs {#{{{
     use v5.14;
     use base 'DBIx::Class::Core';
+    use Carp;
     use DateTime;
     use DateTime::Format::ISO8601;
 
@@ -26,8 +27,8 @@ package LacunaWaX::Model::LogsSchema::Logs {#{{{
         my $cand = shift;
 
         return $cand->iso8601 if ref $cand eq 'DateTime';
-        return undef unless $cand;
-        die "iiInvalid date format" unless $cand =~ m/^\d{4}-\d\d-\d\d[T ]\d\d:\d\d:\d\d$/;
+        return unless $cand;
+        croak "Invalid date format" unless $cand =~ m/^\d{4}-\d\d-\d\d[T ]\d\d:\d\d:\d\d$/;
         return $cand;
     }#}}}
     sub _column_to_datetime {#{{{
@@ -35,7 +36,7 @@ package LacunaWaX::Model::LogsSchema::Logs {#{{{
         my $cand = shift;
 
         ### It's nullable so a false value will be undef.
-        return undef unless $cand;
+        return unless $cand;
 
         ### The Schemas insert the value in ISO8601, so the 'T' exists between 
         ### date and time.  But if you enter a date manually using SQLite 
@@ -47,13 +48,15 @@ package LacunaWaX::Model::LogsSchema::Logs {#{{{
             return DateTime::Format::ISO8601->parse_datetime($cand);
         }
         else {
-            die "aaInvalid datetime format in database -$cand-"
+            croak "Invalid datetime format in database -$cand-"
         }
+        return 1;
     }#}}}
 
 }#}}}
 
 package LacunaWaX::Model::LogsSchema {
+    use v5.14;
     use base qw(DBIx::Class::Schema);
     __PACKAGE__->load_classes(qw/Logs/);
 }
