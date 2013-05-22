@@ -200,7 +200,8 @@ package LacunaWaX::Dialog::Status {
             $self->size,
             wxRESIZE_BORDER
             |
-            wxDEFAULT_DIALOG_STYLE
+            wxDEFAULT_DIALOG_STYLE,
+            "LacunaWaX Status"
         );
     }#}}}
     sub _build_header_sizer {#{{{

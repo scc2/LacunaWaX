@@ -95,10 +95,8 @@ package LacunaWaX::MainSplitterWindow::LeftPane::BodiesTreeCtrl {
                 );
 
                 ### Both Planets and Space Stations get a Rearrange leaf, and 
-                ### the code is identical.  DRY says to put it once after the 
-                ### if/else, but that would cause the leaf to be out of alpha 
-                ### order.  Leave it for now, revisit this leaf building code 
-                ### later.
+                ### the code is identical.  Its creation is repeated below to 
+                ### keep it in correct alpha order.
                 if(
                     my $rec = $schema->resultset('BodyTypes')->search({
                         body_id         => $pid,

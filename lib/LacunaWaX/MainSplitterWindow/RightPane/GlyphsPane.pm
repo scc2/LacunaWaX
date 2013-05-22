@@ -490,6 +490,14 @@ The problem here is:
     ### Pseudo events
     sub OnClose {#{{{
         my $self = shift;
+        ### Called by RightPane.pm's OnClose event
+        $self->clear_dialog_status;
+        return 1;
+    }#}}}
+    sub OnSwitch {#{{{
+        my $self = shift;
+        ### Called by RightPane.pm's show_right_pane event when the user 
+        ### selects a different right pane.
         $self->clear_dialog_status;
         return 1;
     }#}}}

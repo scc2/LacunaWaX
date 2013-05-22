@@ -19,6 +19,8 @@ package LacunaWaX::MainSplitterWindow::RightPane {
         }
     );
 
+    has 'prev_panel' => (is => 'rw', isa => 'Object', predicate => 'has_prev_panel');
+
     sub BUILD {
         my $self = shift;
         $self->show_right_pane( 'LacunaWaX::MainSplitterWindow::RightPane::DefaultPane' );
@@ -139,7 +141,13 @@ Displays one of the RightPane/*.pm panels in the splitter window's right pane.
             ancestor    => $self,
             planet_name => $pname,
         );
-        unless( $panel ) {
+        if( $panel ) {
+            if( $self->has_prev_panel and $self->prev_panel->can('OnSwitch') ) {
+                $self->prev_panel->OnSwitch;
+            }
+            $self->prev_panel($panel);
+        }
+        else {
             $self->_show_default_panel($pname, $class);
             return;
         }
@@ -242,29 +250,54 @@ __END__
 
 # POD {#{{{
 
-=head2 Adding new Right Panel
+=head2 Adding a new right panel
 
-First you'll need to update the TreeCtrl in the left panel to add your new 
-leaf and a new action handler (follow the existing examples).
+=head3 Create your new panel module under RightPane/
 
-The new action handler will call a method of this class, by convention named 
-"show_NAME_OF_YOUR_NEW_PANE_CONTENTS()".  
+For the most part, just follow the existing examples.  But there are some 
+pseudo-events to be aware of.
 
-Your new method should always start with:
+=over 4
 
- sub show_NAME_OF_YOUR_NEW_PANE_CONTENTS {
-  my $self = shift;
-  $self->clear_pane();
-  $self->app->throb();      # Include if creating your new pane will take more than 1 second
+=item * OnClose
 
-  ...
+Optional.  If it exists, RightPane.pm will call your new panel's OnClose 
+method when the RightPane is itself closed (during RightPane's own OnClose 
+method, which is a true, not a pseudo, event.)
 
-  $self->app->endthrob();   # Include if you called throb() above.
-  $self->finish_pane();
- }
+This RightPane OnClose event is triggered when the entire right panel is 
+closed.  This basically means "when the program is closed".
 
-Your new pane should create a sizer containing a Panel or whatever you need.  
-Set your sizer as $self->main_panel->SetSizer($sizer).
+=item * OnSwitch
+
+Optional.  If it exists, RightPane.pm will call your new panel's OnSwitch 
+method when the user attempts to open a different right panel:
+
+ - User opens the Glyphs panel by clicking the appropriate leaf in the left 
+   tree
+ - User then opens the Rearrange panel by clicking its leaf.
+
+Upon clicking the Rearrange panel, the user is "switching" from the Glyphs 
+panel to the Rearrange panel, and the Glyphs panel's OnSwitch will therefore 
+be called.
+
+This is a good place to clean up any Status windows your panel may have 
+created.
+
+=item * OnDialogStatusClose
+
+Optional.  If your panel needs to open a Dialog::Status window at some point, 
+that status dialog will call your panel's OnDialogStatusClose method when (if) 
+that status dialog gets closed. 
+
+=back
+
+=head3 Update the tree in the left pane
+
+To update the TreeCtrl to include a pointer to your new pane (that the user 
+can click on), first add the leaf itself (in fill_tree; follow existing 
+examples).  Next, add a handler for when that leaf is clicked (in OnTreeClick; 
+again, follow existing examples).
 
 =cut
 
