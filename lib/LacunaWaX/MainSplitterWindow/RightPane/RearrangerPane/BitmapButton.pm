@@ -35,6 +35,10 @@ package LacunaWaX::MainSplitterWindow::RightPane::RearrangerPane::BitmapButton {
     };
     sub _set_events { }
 
+    sub id_for_tooltip {#{{{
+        my $self = shift;
+        return $self->bldg_id;
+    }#}}}
     sub level_for_label {#{{{
         my $self = shift;
         return sprintf "%02d", $self->level;
@@ -49,7 +53,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::RearrangerPane::BitmapButton {
     }#}}}
     sub tooltip_contents {#{{{
         my $self = shift;
-        return $self->name_for_tooltip . ' (' . $self->level_for_tooltip .  ')';
+        return $self->name_for_tooltip . ' (level ' . $self->level_for_tooltip .  ', ID ' . $self->id_for_tooltip .')';
     }#}}}
     sub update_button_tooltip {#{{{
         my $self = shift;
