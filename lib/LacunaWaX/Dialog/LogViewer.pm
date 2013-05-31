@@ -86,7 +86,7 @@ package LacunaWaX::Dialog::LogViewer {
         $v->SetColumnWidth(2,wxLIST_AUTOSIZE_USEHEADER);
         $v->SetColumnWidth(3,wxLIST_AUTOSIZE_USEHEADER);
         $v->Arrange(wxLIST_ALIGN_TOP);
-        $self->app->Yield;
+        $self->yield;
         return $v;
     }#}}}
     sub _build_size {#{{{
@@ -129,7 +129,7 @@ package LacunaWaX::Dialog::LogViewer {
         my $cmp_label  = $self->rdo_component->GetString( $self->rdo_component->GetSelection );
         my $cmp_search = $self->component_values->{$cmp_label} || q{};
 
-        my $schema = $self->app->bb->resolve( service => '/DatabaseLog/schema' );
+        my $schema = $self->get_log_schema;
         my $rs = $schema->resultset('Logs')->search(
             [
                 {component => $cmp_search},
@@ -159,7 +159,7 @@ package LacunaWaX::Dialog::LogViewer {
             $self->list_log->SetItem($row, 2, $r->component);
             $self->list_log->SetItem($row, 3, $r->message);
             $row++;
-            $self->app->Yield;
+            $self->yield;
         }
         $self->list_log->SetColumnWidth(0, wxLIST_AUTOSIZE);
         $self->list_log->SetColumnWidth(1, wxLIST_AUTOSIZE_USEHEADER);

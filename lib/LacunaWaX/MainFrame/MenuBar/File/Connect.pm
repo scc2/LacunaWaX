@@ -21,17 +21,17 @@ package LacunaWaX::MainFrame::MenuBar::File::Connect {
     }#}}}
     sub BUILD {
         my $self    = shift;
-        my $schema  = $self->app->bb->resolve( service => '/Database/schema' );
+        my $schema  = $self->get_main_schema;
 
         ### Build one submenu per server.  Immediately gray out servers for 
         ### which the user has not yet set username/password.
-        foreach my $srvr_id( keys %{$self->app->servers} ) {
-            my $rec = $self->app->servers->{$srvr_id};
+        for my $srvr_id( sort{$a<=>$b}$self->server_ids ) {
+            my $srvr_rec = $self->server_record_by_id($srvr_id);
 
             ### OnConnect is relying on the MenuItem name being exactly 
-            ### $rec->name - don't change that.
-            my $menu_item = $self->Append( -1, $rec->name, "Connect to " . $rec->url );
-            $self->connections->{$rec->id} = $menu_item;
+            ### $srvr_rec->name - don't change that.
+            my $menu_item = $self->Append( -1, $srvr_rec->name, "Connect to " . $srvr_rec->url );
+            $self->connections->{$srvr_rec->id} = $menu_item;
 
             if(
                 my $prefs = $schema->resultset('ServerAccounts')->search({ 
@@ -50,7 +50,7 @@ package LacunaWaX::MainFrame::MenuBar::File::Connect {
         my $self = shift;
         foreach my $server_id( keys %{ $self->connections } ) {
             my $menu_item = $self->connections->{$server_id};
-            EVT_MENU( $self->parent, $menu_item->GetId, sub{$self->app->main_frame->OnGameServerConnect($server_id)} );
+            EVT_MENU( $self->parent, $menu_item->GetId, sub{$self->main_frame->OnGameServerConnect($server_id)} );
         }
         return 1;
     }#}}}

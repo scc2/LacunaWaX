@@ -37,7 +37,7 @@ package LacunaWaX::MainFrame::MenuBar::Tools {
         $self->Append( $self->itm_sitter    );
         $self->Append( $self->itm_test      ) if $self->show_test;
 
-        ($self->app->server) ? $self->show_connected : $self->show_not_connected;
+        ($self->get_connected_server) ? $self->show_connected : $self->show_not_connected;
 
         return $self;
     }
@@ -122,8 +122,8 @@ package LacunaWaX::MainFrame::MenuBar::Tools {
         my $self = shift;
 
         ### Determine starting point of LogViewer window
-        my $top_window_point = $self->app->GetTopWindow()->GetPosition;
-        my $self_origin = Wx::Point->new( $top_window_point->x + 30, $top_window_point->y + 30 );
+        my $tlc         = $self->get_top_left_corner;
+        my $self_origin = Wx::Point->new( $tlc->x + 30, $tlc->y + 30 );
         my $log_viewer = LacunaWaX::Dialog::LogViewer->new( 
             app         => $self->app,
             ancestor    => $self->ancestor,
@@ -144,9 +144,9 @@ package LacunaWaX::MainFrame::MenuBar::Tools {
         $status->show;
         $status->say('The mail tool takes a few seconds to load; be patient, please.');
 
-        my $top_window_point = $self->app->GetTopWindow()->GetPosition;
-        my $self_origin = Wx::Point->new( $top_window_point->x + 30, $top_window_point->y + 30 );
-        my $mail = LacunaWaX::Dialog::Mail->new( 
+        my $tlc         = $self->get_top_left_corner;
+        my $self_origin = Wx::Point->new( $tlc->x + 30, $tlc->y + 30 );
+        my $mail        = LacunaWaX::Dialog::Mail->new( 
             app         => $self->app,
             ancestor    => $self->ancestor,
             parent      => $self->parent,
@@ -161,23 +161,23 @@ package LacunaWaX::MainFrame::MenuBar::Tools {
         my $self = shift;
 
         ### Determine starting point of Sitter Manager window
-        my $top_window_point = $self->app->GetTopWindow()->GetPosition;
-        my $self_origin = Wx::Point->new( $top_window_point->x + 30, $top_window_point->y + 30 );
-        my $sitter_manager = LacunaWaX::Dialog::SitterManager->new( 
+        my $tlc         = $self->get_top_left_corner;
+        my $self_origin = Wx::Point->new( $tlc->x + 30, $tlc->y + 30 );
+        my $sm          = LacunaWaX::Dialog::SitterManager->new( 
             app         => $self->app,
             ancestor    => $self->ancestor,
             parent      => $self->parent,
             position    => $self_origin,
         );
-        $sitter_manager->Show(1);
+        $sm->Show(1);
         return 1;
     }#}}}
     sub OnTestDialog {#{{{
         my $self = shift;
 
         ### Determine starting point of Sitter Manager window
-        my $top_window_point = $self->app->GetTopWindow()->GetPosition;
-        my $self_origin = Wx::Point->new( $top_window_point->x + 30, $top_window_point->y + 30 );
+        my $tlc         = $self->get_top_left_corner;
+        my $self_origin = Wx::Point->new( $tlc->x + 30, $tlc->y + 30 );
         my $test_dialog = LacunaWaX::Dialog::Test->new( 
             app         => $self->app,
             ancestor    => $self->ancestor,

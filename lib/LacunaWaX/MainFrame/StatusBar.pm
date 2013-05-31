@@ -31,7 +31,7 @@ package LacunaWaX::MainFrame::StatusBar {
     }#}}}
     sub _build_caption {#{{{
         my $self = shift;
-        return $self->app->bb->resolve(service => '/Strings/app_name')
+        return $self->app_name;
     }#}}}
     sub _build_gauge {#{{{
         my $self = shift;
@@ -61,7 +61,7 @@ package LacunaWaX::MainFrame::StatusBar {
 
         my $rect = $self->status_bar->GetFieldRect(1);
         $self->gauge( $self->_build_gauge );
-        $self->app->Yield;
+        $self->yield;
 
         $self->status_bar->Update;
         return $self->status_bar;
@@ -78,8 +78,8 @@ package LacunaWaX::MainFrame::StatusBar {
     sub OnResize {#{{{
         my($self, $status_bar, $event) = @_;
 
-        if( $self->app->has_main_frame ) {
-            my $mf = $self->app->main_frame;
+        if( $self->has_main_frame ) {
+            my $mf = $self->main_frame;
             my $current_size = $mf->frame->GetSize;
             if( $current_size->width != $self->old_w or $current_size->height != $self->old_h ) {
                 $self->bar_reset;    # otherwise the throbber gauge gets all screwy

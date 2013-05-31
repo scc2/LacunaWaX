@@ -166,14 +166,15 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
                 )
             );
 
-            $self->name_header->SetFont                 ( $self->app->wxbb->resolve(service => '/Fonts/header_7') );
-            $self->proposed_by_header->SetFont          ( $self->app->wxbb->resolve(service => '/Fonts/header_7') );
-            $self->votes_needed_header->SetFont         ( $self->app->wxbb->resolve(service => '/Fonts/header_7') );
-            $self->votes_yes_header->SetFont            ( $self->app->wxbb->resolve(service => '/Fonts/header_7') );
-            $self->votes_no_header->SetFont             ( $self->app->wxbb->resolve(service => '/Fonts/header_7') ); 
-            $self->my_vote_header->SetFont              ( $self->app->wxbb->resolve(service => '/Fonts/header_7') ); 
-            $self->cast_my_vote_header->SetFont         ( $self->app->wxbb->resolve(service => '/Fonts/header_7') ); 
-            $self->cast_sitters_vote_header->SetFont    ( $self->app->wxbb->resolve(service => '/Fonts/header_7') ); 
+            $self->name_header->SetFont                 ( $self->get_font('/header_7') );
+            $self->proposed_by_header->SetFont          ( $self->get_font('/header_7') );
+            $self->votes_needed_header->SetFont         ( $self->get_font('/header_7') );
+            $self->votes_yes_header->SetFont            ( $self->get_font('/header_7') );
+            $self->votes_no_header->SetFont             ( $self->get_font('/header_7') ); 
+            $self->my_vote_header->SetFont              ( $self->get_font('/header_7') ); 
+            $self->cast_my_vote_header->SetFont         ( $self->get_font('/header_7') ); 
+            $self->cast_sitters_vote_header->SetFont    ( $self->get_font('/header_7') ); 
+
 
             $self->main_sizer->Add($self->name_header, 0, 0, 0);
             $self->main_sizer->Add($self->proposed_by_header, 0, 0, 0);
@@ -197,7 +198,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
         $self->main_sizer->AddSpacer(5);
         $self->main_sizer->Add($self->cast_sitters_sizer, 0, 0, 0);
 
-        $self->app->Yield;
+        $self->yield;
         return $self;
     }
     sub _build_cast_me_sizer {#{{{
@@ -245,7 +246,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
             wxDefaultPosition, 
             Wx::Size->new($self->name_width,$self->row_height)
         );
-        $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $v->SetFont( $self->get_font('/para_text_1') );
 
         my $tt = Wx::ToolTip->new( $desc );
         $v->SetToolTip($tt);
@@ -266,7 +267,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
             wxDefaultPosition, 
             Wx::Size->new($self->proposed_by_width,$self->row_height)
         );
-        $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $v->SetFont( $self->get_font('/para_text_1') );
 
         unless($text eq $orig_text) {
             my $tt = Wx::ToolTip->new( $orig_text );
@@ -285,7 +286,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
             wxDefaultPosition, 
             Wx::Size->new($self->votes_needed_width,$self->row_height)
         );
-        $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $v->SetFont( $self->get_font('/para_text_1') );
 
         return $v;
     }#}}}
@@ -299,7 +300,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
             wxDefaultPosition, 
             Wx::Size->new($self->votes_yes_width,$self->row_height)
         );
-        $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $v->SetFont( $self->get_font('/para_text_1') );
 
         return $v;
     }#}}}
@@ -313,7 +314,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
             wxDefaultPosition, 
             Wx::Size->new($self->votes_no_width,$self->row_height)
         );
-        $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $v->SetFont( $self->get_font('/para_text_1') );
 
         return $v;
     }#}}}
@@ -326,7 +327,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
             wxDefaultPosition, 
             Wx::Size->new($self->my_vote_width,$self->row_height)
         );
-        $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $v->SetFont( $self->get_font('/para_text_1') );
 
         return $v;
     }#}}}
@@ -342,7 +343,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
             wxDefaultPosition, 
             Wx::Size->new($self->button_width, $self->row_height)
         );
-        $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $v->SetFont( $self->get_font('/para_text_1') );
         my $enabled = ($self->my_vote eq 'None') ? 1 : 0;
         $v->Enable($enabled);
 
@@ -356,7 +357,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
             wxDefaultPosition, 
             Wx::Size->new($self->button_width,$self->row_height)
         );
-        $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $v->SetFont( $self->get_font('/para_text_1') );
         my $enabled = ($self->my_vote eq 'None') ? 1 : 0;
         $v->Enable($enabled);
 
@@ -372,7 +373,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
             ### + 20 to make the sitters button stand out a bit
             Wx::Size->new($self->button_width + 20, $self->row_height)
         );
-        $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $v->SetFont( $self->get_font('/para_text_1') );
 
         return $v;
     }#}}}
@@ -397,10 +398,10 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
     sub _build_parl {#{{{
         my $self = shift;
         my $parl = try {
-            $self->app->game_client->get_building($self->ancestor->planet_id, 'Parliament');
+            $self->game_client->get_building($self->ancestor->planet_id, 'Parliament');
         }
         catch {
-            $self->app->poperr($_->text);
+            $self->poperr($_->text);
             return;
         };
 
@@ -435,7 +436,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
         ### Need a new client per sitter, logged in as that sitter, NOT as the 
         ### player currently using LacunaWaX.
         my $sitter_client = try {
-            $self->app->game_client->relog($sitter_rec->player_name, $sitter_rec->sitter);
+            $self->game_client->relog($sitter_rec->player_name, $sitter_rec->sitter);
         }
         catch {
             my $msg = (ref $_) ? $_->text : $_;
@@ -572,21 +573,21 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
         my $vote    = shift;    # 1 or 0
 
         unless($self->parl) {
-            $self->app->poperr("We seem not to have a parliament building; no voting is possible.", "Error");
+            $self->poperr("We seem not to have a parliament building; no voting is possible.", "Error");
             return;
         }
 
-        $self->app->throb;
+        $self->throb;
         my $rv = try {
             $self->parl->cast_vote($self->prop->{'id'}, $vote);
         }
         catch {
             my $msg = (ref $_) ? $_->text : $_;
-            $self->app->poperr("Attempt to vote failed with: $msg", "Error!");
-            $self->app->endthrob;
+            $self->poperr("Attempt to vote failed with: $msg", "Error!");
+            $self->endthrob;
             return;
         } or return;
-        $self->app->endthrob;
+        $self->endthrob;
 
 
         my $vote_text;
@@ -606,7 +607,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
         ### so further clicks on either button will just result in failure.
         $self->btn_me_yes->Enable(0);
         $self->btn_me_no->Enable(0);
-        $self->app->popmsg("Your vote of '$vote_text' has been recorded.", "Success!");
+        $self->popmsg("Your vote of '$vote_text' has been recorded.", "Success!");
         return 1;
     }#}}}
     sub OnSittersVote {#{{{
@@ -616,11 +617,11 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
         my $vote    = shift;    # 1 or 0
 
         unless($self->parl) {
-            $self->app->poperr("We seem not to have a parliament building; no voting is possible.", "Error");
+            $self->poperr("We seem not to have a parliament building; no voting is possible.", "Error");
             return;
         }
         unless($vote) {
-            $self->app->popmsg("I'm thinking that allowing anybody to vote 'no' for all of their sitters is a bad idea.", "Vote not recorded");
+            $self->popmsg("I'm thinking that allowing anybody to vote 'no' for all of their sitters is a bad idea.", "Vote not recorded");
             return;
         }
 
@@ -633,7 +634,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
         ### For now, just reset it at the beginning of voting for each prop.  
         ### This won't stop it from periodically showing up, but will clean it 
         ### up when it does.
-        $self->app->endthrob;
+        $self->endthrob;
 
         ### We _do_ want to directly call dialog_status->show here.  It's 
         ### possible the user:
@@ -644,15 +645,15 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
         ### the user closed its window, so it no longer exists.
         ### This direct call will, in that case, recreate it.
         $self->dialog_status->show();
-        $self->app->Yield;
+        $self->yield;
 
-        my $schema = $self->app->bb->resolve( service => '/Database/schema' );
+        my $schema = $self->get_main_schema;
         my @recorded_sitter_recs    = $schema->resultset('SitterPasswords')->search(
-                                        { server_id => $self->app->server->id, },
+                                        { server_id => $self->get_connected_server->id, },
                                         { order_by  => { -asc => 'RANDOM()' } }
                                         );
         unless(@recorded_sitter_recs) {
-            $self->app->poperr("You don't have any sitters recorded yet, so you can't cast votes on their behalf.  See the Sitter Manager tool.", "Error");
+            $self->poperr("You don't have any sitters recorded yet, so you can't cast votes on their behalf.  See the Sitter Manager tool.", "Error");
             $self->btn_sitters_yes->Enable(1);
             $self->clear_dialog_status;
             return;
@@ -660,10 +661,10 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
         
         ### Get alliance members
         my $ally_hash = try {
-            $self->app->game_client->get_alliance_members();
+            $self->game_client->get_alliance_members();
         }
         catch {
-            $self->app->poperr("Could not find your alliance members.  You're most likely out of RPCs; wait a minute and try again.", "Error!");
+            $self->poperr("Could not find your alliance members.  You're most likely out of RPCs; wait a minute and try again.", "Error!");
             $self->btn_sitters_yes->Enable(1);
             $self->clear_dialog_status;
             return;
@@ -735,7 +736,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
         }
 
         ### See comment at the other endthrob call top this method.
-        $self->app->endthrob;
+        $self->endthrob;
         return 1;
     }#}}}
     sub OnDialogStatusClose {#{{{

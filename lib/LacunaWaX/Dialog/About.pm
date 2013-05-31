@@ -11,7 +11,7 @@ package LacunaWaX::Dialog::About {
 
         $self->info( Wx::AboutDialogInfo->new() );
         $self->info->SetName(
-            $self->app->bb->resolve(service => '/Strings/app_name')
+            $self->bb->resolve(service => '/Strings/app_name')
         );
         $self->info->SetVersion(
             "$LacunaWaX::VERSION - wxPerl $Wx::VERSION"
@@ -27,7 +27,7 @@ package LacunaWaX::Dialog::About {
             'This is free software; you can redistribute it and/or modify it under
             the same terms as the Perl 5 programming language system itself.'
         );
-        for my $d( @{$self->app->bb->resolve(service => '/Strings/developers')} ) {
+        for my $d( @{$self->bb->resolve(service => '/Strings/developers')} ) {
             $self->info->AddDeveloper($d);
         }
 

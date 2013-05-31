@@ -4,10 +4,8 @@ package LacunaWax::Dialog::Prefs::TabServer {
     use Try::Tiny;
     use Wx qw(:everything);
     use Wx::Event qw(EVT_BUTTON EVT_CHOICE EVT_COMBOBOX);
+    with 'LacunaWaX::Roles::GuiElement';
 
-    has 'app'               => (is => 'rw', isa => 'LacunaWaX',                 required => 1,  weak_ref => 1);
-    has 'parent'            => (is => 'rw', isa => 'Wx::Notebook',              required => 1);
-    has 'ancestor'          => (is => 'rw', isa => 'LacunaWaX::Dialog::Prefs',  required => 1);
     has 'main_sizer'        => (is => 'rw', isa => 'Wx::Sizer',                 lazy_build => 1);
     has 'pnl_main'          => (is => 'rw', isa => 'Wx::Panel',                 lazy_build => 1);
 
@@ -48,7 +46,7 @@ package LacunaWax::Dialog::Prefs::TabServer {
     }
     sub _build_server_list {#{{{
         my $self = shift;
-        my $schema = $self->app->bb->resolve( service => '/Database/schema' );
+        my $schema = $self->get_main_schema;
         my $rs_servers = $schema->resultset('Servers')->search();
 
         my $list = [];
@@ -87,19 +85,19 @@ package LacunaWax::Dialog::Prefs::TabServer {
     sub _build_lbl_server {#{{{
         my $self = shift;
         my $v = Wx::StaticText->new($self->pnl_main, -1, "Server", wxDefaultPosition, Wx::Size->new(80,25));
-        $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $v->SetFont( $self->get_font('/bold_para_text_1') );
         return $v;
     }#}}}
     sub _build_lbl_user {#{{{
         my $self = shift;
         my $v =  Wx::StaticText->new($self->pnl_main, -1, "Username", wxDefaultPosition, Wx::Size->new(80,25));
-        $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $v->SetFont( $self->get_font('/bold_para_text_1') );
         return $v;
     }#}}}
     sub _build_lbl_pass {#{{{
         my $self = shift;
         my $v = Wx::StaticText->new($self->pnl_main, -1, "Password", wxDefaultPosition, Wx::Size->new(80,25));
-        $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $v->SetFont( $self->get_font('/bold_para_text_1') );
         return $v;
     }#}}}
     sub _build_btn_save {#{{{
@@ -178,15 +176,15 @@ package LacunaWax::Dialog::Prefs::TabServer {
 
     sub get_server_protocol {#{{{
         my $self = shift;
-        my $server_name     = $self->server_list->[ $self->chc_server->GetCurrentSelection ];
-        my $schema          = $self->app->bb->resolve( service => '/Database/schema' );
-        my $server_rec      = $schema->resultset('Servers')->find({ name => $server_name });
+        my $server_name = $self->server_list->[ $self->chc_server->GetCurrentSelection ];
+        my $schema      = $self->get_main_schema;
+        my $server_rec  = $schema->resultset('Servers')->find({ name => $server_name });
         return $server_rec->protocol;
     }#}}}
     sub set_proto {#{{{
         my $self = shift;
-        my $schema        = $self->app->bb->resolve( service => '/Database/schema' );
-        my $server_name   = $self->server_list->[ $self->chc_server->GetCurrentSelection ];
+        my $schema      = $self->get_main_schema;
+        my $server_name = $self->server_list->[ $self->chc_server->GetCurrentSelection ];
 
         my $server_rec = $schema->resultset('Servers')->find({ name => $server_name });
         if( $server_rec->protocol eq 'https' ) {
@@ -199,7 +197,7 @@ package LacunaWax::Dialog::Prefs::TabServer {
     }#}}}
     sub set_txtbox_user {#{{{
         my $self        = shift;
-        my $schema      = $self->app->bb->resolve( service => '/Database/schema' );
+        my $schema      = $self->get_main_schema;
         my $server_name = $self->server_list->[ $self->chc_server->GetCurrentSelection ];
 
         my $rs = $schema->resultset('ServerAccounts')->search(
@@ -216,7 +214,7 @@ package LacunaWax::Dialog::Prefs::TabServer {
     }#}}}
     sub set_pass {#{{{
         my $self = shift;
-        my $schema      = $self->app->bb->resolve( service => '/Database/schema' );
+        my $schema      = $self->get_main_schema;
         my $server_name = $self->server_list->[ $self->chc_server->GetCurrentSelection ];
         my $username    = $self->txtbox_user->GetLineText(0);
 
@@ -235,7 +233,7 @@ package LacunaWax::Dialog::Prefs::TabServer {
     }#}}}
     sub set_default_account {#{{{
         my $self = shift;
-        my $schema      = $self->app->bb->resolve( service => '/Database/schema' );
+        my $schema      = $self->get_main_schema;
         my $server_name = $self->server_list->[ $self->chc_server->GetCurrentSelection ];
         my $username    = $self->txtbox_user->GetLineText(0);
 

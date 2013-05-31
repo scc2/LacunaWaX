@@ -10,22 +10,27 @@ use Data::Dumper;
 use FindBin;
 use lib $FindBin::Bin . '/../lib';
 
-use LacunaWaX::Container;
-use LacunaWaX::WxContainer;
+use LacunaWaX::Model::Container;
+use LacunaWaX::Model::WxContainer;
 
 my $root_dir    = "$FindBin::Bin/..";
 my $db_file     = join '/', ($root_dir, 'user', 'lacuna_app.sqlite');
 my $db_log_file = join '/', ($root_dir, 'user', 'lacuna_log.sqlite');
 
-my $bb = LacunaWaX::Container->new(
+my $bb = LacunaWaX::Model::Container->new(
     name        => 'ScheduleContainer',
     db_file     => $db_file,
     db_log_file => $db_log_file,
+    root_dir    => $root_dir,
 );
 
-my $wxbb = LacunaWaX::WxContainer->new(
-    name => 'WxContainer',
+my $wxbb = LacunaWaX::Model::WxContainer->new(
+    name        => 'WxContainer',
+    root_dir    => $root_dir,
 );
+
+my $schema = $bb->resolve( service => '/Database/schema' );
+die ref $schema;
 
 my $chi  = $wxbb->resolve( service => '/Cache/raw_memory' );
 

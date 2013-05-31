@@ -116,14 +116,12 @@ Displays one of the RightPane/*.pm panels in the splitter window's right pane.
 =cut
 
         unless(defined $args->{'nothrob'} and $args->{'nothrob'}) {
-            $self->app->throb;
-            $self->app->Yield;
+            $self->throb;
+            $self->yield;
         }
         $self->clear_pane;
         $self->main_panel->Show(0);
-        $self->app->Yield;
-
-        my $mf = $self->app->main_frame;
+        $self->yield;
 
         if( defined $args->{'required_buildings'} ) {
             foreach my $bldg_name( keys %{$args->{'required_buildings'}} ) {
@@ -156,10 +154,10 @@ Displays one of the RightPane/*.pm panels in the splitter window's right pane.
         $self->main_panel->SetSizer($self->panel_obj->main_sizer);
 
         unless(defined $args->{'nothrob'} and $args->{'nothrob'}) {
-            $self->app->endthrob;
-            $self->app->Yield;
+            $self->endthrob;
+            $self->yield;
         }
-        $self->app->Yield;
+        $self->yield;
 
         $self->main_panel->Show(1);
         $self->finish_pane();
@@ -171,9 +169,9 @@ Displays one of the RightPane/*.pm panels in the splitter window's right pane.
         my $bldg_name   = shift;
 
         my $bldg = try {
-            $self->app->game_client->get_building($pid, $bldg_name);
+            $self->game_client->get_building($pid, $bldg_name);
         };
-        $self->app->Yield;
+        $self->yield;
         return $bldg || undef;
     }#}}}
     sub _show_default_panel {#{{{
@@ -181,21 +179,20 @@ Displays one of the RightPane/*.pm panels in the splitter window's right pane.
         my $pname = shift || q{};
         my $class = shift || q{};
 
-        my $mf = $self->app->main_frame;
         if( $pname and $class ne 'LacunaWaX::MainSplitterWindow::RightPane::SummaryPane' ) {
-            $mf->splitter->right_pane->show_right_pane(
+            $self->get_right_pane->show_right_pane(
                 'LacunaWaX::MainSplitterWindow::RightPane::SummaryPane',
                 $pname
             );
         }
         elsif( $class ne 'LacunaWaX::MainSplitterWindow::RightPane::DefaultPane' ) {
-            $mf->splitter->right_pane->show_right_pane(
+            $self->get_right_pane->show_right_pane(
                 'LacunaWaX::MainSplitterWindow::RightPane::DefaultPane'
             );
         }
         else {
             ### wtf?
-            $self->app->poperr("Something has gone horribly wrong.");
+            $self->poperr("Something has gone horribly wrong.");
             return;
         }
 
@@ -208,8 +205,7 @@ Displays one of the RightPane/*.pm panels in the splitter window's right pane.
         my $bldg_lvl    = shift || 0;
 
         my $error = q{};
-        my $mf    = $self->app->main_frame;
-        my $pid   = $self->app->game_client->planet_id($pname) if $pname;
+        my $pid   = $self->game_client->planet_id($pname) if $pname;
 
         my $bldg = $self->_planet_has_building($pid, $bldg_name);
         unless($bldg) {
@@ -218,11 +214,11 @@ Displays one of the RightPane/*.pm panels in the splitter window's right pane.
 
         if( $bldg and $bldg_lvl ) {
             my $b_view = try {
-                $self->app->game_client->get_building_view($pid, $bldg);
+                $self->game_client->get_building_view($pid, $bldg);
             }
             catch {
                 my $msg = (ref $_) ? $_->text : $_;
-                $self->app->poperr($msg);
+                $self->poperr($msg);
                 return;
             };
             $b_view or return;
@@ -232,7 +228,7 @@ Displays one of the RightPane/*.pm panels in the splitter window's right pane.
         }
 
         if( $error ) {
-            $self->app->popmsg( $error, "Missing building requirements" );
+            $self->popmsg( $error, "Missing building requirements" );
             $self->_show_default_panel($pname);
             return;
         }

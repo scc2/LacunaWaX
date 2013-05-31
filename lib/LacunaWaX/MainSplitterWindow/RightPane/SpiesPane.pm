@@ -95,11 +95,11 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane {
         $self->content_sizer->AddSpacer(10);
 
         my $spies = try {
-            $self->app->game_client->get_spies($self->planet_id);
+            $self->game_client->get_spies($self->planet_id);
         }
         catch {
             my $msg = (ref $_) ? $_->text : $_;
-            $self->app->poperr($msg);
+            $self->poperr($msg);
             return;
         };
         $spies or return;
@@ -116,7 +116,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane {
 
         ### Actual spy list
         foreach my $hr( @{$spies} ) {
-            $self->app->Yield;
+            $self->yield;
             my $spy = LacunaWaX::Model::Client::Spy->new(hr => $hr);
             my $row = LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::SpyRow->new(
                 app         => $self->app,
@@ -218,19 +218,19 @@ see what you're doing.
     sub _build_btn_clear {#{{{
         my $self = shift;
         my $v = Wx::Button->new($self->parent, -1, "Clear Spy Assignments");
-        $v->SetFont($self->app->wxbb->resolve(service => '/Fonts/para_text_2'));
+        $v->SetFont( $self->get_font('/para_text_2') );
         return $v;
     }#}}}
     sub _build_btn_rename {#{{{
         my $self = shift;
         my $v = Wx::Button->new($self->parent, -1, "Rename Spies");
-        $v->SetFont($self->app->wxbb->resolve(service => '/Fonts/para_text_2'));
+        $v->SetFont( $self->get_font('/para_text_2') );
         return $v;
     }#}}}
     sub _build_btn_save {#{{{
         my $self = shift;
         my $v = Wx::Button->new($self->parent, -1, "Save Spy Assignments");
-        $v->SetFont($self->app->wxbb->resolve(service => '/Fonts/para_text_2'));
+        $v->SetFont( $self->get_font('/para_text_2') );
         return $v;
     }#}}}
     sub _build_chc_train_1 {#{{{
@@ -239,10 +239,10 @@ see what you're doing.
             $self->parent, -1, 
             wxDefaultPosition, 
             Wx::Size->new($self->width_chc, $self->height_chc), 
-            [$self->text_none, @{$self->app->game_client->spy_training_choices}],
+            [$self->text_none, @{$self->game_client->spy_training_choices}],
         );
         $v->SetSelection(0);
-        $v->SetFont($self->app->wxbb->resolve(service => '/Fonts/para_text_2'));
+        $v->SetFont( $self->get_font('/para_text_2') );
         return $v;
     }#}}}
     sub _build_chc_train_2 {#{{{
@@ -251,10 +251,10 @@ see what you're doing.
             $self->parent, -1, 
             wxDefaultPosition, 
             Wx::Size->new($self->width_chc, $self->height_chc), 
-            [$self->text_none, @{$self->app->game_client->spy_training_choices}],
+            [$self->text_none, @{$self->game_client->spy_training_choices}],
         );
         $v->SetSelection(0);
-        $v->SetFont($self->app->wxbb->resolve(service => '/Fonts/para_text_2'));
+        $v->SetFont( $self->get_font('/para_text_2') );
         return $v;
     }#}}}
     sub _build_chc_train_3 {#{{{
@@ -263,10 +263,10 @@ see what you're doing.
             $self->parent, -1, 
             wxDefaultPosition, 
             Wx::Size->new($self->width_chc, $self->height_chc), 
-            [$self->text_none, @{$self->app->game_client->spy_training_choices}],
+            [$self->text_none, @{$self->game_client->spy_training_choices}],
         );
         $v->SetSelection(0);
-        $v->SetFont($self->app->wxbb->resolve(service => '/Fonts/para_text_2'));
+        $v->SetFont( $self->get_font('/para_text_2') );
         return $v;
     }#}}}
     sub _build_chc_train_4 {#{{{
@@ -275,10 +275,10 @@ see what you're doing.
             $self->parent, -1, 
             wxDefaultPosition, 
             Wx::Size->new($self->width_chc, $self->height_chc), 
-            [$self->text_none, @{$self->app->game_client->spy_training_choices}],
+            [$self->text_none, @{$self->game_client->spy_training_choices}],
         );
         $v->SetSelection(0);
-        $v->SetFont($self->app->wxbb->resolve(service => '/Fonts/para_text_2'));
+        $v->SetFont( $self->get_font('/para_text_2') );
         return $v;
     }#}}}
     sub _build_dialog_status {#{{{
@@ -296,11 +296,11 @@ see what you're doing.
     sub _build_int_min {#{{{
         my $self = shift;
         my $im = try {
-            $self->app->game_client->get_building($self->planet_id, 'Intelligence Ministry');
+            $self->game_client->get_building($self->planet_id, 'Intelligence Ministry');
         }
         catch {
             my $msg = (ref $_) ? $_->text : $_;
-            $self->app->poperr($msg);
+            $self->poperr($msg);
             return;
         };
 
@@ -314,7 +314,7 @@ see what you're doing.
             wxDefaultPosition, 
             Wx::Size->new(25, 40)
         );
-        $y->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $y->SetFont( $self->get_font('/para_text_1') );
         return $y;
     }#}}}
     sub _build_lbl_train_2 {#{{{
@@ -325,7 +325,7 @@ see what you're doing.
             wxDefaultPosition, 
             Wx::Size->new(25, 40)
         );
-        $y->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $y->SetFont( $self->get_font('/para_text_1') );
         return $y;
     }#}}}
     sub _build_lbl_train_3 {#{{{
@@ -336,7 +336,7 @@ see what you're doing.
             wxDefaultPosition, 
             Wx::Size->new(25, 40)
         );
-        $y->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $y->SetFont( $self->get_font('/para_text_1') );
         return $y;
     }#}}}
     sub _build_lbl_train_4 {#{{{
@@ -347,7 +347,7 @@ see what you're doing.
             wxDefaultPosition, 
             Wx::Size->new(25, 40)
         );
-        $y->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $y->SetFont( $self->get_font('/para_text_1') );
         return $y;
     }#}}}
     sub _build_lbl_header {#{{{
@@ -358,7 +358,7 @@ see what you're doing.
             wxDefaultPosition, 
             Wx::Size->new($self->screen_width, 40)
         );
-        $y->SetFont( $self->app->wxbb->resolve(service => '/Fonts/header_1') );
+        $y->SetFont( $self->get_font('/header_1') );
         return $y;
     }#}}}
     sub _build_lbl_save_button_reminder {#{{{
@@ -369,7 +369,7 @@ see what you're doing.
             wxDefaultPosition, 
             Wx::Size->new($self->screen_width, 28)
         );
-        $y->SetFont( $self->app->wxbb->resolve(service => '/Fonts/bold_para_text_2') );
+        $y->SetFont( $self->get_font('/para_text_2') );
         $y->SetForegroundColour( Wx::Colour->new(255,0,0) );    # Not 'color'.  Silly brits.
         return $y;
     }#}}}
@@ -394,7 +394,7 @@ see what you're doing.
             wxDefaultPosition, 
             Wx::Size->new(-1, 370)
         );
-        $y->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_2') );
+        $y->SetFont( $self->get_font('/para_text_2') );
         $y->Wrap($self->screen_width);
 
         return $y;
@@ -407,7 +407,7 @@ see what you're doing.
     }#}}}
     sub _build_planet_id {#{{{
         my $self = shift;
-        return $self->app->game_client->planet_id( $self->planet_name );
+        return $self->game_client->planet_id( $self->planet_name );
     }#}}}
     sub _build_szr_batch {#{{{
         my $self = shift;
@@ -511,15 +511,15 @@ see what you're doing.
         my $panel   = shift;    # Wx::ScrolledWindow
         my $event   = shift;    # Wx::CommandEvent
 
-        $self->app->throb();
-        my $schema = $self->app->bb->resolve( service => '/Database/schema' );
+        $self->throb();
+        my $schema = $self->get_main_schema;
 
         foreach my $row( @{$self->spy_table} ) {
-            $self->app->Yield;
+            $self->yield;
             my $selection = $row->chc_train->FindString( $row->text_none );
             $row->chc_train->SetSelection( $selection );
         }
-        $self->app->endthrob();
+        $self->endthrob();
         return 1;
     }#}}}
     sub OnRenameButton {#{{{
@@ -529,7 +529,7 @@ see what you're doing.
 
         $self->dialog_status->erase;
         $self->dialog_status->show;
-        $self->app->Yield;
+        $self->yield;
 
         my $cnt = 0;
         SPY_ROW:
@@ -548,7 +548,7 @@ see what you're doing.
             }
             catch {
                 my $msg = (ref $_) ? $_->text : $_;
-                $self->app->poperr($msg);
+                $self->poperr($msg);
                 $self->clear_dialog_status;
                 return;
             };
@@ -556,7 +556,7 @@ see what you're doing.
                 $row->change_name( $row->new_name );
                 $cnt++;
             }
-            $self->app->Yield;
+            $self->yield;
         }
 
         $self->dialog_status->close;
@@ -565,14 +565,15 @@ see what you're doing.
         if( $cnt >= 1 ) {
             ### Spies have been renamed, so expire the spies currently in the 
             ### cache so the new names show up on the next screen load.
-            if( $self->app->wxbb ) {
-                my $chi  = $self->app->wxbb->resolve( service => '/Cache/raw_memory' );
+            if( $self->wxbb ) {
+                #my $chi  = $self->app->wxbb->resolve( service => '/Cache/raw_memory' );
+                my $chi  = $self->get_chi;
                 my $key  = join q{:}, ('BODIES', 'SPIES', $self->planet_id);
                 $chi->remove($key);
             }
         }
 
-        $self->app->popmsg(
+        $self->popmsg(
             "$cnt spies have been renamed.",
             "Success!"
         );
@@ -583,22 +584,22 @@ see what you're doing.
         my $panel   = shift;    # Wx::ScrolledWindow
         my $event   = shift;    # Wx::CommandEvent
 
-        $self->app->throb();
-        my $schema = $self->app->bb->resolve( service => '/Database/schema' );
+        $self->throb();
+        my $schema = $self->get_main_schema;
         foreach my $row( @{$self->spy_table} ) {
-            $self->app->Yield;
+            $self->yield;
             my $spy = $row->spy;
             my $chosen_training_str = lc $row->chc_train->GetString( $row->chc_train->GetSelection );
             my $rec = $schema->resultset('SpyTrainPrefs')->find_or_create({
                 spy_id => $spy->id, 
-                server_id => $self->app->server->id
+                server_id => $self->get_connected_server->id
             });
             $rec->train( $chosen_training_str );
             $rec->update;
         }
-        $self->app->endthrob();
+        $self->endthrob();
 
-        $self->app->popmsg(
+        $self->popmsg(
             "Your spy training preferences have been saved.",
             "Success!"
         );

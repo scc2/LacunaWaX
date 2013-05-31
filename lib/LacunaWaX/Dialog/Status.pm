@@ -218,7 +218,7 @@ package LacunaWaX::Dialog::Status {
             wxDefaultPosition, 
             $s,
         );
-        $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/header_1') );
+        $v->SetFont( $self->get_font('/header_1') );
 
         ### This needs to be here, or the header will report itself as being 
         ### 34 pixels high immediately after creation, regardless of what we 
@@ -367,7 +367,7 @@ package LacunaWaX::Dialog::Status {
         ### The short MilliSleep following the Yield gives the main thread 
         ### enough time to actually respond to the Yield and flush the output 
         ### buffer, which is the point.
-        $self->app->Yield(1);
+        $self->yield(1);
         Wx::MilliSleep(100);
         return 1;
     }#}}}

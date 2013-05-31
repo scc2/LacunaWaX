@@ -18,6 +18,7 @@ package LacunaWaX {
     use LacunaWaX::Model::Container;
     use LacunaWaX::Model::WxContainer;
     use LacunaWaX::Schedule;
+    use LacunaWaX::Servers;
 
     use MooseX::NonMoose;
     extends 'Wx::App';
@@ -29,39 +30,61 @@ package LacunaWaX {
     has 'wxbb'              => (is => 'rw', isa => 'LacunaWaX::Model::WxContainer',     lazy_build => 1);
     has 'db_file'           => (is => 'rw', isa => 'Str',                               lazy_build => 1);
     has 'db_log_file'       => (is => 'rw', isa => 'Str',                               lazy_build => 1);
-    has 'main_frame'        => (is => 'rw', isa => 'LacunaWaX::MainFrame',              lazy_build => 1);
     has 'icon_bundle'       => (is => 'rw', isa => 'Wx::IconBundle',                    lazy_build => 1);
 
-    has 'servers'   => (
-        is => 'rw', isa => 'HashRef', lazy_build => 1,
-        documentation => q{
-            Servers table id => related DBIC record.
-            This is always available, meaning the user doesn't have to connect first.
+    has 'main_frame' => (
+        is      => 'rw', 
+        isa     => 'LacunaWaX::MainFrame', 
+        lazy_build => 1,
+        handles => {
+            menu_bar            => 'menu_bar',
+            intro_panel         => 'intro_panel',
+            has_intro_panel     => 'has_intro_panel',
+            left_pane           => 'left_pane',
+            right_pane          => 'right_pane',
+            splitter            => 'splitter',
+        }
+    );
+    has 'servers' => (
+        is      => 'ro',
+        isa     => 'LacunaWaX::Servers',
+        handles => {
+            server_ids              => 'ids',
+            server_records          => 'records',
+            server_pairs            => 'pairs',
+            server_record_by_id     => 'get',
         },
+        lazy_build => 1,
     );
     has 'server' => (
-        is => 'rw', isa => 'Maybe[LacunaWaX::Model::Schema::Servers]', clearer => 'clear_server',
-        documentation => q{
+        is              => 'rw',
+        isa             => 'Maybe[LacunaWaX::Model::Schema::Servers]',
+        clearer         => 'clear_server',
+        documentation   => q{
             DBIC Servers record of the server to which we're connected.
             Populated by call to ->game_connect().
         },
     );
     has 'account' => (
-        is => 'rw', isa => 'Maybe[LacunaWaX::Model::Schema::ServerAccounts]', clearer => 'clear_server_prefs',
-        documentation => q{
+        is              => 'rw', 
+        isa             => 'Maybe[LacunaWaX::Model::Schema::ServerAccounts]',
+        clearer         => 'clear_server_prefs',
+        documentation   => q{
             DBIC ServerAccounts record of the account we're connected as.
             Populated by call to ->game_connect().
         },
     );
     has 'game_client' => (
-        is => 'rw', isa => 'LacunaWaX::Model::Client', 
+        is              => 'rw', 
+        isa             => 'LacunaWaX::Model::Client', 
         clearer         => 'clear_game_client',
         predicate       => 'has_game_client',
         documentation   => q{
             Chicken-and-egg.
-            This makes sense as an attribute of LacunaWaX, but it cannot connect until the user has 
-            updated their username/password in the Preferences window during their first run.
-            Populated by call to ->game_connect().
+            This makes sense as an attribute of LacunaWaX, but it cannot connect 
+            until the user has updated their username/password in the 
+            Preferences window during their first run.  Populated by call to 
+            ->game_connect().
         }
     );
 
@@ -141,8 +164,8 @@ package LacunaWaX {
         my $self = shift;
 
         my $args = {
-            app     => $self,
-            title   => $self->bb->resolve(service => '/Strings/app_name')
+            app         => $self,
+            title       => $self->bb->resolve(service => '/Strings/app_name'),
         };
 
         ### Coords to place frame if we saved them from a previous run.
@@ -162,12 +185,7 @@ package LacunaWaX {
     sub _build_servers {#{{{
         my $self        = shift;
         my $schema      = $self->bb->resolve( service => '/Database/schema' );
-        my $servers_rs  = $schema->resultset('Servers')->search();
-        my $hr = {};
-        while(my $rec = $servers_rs->next) {
-            $hr->{$rec->id} = $rec;
-        }
-        return $hr;
+        return LacunaWaX::Servers->new( schema => $schema );
     }#}}}
     sub _build_warships {#{{{
         my $self = shift;

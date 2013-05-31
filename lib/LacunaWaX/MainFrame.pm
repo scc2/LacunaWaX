@@ -7,6 +7,7 @@ package LacunaWaX::MainFrame {
     use Try::Tiny;
     use Wx qw(:everything);
     use Wx::Event qw(EVT_CLOSE EVT_SET_FOCUS EVT_KILL_FOCUS EVT_SIZE);
+    with 'LacunaWaX::Roles::GuiElement';
 
     use LacunaWaX::Dialog::Status;
     use LacunaWaX::MainFrame::IntroPanel;
@@ -14,8 +15,6 @@ package LacunaWaX::MainFrame {
     use LacunaWaX::MainFrame::StatusBar;
     use LacunaWaX::MainFrame::StatusBar::Timer;
     use LacunaWaX::MainSplitterWindow;
-
-    has 'app'       => (is => 'rw', isa => 'LacunaWaX', required => 1,  weak_ref => 1);
 
     has 'position'  => (is => 'rw', isa => 'Maybe[Wx::Point]',
         documentation => q{
@@ -46,7 +45,11 @@ package LacunaWaX::MainFrame {
         isa         => 'LacunaWaX::MainSplitterWindow',
         lazy_build  => 1, 
         clearer     => 'clear_splitter',
-        predicate   => 'has_splitter'
+        predicate   => 'has_splitter',
+        handles => {
+            left_pane  => 'left_pane',
+            right_pane => 'right_pane',
+        }
     );
 
     has 'intro_panel_sizer' => (is => 'rw', isa => 'Wx::Sizer', lazy_build => 1 );
@@ -88,7 +91,7 @@ package LacunaWaX::MainFrame {
         my $self = shift;
 
         my $icon = Wx::Icon->new(
-            join q{/}, $self->app->bb->resolve(service => '/Directory/assets'), 'Futurama', '128', 'frai_128.png',
+            join q{/}, $self->bb->resolve(service => '/Directory/assets'), 'Futurama', '128', 'frai_128.png',
             wxBITMAP_TYPE_ANY,
         );
 
@@ -116,15 +119,6 @@ package LacunaWaX::MainFrame {
         );
         return $mb;
     }#}}}
-    sub ORIG_build_menu_bar {#{{{
-        my $self = shift;
-        my $mb = LacunaWaX::MainFrame::MenuBar->new(
-            app         => $self->app,
-            ancestor    => $self,
-            parent      => $self->frame
-        );
-        return $mb;
-    }#}}}
     sub _build_size {#{{{
         my $self = shift;
 
@@ -139,7 +133,7 @@ package LacunaWaX::MainFrame {
 
         ### Maintain the h/w most recently set by the user
         my($w,$h) = (900,800);  # defaults
-        my $schema = $self->app->bb->resolve( service => '/Database/schema' );
+        my $schema = $self->get_main_schema;
         if( my $db_w = $schema->resultset('AppPrefsKeystore')->find({ name => 'MainWindowW' }) ) {
             $w = $db_w->value;
         }
@@ -195,7 +189,7 @@ package LacunaWaX::MainFrame {
     }#}}}
     sub _build_title {#{{{
         my $self = shift;
-        return $self->app->bb->resolve(service => '/Strings/app_name')
+        return $self->bb->resolve(service => '/Strings/app_name')
     }#}}}
     sub _set_events {#{{{
         my $self = shift;
@@ -246,21 +240,20 @@ package LacunaWaX::MainFrame {
             $self->clear_splitter;
         }
 
-        my $schema = $self->app->bb->resolve( service => '/Database/schema' );
+        my $schema = $self->get_main_schema;
         if( my $server = $schema->resultset('Servers')->find({id => $server_id}) ) {
-            $self->app->server( $server );
+            $self->set_connected_server( $server );
 
-            $self->app->caption("Connecting...");
-            $self->app->throb();
+            $self->set_caption("Connecting...");
+            $self->throb();
 
-            unless($self->app->game_connect) {
+            unless($self->game_connect) {
                 ### Probably bad creds filled out in Prefs frame.  Undef 
-                ### app->server so we don't get told we're "Already Connected" 
-                ### on our next attempt.
-                $self->app->server(undef);
-                $self->app->endthrob();
-                #$self->status_bar->caption("Connection Failed!  Correct your login credentials in Edit... Preferences.");
-                $self->app->caption("Connection Failed!  Correct your login credentials in Edit... Preferences.");
+                ### set_connected_server so we don't get told we're "Already 
+                ### Connected" on our next attempt.
+                $self->set_connected_server(undef);
+                $self->endthrob();
+                $self->set_caption("Connection Failed!  Correct your login credentials in Edit... Preferences.");
                 return;
             }
             if( $self->has_intro_panel ) {
@@ -274,9 +267,8 @@ package LacunaWaX::MainFrame {
             $self->splitter_sizer->Add( $self->splitter->splitter_window, 1, wxEXPAND );
             $self->frame->Layout();
 
-            $self->app->endthrob();
-            #$self->status_bar->caption("Connected to " . $server->name . " as " . $self->app->account->username);
-            $self->app->caption("Connected to " . $server->name . " as " . $self->app->account->username);
+            $self->endthrob();
+            $self->set_caption("Connected to " . $server->name . " as " . $self->connected_account->username);
         }
         else {
             Wx::MessageBox("Invalid Server!", "Whoops", wxICON_EXCLAMATION, $self->frame);

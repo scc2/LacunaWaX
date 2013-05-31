@@ -73,7 +73,7 @@ package LacunaWaX::Dialog::Test {
     sub _build_fs_html {#{{{
         my $self = shift;
         my $v    = Wx::FileSystem->new();
-        $v->ChangePathTo($self->app->bb->root_dir . '/doc/html', 1);
+        $v->ChangePathTo($self->bb->root_dir . '/doc/html', 1);
         return $v;
     }#}}}
     sub _build_htm_window {#{{{
@@ -126,7 +126,7 @@ package LacunaWaX::Dialog::Test {
         ### GetPath does end with a /
         my $fqfn = $self->fs_html->GetPath() . $file;
         unless(-e $fqfn) {
-            $self->app->poperr("$fqfn: No such file or directory");
+            $self->poperr("$fqfn: No such file or directory");
             return;
         }
 

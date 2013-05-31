@@ -63,6 +63,87 @@ and also modify the sizer's position and size if needed:
 
 All sizers created by build_sizer will be added to the $self->sizers hashref.
 
+=head1 HANDLERS
+
+Any class that inherits from GuiElement gets the following methods:
+
+=over 4
+
+=item * app_name - string
+
+=item * bb - The non-Wx Bread::Board container - safe for use from non-GUIs
+
+=item * connected_account - LacunaWaX::Model::Schema::ServerAccounts record with which we're connected (may be undef)
+
+=item * throb, endthrob - Starts and stops the throbber
+
+=item * game_connect - Connects using the current creds.  Returns true/false on success/fail.
+
+=item * game_client - Gets the LacunaWaX::Model::Client that's currently connected.
+
+=item * get_chi - Returns the CHI (cache) object.  UN-safe for use from non-GUIs.
+
+=item * get_connected_server
+
+LacunaWaX::Model::Schema::Servers record of the connected server.  Undef unless 
+game_connect has previously been called.
+
+=item * get_font
+
+Retrieves the requested font from the Wx Bread::Board container.  All 
+fonts are in '/Fonts/...', so you only need to pass in (eg) 'para_text_1' to get 
+at '/Fonts/para_text_1'.
+
+=item * get_image
+
+Retrieves the requested image asset from the Wx Bread::Board container.  All 
+images are in '/Assets/images/...', so you only need to pass in (eg) 
+'/app/arrow-left.png' to get at '/Assets/images/app/arrow-left.png'.
+
+=item * get_splitter, get_left_pane, get_right_pane
+
+Returns, respectively, the main splitter, or its left or right panes
+
+=item * get_top_left_corner - Returns the Wx::Point object of the top left corner of the TopWindow
+
+=item * get_main_schema - Returns the main (not 'logs') DBIC schema
+
+=item * get_log_schema - Returns the logging (not 'main') DBIC schema
+
+=item * get_logger - returns a Log::Dispatch object
+
+=item * has_main_frame, get_main_frame
+
+Respectively returns true if the app has gotten to the point of displaying the 
+main frame, and returns that main frame if so.
+
+=item * intro_panel_exists, get_intro_panel
+
+Respectively checks to see if the main frame is currently displaying the 
+introduction panel, and returns it if it is.
+
+=item * popmsg, poperr, popconf
+
+Pops up Message, Error, or Confirmation windows.  Popconf will return either 
+wxYES or wxNO to indicate which button the user pressed.
+
+=item * server_ids - Returns a list of valid server IDs from the Servers table
+
+=item * server_record_by_id($id) - Returns the LacunaWaX::Model::Schema::Servers record indicated by $id
+
+=item * set_caption($text) - Sets $text as the app caption on the status bar
+
+=item * set_connected_server($srvr)
+
+Where $srvr is a LacunaWaX::Model::Schema::Servers object; sets $srvr as the one 
+to which we're currently connected.
+
+=item * wxbb - The Wx Bread::Board container - UNsafe for use from non-GUIs
+
+=item * [yY]ield - Calls wxApp::Yield.  Either casing is allowed.
+
+=back
+
 =cut
 
 package LacunaWaX::Roles::GuiElement {
@@ -71,9 +152,50 @@ package LacunaWaX::Roles::GuiElement {
     use Try::Tiny;
     use Wx qw(:everything);
 
-    has 'app'           => (is => 'rw', isa => 'LacunaWaX', required => 1, weak_ref => 1);
-    has 'ancestor'      => (is => 'rw', isa => 'Object',    required => 1, weak_ref => 1);
-    has 'parent'        => (is => 'rw', isa => 'Maybe[Wx::Window]'                      );
+    has 'app' => (
+        is          => 'rw',
+        isa         => 'LacunaWaX',
+        required    => 1,
+        weak_ref    => 1,
+        handles => {
+            app_name                => sub{ return shift->bb->resolve(service => '/Strings/app_name') },
+            bb                      => 'bb',
+            connected_account       => 'account',
+            endthrob                => 'endthrob',
+            game_connect            => 'game_connect',
+            game_client             => 'game_client',
+            get_chi                 => sub{ return shift->wxbb->resolve( service => '/Cache/raw_memory' ) },
+            get_connected_server    => 'server',
+            get_font                => sub{ return shift->wxbb->resolve(service => '/Fonts' . shift) },
+            get_image               => sub{ return shift->wxbb->resolve(service => '/Assets/images' . shift) },
+            get_left_pane           => 'left_pane',
+            get_log_schema          => sub{ return shift->bb->resolve(service => '/DatabaseLog/schema') },
+            get_logger              => sub{ shift->bb->resolve( service => '/Log/logger' ) },
+            get_right_pane          => 'right_pane',
+            get_main_schema         => sub{ return shift->bb->resolve(service => '/Database/schema') },
+            get_main_frame          => 'main_frame',
+            get_splitter            => 'splitter',
+            has_main_frame          => 'has_main_frame',
+            intro_panel_exists      => 'has_intro_panel',
+            get_intro_panel         => 'intro_panel',
+            get_top_left_corner     => sub{ return shift->app->GetTopWindow()->GetPosition },
+            menu                    => 'menu_bar',
+            poperr                  => 'poperr',
+            popmsg                  => 'popmsg',
+            popconf                 => 'popconf',
+            server_ids              => 'server_ids',
+            server_record_by_id     => 'server_record_by_id',
+            set_caption             => 'caption',
+            set_connected_server    => 'server',
+            throb                   => 'throb',
+            wxbb                    => 'wxbb',
+            yield                   => 'Yield',
+            Yield                   => 'Yield',
+        }
+    );
+
+    has 'ancestor'  => (is => 'rw', isa => 'Object',            weak_ref => 1       );
+    has 'parent'    => (is => 'rw', isa => 'Maybe[Wx::Window]'                      );
 
     has 'sizer_debug' => (is => 'rw', isa => 'Int',  lazy => 1, default => 0,
         documentation => q{

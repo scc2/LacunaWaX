@@ -106,7 +106,7 @@ package LacunaWaX::Dialog::Help {
     };
     sub _build_bmp_home {#{{{
         my $self = shift;
-        my $img = $self->app->wxbb->resolve(service => '/Assets/images/app/home.png');
+        my $img = $self->get_image('/app/home.png');
         $img->Rescale($self->nav_img_w - 10, $self->nav_img_h - 10);    # see build_bmp_left
         my $bmp = Wx::Bitmap->new($img);
         my $v = Wx::BitmapButton->new(
@@ -120,7 +120,7 @@ package LacunaWaX::Dialog::Help {
     }#}}}
     sub _build_bmp_left {#{{{
         my $self = shift;
-        my $img = $self->app->wxbb->resolve(service => '/Assets/images/app/arrow-left.png');
+        my $img = $self->get_image('/app/arrow-left.png');
         ### On Ubuntu, there's a margin inside the button.  If the image is 
         ### the same size as the button, that margin obscures part of the 
         ### image.  So the image must be a bit smaller than the button.
@@ -138,7 +138,7 @@ package LacunaWaX::Dialog::Help {
     }#}}}
     sub _build_bmp_right {#{{{
         my $self = shift;
-        my $img = $self->app->wxbb->resolve(service => '/Assets/images/app/arrow-right.png');
+        my $img = $self->get_image('/app/arrow-right.png');
         $img->Rescale($self->nav_img_w - 10, $self->nav_img_h - 10);    # see build_bmp_left
         my $bmp = Wx::Bitmap->new($img);
         return Wx::BitmapButton->new(
@@ -151,7 +151,7 @@ package LacunaWaX::Dialog::Help {
     }#}}}
     sub _build_bmp_search {#{{{
         my $self = shift;
-        my $img = $self->app->wxbb->resolve(service => '/Assets/images/app/search.png');
+        my $img = $self->get_image('/app/search.png');
         $img->Rescale($self->nav_img_w - 10, $self->nav_img_h - 10);    # see build_bmp_left
         my $bmp = Wx::Bitmap->new($img);
         my $v = Wx::BitmapButton->new(
@@ -184,7 +184,7 @@ package LacunaWaX::Dialog::Help {
     }#}}}
     sub _build_html_dir {#{{{
         my $self = shift;
-        return $self->app->bb->resolve(service => '/Directory/html');
+        return $self->bb->resolve(service => '/Directory/html');
     }#}}}
     sub _build_index_file {#{{{
         return 'index.html';
@@ -259,7 +259,7 @@ package LacunaWaX::Dialog::Help {
         my $self    = shift;
         my $kandi   = HTML::Strip->new();
         my $docs    = {};
-        my $dir     = $self->app->bb->resolve(service => '/Directory/html');
+        my $dir     = $self->bb->resolve(service => '/Directory/html');
         foreach my $f(glob("\"$dir\"/*.html")) {
             my $html = read_file($f);
 
@@ -311,17 +311,17 @@ package LacunaWaX::Dialog::Help {
 
         my $fqfn = join q{/}, ($self->html_dir, $file);
         unless(-e $fqfn) {
-            $self->app->poperr("$fqfn: No such file or directory");
+            $self->poperr("$fqfn: No such file or directory");
             return;
         }
 
         my $vars = {
             ### fix the .. in the paths, since it might confuse muggles.
-            bin_dir     => File::Spec->rel2abs($self->app->bb->resolve(service => '/Directory/bin')),
+            bin_dir     => File::Spec->rel2abs($self->bb->resolve(service => '/Directory/bin')),
             dir_sep     => File::Util->SL,
             html_dir    => File::Spec->rel2abs($self->html_dir),
-            user_dir    => File::Spec->rel2abs($self->app->bb->resolve(service => '/Directory/user')),
-            lucy_index  => File::Spec->rel2abs($self->app->bb->resolve(service => '/Lucy/index')),
+            user_dir    => File::Spec->rel2abs($self->bb->resolve(service => '/Directory/user')),
+            lucy_index  => File::Spec->rel2abs($self->bb->resolve(service => '/Lucy/index')),
         };
 
         my $output  = q{};
@@ -332,7 +332,7 @@ package LacunaWaX::Dialog::Help {
     sub make_search_index {#{{{
         my $self = shift;
 
-        my $idx = $self->app->bb->resolve(service => '/Lucy/index');
+        my $idx = $self->bb->resolve(service => '/Lucy/index');
         return if -e $idx;
         my $docs = $self->get_docs;
 
@@ -443,13 +443,13 @@ package LacunaWaX::Dialog::Help {
             my $ok = Browser::Open::open_browser($info->GetHref);
 
             if( $ok ) {
-                $self->app->poperr(
+                $self->poperr(
                     "LacunaWaX encountered an error while attempting to open the URL in your web browser.  The URL you were attempting to reach was '" . $info->GetHref . q{'.},
                     "Error opening web browser"
                 );
             }
             elsif(not defined $ok) {
-                $self->app->poperr(
+                $self->poperr(
                     "LacunaWaX was unable to open the URL in your web browser.  The URL you were attempting to reach was '" . $info->GetHref . q{'.},
                     "Unable to open web browser"
                 );
@@ -509,13 +509,13 @@ package LacunaWaX::Dialog::Help {
 
         my $term = $self->txt_search->GetValue;
         unless($term) {
-            $self->app->popmsg("Searching for nothing isn't going to return many results.");
+            $self->popmsg("Searching for nothing isn't going to return many results.");
             return;
         }
 
         ### Search results do not get recorded in history.
 
-        my $searcher = $self->app->bb->resolve(service => '/Lucy/searcher');
+        my $searcher = $self->bb->resolve(service => '/Lucy/searcher');
         my $hits = $searcher->hits( query => $term );
         my $vars = {
             term => $term,

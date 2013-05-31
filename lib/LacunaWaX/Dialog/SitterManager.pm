@@ -75,7 +75,7 @@ package LacunaWaX::Dialog::SitterManager {
             wxDefaultPosition, 
             Wx::Size->new(400, 35)
         );
-        $y->SetFont( $self->app->wxbb->resolve(service => '/Fonts/header_1') );
+        $y->SetFont( $self->get_font('/header_1') );
         return $y;
     }#}}}
     sub _build_lbl_instructions {#{{{
@@ -90,7 +90,7 @@ package LacunaWaX::Dialog::SitterManager {
             wxDefaultPosition, $size
         );
         $y->Wrap( $self->size->GetWidth - 35 ); # - 35 accounts for the vertical scrollbar
-        $y->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $y->SetFont( $self->get_font('/bold_para_text_1') );
 
         return $y;
     }#}}}
@@ -133,7 +133,7 @@ package LacunaWaX::Dialog::SitterManager {
     sub fill_sitters_sizer {#{{{
         my $self = shift;
 
-        my $schema = $self->app->bb->resolve( service => '/Database/schema' );
+        my $schema = $self->get_main_schema;
 
         my $header = LacunaWaX::Dialog::SitterManager::SitterRow->new(
             app         => $self->app,
@@ -145,7 +145,7 @@ package LacunaWaX::Dialog::SitterManager {
         $header->show;
 
         my $rs = $schema->resultset('SitterPasswords')->search(
-            { server_id => $self->app->server->id },
+            { server_id => $self->get_connected_server->id },
             ### LOWER(arg) works with SQLite.  May not work with another RDBMS.
             { order_by => { -asc => 'LOWER(player_name)' }, }
         );
@@ -160,7 +160,7 @@ package LacunaWaX::Dialog::SitterManager {
             );
             $self->sitters_sizer->Add($row->main_sizer, 0, 0, 0);
             $self->sitters_sizer->AddSpacer( $self->row_spacer_size );
-            $self->app->Yield;
+            $self->yield;
             $row->show;
 
             if( $prev_row ) {

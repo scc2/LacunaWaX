@@ -51,7 +51,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::SummaryPane {
             wxDefaultPosition, 
             Wx::Size->new(-1, 30)
         );
-        $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/header_1') );
+        $v->SetFont( $self->get_font('/header_1') );
         return $v;
     }#}}}
     sub _build_lbl_text {#{{{
@@ -62,7 +62,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::SummaryPane {
             wxDefaultPosition, 
             Wx::Size->new(400,600)
         );
-        $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_2') );
+        $v->SetFont( $self->get_font('/para_text_2') );
         return $v;
     }#}}}
     sub _build_owner {#{{{
@@ -71,16 +71,16 @@ package LacunaWaX::MainSplitterWindow::RightPane::SummaryPane {
     }#}}}
     sub _build_planet_id {#{{{
         my $self = shift;
-        return $self->app->game_client->planet_id( $self->planet_name );
+        return $self->game_client->planet_id( $self->planet_name );
     }#}}}
     sub _build_status {#{{{
         my $self = shift;
 
         my $s = try {
-            $self->app->game_client->get_body_status( $self->planet_id );
+            $self->game_client->get_body_status( $self->planet_id );
         }
         catch {
-            $self->app->poperr("$_->{'text'} ($_)");
+            $self->poperr("$_->{'text'} ($_)");
             return;
         };
         return $s;
@@ -125,7 +125,7 @@ Orbit $s->{orbit} around $s->{star_name} (ID $s->{star_id}), in zone $s->{zone}\
             }
             $text .= "\n";
 
-            my $parl = try { $self->app->game_client->get_building($self->planet_id, 'Parliament') };
+            my $parl = try { $self->game_client->get_building($self->planet_id, 'Parliament') };
             my $laws = try { $parl->view_laws($self->planet_id) } if $parl;
 
             my @non_seizure_laws = ();

@@ -8,10 +8,7 @@ package LacunaWaX::Dialog::SitterManager::SitterRow {
     use Try::Tiny;
     use Wx qw(:everything);
     use Wx::Event qw(EVT_BUTTON EVT_TEXT);
-
-    has 'app'           => (is => 'rw', isa => 'LacunaWaX',                         required => 1, weak_ref => 1    );
-    has 'parent'        => (is => 'rw', isa => 'Wx::Window',                        required => 1                   );
-    has 'ancestor'      => (is => 'rw', isa => 'LacunaWaX::Dialog::SitterManager',  required => 1, weak_ref => 1    );
+    with 'LacunaWaX::Roles::GuiElement';
 
     has 'main_sizer' => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1, documentation => 'vertical');
 
@@ -111,8 +108,8 @@ over the dialog while the row is being created.
                 )
             );
 
-            $self->name_header->SetFont( $self->app->wxbb->resolve(service => '/Fonts/header_5') );
-            $self->pass_header->SetFont( $self->app->wxbb->resolve(service => '/Fonts/header_5') );
+            $self->name_header->SetFont( $self->get_font('/header_5') );
+            $self->pass_header->SetFont( $self->get_font('/header_5') );
 
             $self->row_panel_sizer->Add($self->name_header, 0, 0, 0);
             $self->row_panel_sizer->Add($self->pass_header, 0, 0, 0);
@@ -128,7 +125,7 @@ over the dialog while the row is being created.
         $self->row_panel_sizer->AddSpacer(5);  # Separate delete button a hair
         $self->row_panel_sizer->Add($self->btn_delete, 0, 0, 0);
         $self->main_sizer->Add($self->row_panel, 0, 0, 0);
-        $self->app->Yield;
+        $self->yield;
 
         $self->_set_events;
         return $self;
@@ -243,11 +240,11 @@ over the dialog while the row is being created.
         my $name = shift;
 
         my $hr = try {
-            $self->app->game_client->empire->find($name);   ## no critic qw(ProhibitLongChainsOfMethodCalls)
+            $self->game_client->empire->find($name);   ## no critic qw(ProhibitLongChainsOfMethodCalls)
         }
         catch {
             my $msg = (ref $_) ? $_->text : $_;
-            $self->app->poperr($msg, "Error");
+            $self->poperr($msg, "Error");
             return;
         };
 
@@ -298,8 +295,8 @@ test_sitter_gui(), is unacceptable.
 
 =cut
 
-        my $uri     = $self->app->server->protocol . '://' . $self->app->server->url;
-        my $api_key = $self->app->bb->resolve( service => '/Globals/api_key' );
+        my $uri     = $self->get_connected_server->protocol . '://' . $self->get_connected_server->url;
+        my $api_key = $self->bb->resolve( service => '/Globals/api_key' );
 
         my $client = Games::Lacuna::Client->new(
             name        => $name,
@@ -350,14 +347,14 @@ else {
         }
         catch {
             if( $_ =~ /empire does not exist/i ) {
-                $self->app->poperr("No such empire exists - check spelling of empire name.", 'Error');
+                $self->poperr("No such empire exists - check spelling of empire name.", 'Error');
                 return;
             }
             elsif( $_ =~ /password incorrect/i ) {
-                $self->app->poperr("Bad password - check your spelling.", 'Error');
+                $self->poperr("Bad password - check your spelling.", 'Error');
                 return;
             }
-            $self->app->poperr("Attempt to test sitter password returned error '$_'", 'Error');
+            $self->poperr("Attempt to test sitter password returned error '$_'", 'Error');
         };
 
         return $rv || 0;
@@ -406,15 +403,15 @@ else {
             if( $self->test_sitter_gui($name, $pass) ) {
 
                 my $player_id = $self->find_player_id($name) or do { # WTF?
-                    $self->app->poperr("Unable to find player name after it passed testing.", "WTF?");
+                    $self->poperr("Unable to find player name after it passed testing.", "WTF?");
                     return;
                 };
 
-                my $schema = $self->app->bb->resolve( service => '/Database/schema' );
+                my $schema = $self->get_main_schema;
                 if(
                     my $rec = $schema->resultset('SitterPasswords')->find_or_create(
                         {
-                            server_id => $self->app->server->id,
+                            server_id => $self->get_connected_server->id,
                             player_id => $player_id
                         },
                         { key => 'one_player_per_server' }
@@ -428,17 +425,17 @@ else {
                     $self->btn_save->SetLabel('Update Sitter');
                 }
                 else { # WTF?
-                    $self->app->poperr("Player record creation should not have failed, but it did.", "WTF?");
+                    $self->poperr("Player record creation should not have failed, but it did.", "WTF?");
                     return;
                 }
             }
             else {
-                $self->app->poperr("The player name and sitter you entered are not a valid game login.", "Invalid Credentials!");
+                $self->poperr("The player name and sitter you entered are not a valid game login.", "Invalid Credentials!");
                 return;
             }
         }
         $self->btn_delete->Enable(1);
-        $self->app->popmsg("Sitter credentials have been saved.", "Success!");
+        $self->popmsg("Sitter credentials have been saved.", "Success!");
         return 1;
     }#}}}
     sub OnTest {#{{{
@@ -450,7 +447,7 @@ else {
         my $pass    = $self->txt_sitter->GetLineText(0);
 
         if( $self->test_sitter_gui($name, $pass) ) {
-            $self->app->popmsg("Credentials are valid.", "Success!");
+            $self->popmsg("Credentials are valid.", "Success!");
         }
         return 1;
     }#}}}
@@ -460,7 +457,7 @@ else {
         my $event   = shift;    # Wx::CommandEvent
 
         return unless $self->player_rec;
-        return if wxNO == $self->app->popconf("Delete sitter for " . $self->player_rec->player_name . " - are you sure?");
+        return if wxNO == $self->popconf("Delete sitter for " . $self->player_rec->player_name . " - are you sure?");
 
         $self->player_rec->delete;
         $self->player_rec( undef );
@@ -469,7 +466,7 @@ else {
         $self->btn_save->SetLabel('Add Sitter');
         $self->btn_delete->Enable(0);
 
-        $self->app->popmsg("The sitter has been deleted.", "Success!");
+        $self->popmsg("The sitter has been deleted.", "Success!");
         return 1;
     }#}}}
 

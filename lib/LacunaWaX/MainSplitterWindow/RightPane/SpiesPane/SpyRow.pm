@@ -115,7 +115,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::SpyRow {
                     )
                 );
 
-                $self->$header->SetFont( $self->app->wxbb->resolve(service => '/Fonts/header_7') );
+                $self->$header->SetFont( $self->get_font('/header_7') );
                 $self->szr_main->Add($self->$header, 0, 0, 0);
             }
             return;
@@ -142,7 +142,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::SpyRow {
         $self->szr_main->Add($self->szr_theft, 0, 0, 0);
         $self->szr_main->Add($self->szr_train, 0, 0, 0);
 
-        $self->app->Yield;
+        $self->yield;
         return $self;
     }
     sub _build_chc_train {#{{{
@@ -151,25 +151,25 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::SpyRow {
             $self->parent, -1, 
             wxDefaultPosition, 
             Wx::Size->new($self->train_width, $self->row_height), 
-            [$self->text_none, @{$self->app->game_client->spy_training_choices} ]
+            [$self->text_none, @{$self->game_client->spy_training_choices} ]
         );
 
         my $selection = 0;
-        my $schema = $self->app->bb->resolve( service => '/Database/schema' );
+        my $schema = $self->get_main_schema;
         if( my $rec = $schema->resultset('SpyTrainPrefs')->find({spy_id => $self->spy->id}) ) {
             $selection = $v->FindString( ucfirst $rec->train );
         }
         $v->SetSelection($selection);
-        $v->SetFont($self->app->wxbb->resolve(service => '/Fonts/para_text_1'));
+        $v->SetFont( $self->get_font('/para_text_1') );
         return $v;
     }#}}}
     sub _build_int_min {#{{{
         my $self = shift;
         my $im = try {
-            $self->app->game_client->get_building($self->planet_id, 'Intelligence Ministry');
+            $self->game_client->get_building($self->planet_id, 'Intelligence Ministry');
         }
         catch {
-            $self->app->poperr($_->text);
+            $self->poperr($_->text);
             return;
         };
 
@@ -184,7 +184,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::SpyRow {
             wxDefaultPosition, 
             Wx::Size->new(60, $self->row_height)
         );
-        $y->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $y->SetFont( $self->get_font('/para_text_1') );
         return $y;
     }#}}}
     sub _build_lbl_intel {#{{{
@@ -195,7 +195,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::SpyRow {
             wxDefaultPosition, 
             Wx::Size->new($self->skill_width, $self->row_height - 10)
         );
-        $y->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $y->SetFont( $self->get_font('/para_text_1') );
         return $y;
     }#}}}
     sub _build_lbl_level {#{{{
@@ -207,14 +207,14 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::SpyRow {
             wxDefaultPosition, 
             Wx::Size->new($self->level_width, $self->row_height)
         );
-        $y->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $y->SetFont( $self->get_font('/para_text_1') );
         return $y;
     }#}}}
     sub _build_lbl_loc {#{{{
         my $self = shift;
 
         my($loc, $tooltip);
-        if( $loc = $self->app->game_client->planet_name($self->spy->assigned_to_id) ) {
+        if( $loc = $self->game_client->planet_name($self->spy->assigned_to_id) ) {
             substr $loc, 12, (length $loc), '...' if(length $loc > 15);
             $tooltip = Wx::ToolTip->new('Location ID: ' . $self->spy->assigned_to_id);
         }
@@ -231,7 +231,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::SpyRow {
         );
         $y->SetToolTip($tooltip);
 
-        $y->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $y->SetFont( $self->get_font('/para_text_1') );
         return $y;
     }#}}}
     sub _build_lbl_mayhem {#{{{
@@ -242,7 +242,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::SpyRow {
             wxDefaultPosition, 
             Wx::Size->new($self->skill_width, $self->row_height - 10)
         );
-        $y->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $y->SetFont( $self->get_font('/para_text_1') );
         return $y;
     }#}}}
     sub _build_lbl_name {#{{{
@@ -260,7 +260,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::SpyRow {
             Wx::Size->new($self->name_width - 12, $self->row_height)
         );
 
-        $y->SetFont( $self->app->wxbb->resolve(service => '/Fonts/bold_para_text_1') );
+        $y->SetFont( $self->get_font('/para_text_1') );
         return $y;
     }#}}}
     sub _build_lbl_task {#{{{
@@ -280,7 +280,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::SpyRow {
             $y->SetToolTip($tt);
         }
 
-        $y->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $y->SetFont( $self->get_font('/para_text_1') );
         return $y;
     }#}}}
     sub _build_lbl_offense {#{{{
@@ -292,7 +292,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::SpyRow {
             wxDefaultPosition, 
             Wx::Size->new(60, $self->row_height)
         );
-        $y->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $y->SetFont( $self->get_font('/para_text_1') );
         return $y;
     }#}}}
     sub _build_lbl_politics {#{{{
@@ -303,7 +303,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::SpyRow {
             wxDefaultPosition, 
             Wx::Size->new($self->skill_width, $self->row_height - 10)
         );
-        $y->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $y->SetFont( $self->get_font('/para_text_1') );
         return $y;
     }#}}}
     sub _build_lbl_placeholder {#{{{
@@ -328,7 +328,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::SpyRow {
             wxDefaultPosition, 
             Wx::Size->new($self->skill_width, $self->row_height - 10)
         );
-        $y->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $y->SetFont( $self->get_font('/para_text_1') );
         return $y;
     }#}}}
     sub _build_szr_task {#{{{

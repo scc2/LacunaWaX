@@ -60,7 +60,7 @@ package LacunaWaX::Dialog::Prefs {
     sub _build_tab_autovote {#{{{
         my $self = shift;
 
-        if( $self->app->server ) {
+        if( $self->get_connected_server ) {
             my $av = LacunaWax::Dialog::Prefs::TabAutovote->new(
                 app         => $self->app,
                 parent      => $self->notebook,
@@ -104,11 +104,11 @@ package LacunaWaX::Dialog::Prefs {
         my $server_name     = $self->tab_server->server_list->[ $self->tab_server->chc_server->GetCurrentSelection ];
         my $username_str    = $self->tab_server->txtbox_user->GetLineText(0);
         my $password_str    = $self->tab_server->txtbox_pass->GetLineText(0);
-        my $schema          = $self->app->bb->resolve( service => '/Database/schema' );
+        my $schema          = $self->get_main_schema;
 
         ### Sanity check input
         unless( $username_str and $password_str ) {
-            $self->app->poperr(
+            $self->poperr(
                 'You must enter both a username and password',
                 'Incomplete Credentials'
             );
@@ -142,7 +142,7 @@ package LacunaWaX::Dialog::Prefs {
         if( $self->tab_autovote ) {
             my $who = lc $self->tab_autovote->rdo_autovote->GetStringSelection();
             my $rec = $schema->resultset('ScheduleAutovote')->find_or_create({
-                server_id  => $self->app->server->id
+                server_id  => $self->get_connected_server->id
             });
             $rec->proposed_by($who);
             $rec->update;
@@ -150,18 +150,17 @@ package LacunaWaX::Dialog::Prefs {
 
         ### Enable/Disable connection widgets.
         ### Menu item, two Connect buttons (on the Intro page).
-        my $main_frame = $self->app->main_frame;
-        my $menu_file  = $main_frame->menu_bar->menu_file;
+        my $menu_file  = $self->menu->menu_file;
         my $srvr_menu_id = $menu_file->itm_connect->connections->{ $server_account->server_id }->GetId;
         if( $username_str and $password_str ) {
-            if( $main_frame->has_intro_panel ) {
-                $main_frame->intro_panel->buttons->{ $server_account->server->id }->Enable(1);
+            if( $self->intro_panel_exists ) {
+                $self->get_intro_panel->buttons->{ $server_account->server->id }->Enable(1);
             }
             $menu_file->itm_connect->Enable($srvr_menu_id, 1);
         }
         else {
-            if( $main_frame->has_intro_panel ) {
-                $main_frame->intro_panel->buttons->{ $server_account->server->id }->Disable();
+            if( $self->intro_panel_exists ) {
+                $self->get_intro_panel->buttons->{ $server_account->server->id }->Disable();
             }
             $menu_file->itm_connect->Enable($srvr_menu_id, 0);
         }

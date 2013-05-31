@@ -90,16 +90,14 @@ package LacunaWaX::MainSplitterWindow::RightPane::LotteryPane {
     sub BUILD {
         my $self = shift;
 
-        my $sp = $self->app->main_frame->splitter;
-
         my $l = try {
             $self->_make_links
         }
         catch {
             my $msg = (ref $_) ? $_->text : $_;
-            $self->app->poperr("I was unable to access the lottery links: $msg");
-            $sp->right_pane->clear_pane;
-            $sp->right_pane->show_right_pane(
+            $self->poperr("I was unable to access the lottery links: $msg");
+            $self->get_right_pane->clear_pane;
+            $self->get_right_pane->show_right_pane(
                 'LacunaWaX::MainSplitterWindow::RightPane::DefaultPane'
             );
             return;
@@ -177,7 +175,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::LotteryPane {
             wxDefaultPosition, 
             Wx::Size->new(-1, 35)
         );
-        $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/header_1') );
+        $v->SetFont( $self->get_font('/header_1') );
         return $v;
     }#}}}
     sub _build_lbl_links_hdr {#{{{
@@ -188,7 +186,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::LotteryPane {
             wxDefaultPosition, 
             Wx::Size->new(-1, 35)
         );
-        $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/header_2') );
+        $v->SetFont( $self->get_font('/header_2') );
         return $v;
     }#}}}
     sub _build_lbl_links_inst {#{{{
@@ -209,7 +207,7 @@ show up in this list until a new version of LacunaWaX is released.";
             wxDefaultPosition, 
             Wx::Size->new(-1, 140)
         );
-        $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_2') );
+        $v->SetFont( $self->get_font('/para_text_2') );
         return $v;
     }#}}}
     sub _build_lbl_total {#{{{
@@ -227,7 +225,7 @@ show up in this list until a new version of LacunaWaX is released.";
             wxDefaultPosition, 
             Wx::Size->new(500,$th)
         );
-        $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_2') );
+        $v->SetFont( $self->get_font('/para_text_2') );
         return $v;
     }#}}}
     sub _build_lbl_other {#{{{
@@ -244,7 +242,7 @@ show up in this list until a new version of LacunaWaX is released.";
             wxDefaultPosition, 
             Wx::Size->new(500,25)
         );
-        $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_2') );
+        $v->SetFont( $self->get_font('/para_text_2') );
         $v->SetLabel( $self->update_lbl_other_assignments );
         return $v;
     }#}}}
@@ -258,16 +256,16 @@ show up in this list until a new version of LacunaWaX is released.";
             wxDefaultPosition, 
             Wx::Size->new(55,25)
         );
-        $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_2') );
+        $v->SetFont( $self->get_font('/para_text_2') );
         
         return $v;
     }#}}}
     sub _build_txt_mine {#{{{
         my $self  = shift;
         
-        my $schema = $self->app->bb->resolve( service => '/Database/schema' );
+        my $schema = $self->get_main_schema;
         my $my_cnt = $schema->resultset('LotteryPrefs')->search({
-            server_id   => $self->app->server->id,
+            server_id   => $self->get_connected_server->id,
             body_id     => $self->planet_id,
         })->single;
 
@@ -293,7 +291,7 @@ show up in this list until a new version of LacunaWaX is released.";
             wxDefaultPosition, 
             Wx::Size->new(180,25)
         );
-        $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_2') );
+        $v->SetFont( $self->get_font('/para_text_2') );
         
         return $v;
     }#}}}
@@ -308,9 +306,9 @@ show up in this list until a new version of LacunaWaX is released.";
     sub _build_assigned_other {#{{{
         my $self  = shift;
         
-        my $schema = $self->app->bb->resolve( service => '/Database/schema' );
+        my $schema = $self->get_main_schema;
         my $other_rs = $schema->resultset('LotteryPrefs')->search({
-            server_id   => $self->app->server->id,
+            server_id   => $self->get_connected_server->id,
             body_id     => { q{!=} => $self->planet_id },
         });
 
@@ -322,7 +320,7 @@ show up in this list until a new version of LacunaWaX is released.";
     }#}}}
     sub _build_planet_id {#{{{
         my $self = shift;
-        return $self->app->game_client->planet_id( $self->planet_name );
+        return $self->game_client->planet_id( $self->planet_name );
     }#}}}
     sub _build_unassigned {#{{{
         my $self  = shift;
@@ -356,7 +354,7 @@ show up in this list until a new version of LacunaWaX is released.";
         ### This is because this constructor could fail, so I'm wrapping the 
         ### call in try/catch (in BUILD).
         return LacunaWaX::Model::Lottery::Links->new(
-            client      => $self->app->game_client,
+            client      => $self->game_client,
             planet_id   => $self->planet_id,
         );
     }#}}}
@@ -402,7 +400,7 @@ far in tests, and a bullet getting through this is not fatal.
                 Wx::Size->new(-1, 20),
                 wxHL_DEFAULT_STYLE
             );
-            $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_3') );
+            $v->SetFont( $self->get_font('/para_text_3') );
 
             ### Windows, at least:
             ### Mousing over a link should display its hover color (default 
@@ -458,14 +456,14 @@ far in tests, and a bullet getting through this is not fatal.
         my $to_be_assigned = $self->txt_mine->GetLineText(0);
 
         if( $to_be_assigned > $self->unassigned ) {
-            $self->app->poperr("Attempt to assign more links than are available failed.");
+            $self->poperr("Attempt to assign more links than are available failed.");
             return;
         }
 
-        my $schema = $self->app->bb->resolve( service => '/Database/schema' );
+        my $schema = $self->get_main_schema;
         my $rec = $schema->resultset('LotteryPrefs')->find_or_create(
             {
-                server_id => $self->app->server->id,
+                server_id => $self->get_connected_server->id,
                 body_id   => $self->planet_id,
             },
             { key => 'LotteryPrefs_body' }
@@ -473,7 +471,7 @@ far in tests, and a bullet getting through this is not fatal.
         $rec->count($to_be_assigned);
         $rec->update;
 
-        $self->app->popmsg(
+        $self->popmsg(
   "$to_be_assigned lottery links will be clicked from this planet.\n"
 . "Don't forget to set up Schedule_lottery.exe to run twice per day!"
         );
@@ -484,9 +482,9 @@ far in tests, and a bullet getting through this is not fatal.
         my $panel   = shift;    # Wx::ScrolledWindow
         my $event   = shift;    # Wx::CommandEvent
 
-        my $schema = $self->app->bb->resolve( service => '/Database/schema' );
+        my $schema = $self->get_main_schema;
         my $rv = $schema->resultset('LotteryPrefs')->search({
-            server_id => $self->app->server->id,
+            server_id => $self->get_connected_server->id,
         })->delete;
 
         $self->clear_assigned_other;
@@ -496,7 +494,7 @@ far in tests, and a bullet getting through this is not fatal.
         $self->txt_mine->SetToolTip( $self->update_txt_mine_tooltip );
         $self->lbl_other->SetLabel( $self->update_lbl_other_assignments );
 
-        $self->app->popmsg("All lottery assignments have been cleared.  Don't forget to reset them.");
+        $self->popmsg("All lottery assignments have been cleared.  Don't forget to reset them.");
         return 1;
     }#}}}
     sub OnMouseOverLink {#{{{
@@ -505,7 +503,7 @@ far in tests, and a bullet getting through this is not fatal.
         my $event   = shift;    # Wx::MouseEvent
 
         my $url = $ctrl->GetURL;
-        my $old_caption = $self->app->caption($url);
+        my $old_caption = $self->set_caption($url);
         $self->save_caption( $old_caption ) unless $self->save_caption;
         return 1;
     }#}}}
@@ -514,7 +512,7 @@ far in tests, and a bullet getting through this is not fatal.
         my $ctrl    = shift;    # Wx::HyperlinkCtrl
         my $event   = shift;    # Wx::MouseEvent
 
-        $self->app->caption($self->save_caption);
+        $self->set_caption($self->save_caption);
         return 1;
     }#}}}
 

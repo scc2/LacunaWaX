@@ -125,7 +125,7 @@ package LacunaWaX::Dialog::Mail {
     sub _build_ally_members {#{{{
         my $self = shift;
 
-        my @members = sort{ uc $a->{name} cmp uc $b->{name} } @{$self->app->game_client->get_alliance_members('As an arrayref, please')};
+        my @members = sort{ uc $a->{name} cmp uc $b->{name} } @{$self->game_client->get_alliance_members('As an arrayref, please')};
         ### [
         ###     { id => 1, name => 'tmtowtdi'},
         ###     { id => 2, name => 'Infinate Ones'},
@@ -244,11 +244,11 @@ package LacunaWaX::Dialog::Mail {
     sub _build_inbox {#{{{
         my $self = shift;
         my $inbox = try {
-            $self->app->game_client->inbox;
+            $self->game_client->inbox;
         }
         catch {
             my $msg = (ref $_) ? $_->text : $_;
-            $self->app->poperr("GONNGG!  Unable to open your inbox: $msg");
+            $self->poperr("GONNGG!  Unable to open your inbox: $msg");
         };
         return $inbox;
     }#}}}
@@ -260,7 +260,7 @@ package LacunaWaX::Dialog::Mail {
             wxDefaultPosition, 
             Wx::Size->new(50, $self->addy_height)
         );
-        $y->SetFont( $self->app->wxbb->resolve(service => '/Fonts/bold_para_text_1') );
+        $y->SetFont( $self->get_font('/bold_para_text_1') );
         return $y;
     }#}}}
     sub _build_lbl_body {#{{{
@@ -271,7 +271,7 @@ package LacunaWaX::Dialog::Mail {
             wxDefaultPosition, 
             Wx::Size->new(50, $self->addy_height)
         );
-        $y->SetFont( $self->app->wxbb->resolve(service => '/Fonts/bold_para_text_1') );
+        $y->SetFont( $self->get_font('/bold_para_text_1') );
         return $y;
     }#}}}
     sub _build_lbl_btn_send {#{{{
@@ -285,7 +285,7 @@ package LacunaWaX::Dialog::Mail {
             wxDefaultPosition, 
             Wx::Size->new(50, $self->addy_height)
         );
-        $y->SetFont( $self->app->wxbb->resolve(service => '/Fonts/bold_para_text_1') );
+        $y->SetFont( $self->get_font('/bold_para_text_1') );
         return $y;
     }#}}}
     sub _build_lbl_instructions {#{{{
@@ -300,7 +300,7 @@ package LacunaWaX::Dialog::Mail {
             wxDefaultPosition, $size
         );
         $y->Wrap( $self->size->GetWidth - 35 ); # - 35 accounts for the vertical scrollbar
-        $y->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $y->SetFont( $self->get_font('/bold_para_text_1') );
 
         return $y;
     }#}}}
@@ -312,7 +312,7 @@ package LacunaWaX::Dialog::Mail {
             wxDefaultPosition, 
             Wx::Size->new(400, 30)
         );
-        $y->SetFont( $self->app->wxbb->resolve(service => '/Fonts/header_2') );
+        $y->SetFont( $self->get_font('/header_2') );
         return $y;
     }#}}}
     sub _build_lbl_hdr_page {#{{{
@@ -323,7 +323,7 @@ package LacunaWaX::Dialog::Mail {
             wxDefaultPosition, 
             Wx::Size->new(400, 35)
         );
-        $y->SetFont( $self->app->wxbb->resolve(service => '/Fonts/header_1') );
+        $y->SetFont( $self->get_font('/header_1') );
         return $y;
     }#}}}
     sub _build_lbl_hdr_send {#{{{
@@ -334,7 +334,7 @@ package LacunaWaX::Dialog::Mail {
             wxDefaultPosition, 
             Wx::Size->new(400, 30)
         );
-        $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/header_2') );
+        $v->SetFont( $self->get_font('/header_2') );
         $v->SetToolTip(
 "Messages sent by this form are doing an end-run around the profanity filter.  Use your head."
         );
@@ -348,7 +348,7 @@ package LacunaWaX::Dialog::Mail {
             wxDefaultPosition, 
             Wx::Size->new(50, $self->addy_height)
         );
-        $y->SetFont( $self->app->wxbb->resolve(service => '/Fonts/bold_para_text_1') );
+        $y->SetFont( $self->get_font('/bold_para_text_1') );
         return $y;
     }#}}}
     sub _build_lbl_to {#{{{
@@ -359,7 +359,7 @@ package LacunaWaX::Dialog::Mail {
             wxDefaultPosition, 
             Wx::Size->new(50, $self->addy_height)
         );
-        $y->SetFont( $self->app->wxbb->resolve(service => '/Fonts/bold_para_text_1') );
+        $y->SetFont( $self->get_font('/bold_para_text_1') );
         return $y;
     }#}}}
     sub _build_size {#{{{
@@ -578,7 +578,7 @@ already used 'bless'.
         }
         catch {
             my $msg = (ref $_) ? $_->text : $_;
-            $self->app->poperr("Unable to get page 1: $msg");
+            $self->poperr("Unable to get page 1: $msg");
             return;
         } or return;
         my $msg_count   = $contents->{'message_count'};
@@ -598,7 +598,7 @@ already used 'bless'.
             }
             catch {
                 my $msg = (ref $_) ? $_->text : $_;
-                $self->app->poperr("Unable to get page $page: $msg");
+                $self->poperr("Unable to get page $page: $msg");
                 return;
             } or return;
             my $msgs = $contents->{'messages'};
@@ -625,7 +625,7 @@ already used 'bless'.
             push @{$tags_to_trash}, $checkbox->GetLabel if $checkbox->GetValue;
         }
         unless( @{$tags_to_trash} ) {
-            $self->app->poperr(
+            $self->poperr(
                 "I should remove nothing?  You got it.",
                 "No checkboxes checked",
             );
@@ -642,47 +642,6 @@ already used 'bless'.
 
 
         my $trash_these = $self->_get_trash_messages($tags_to_trash, $status);
-=pod
-        ### We always have to get the first page of messages, which will tell us 
-        ### how many messages (and therefore pages) there are in total.
-        $status->say("Reading page 1");
-        my $contents = try {
-            $self->inbox->view_inbox({page_number => 1, tags => $tags_to_trash});
-        }
-        catch {
-            my $msg = (ref $_) ? $_->text : $_;
-            $self->app->poperr("Unable to get page 1: $msg");
-            return;
-        } or return;
-        my $msg_count   = $contents->{'message_count'};
-        my $msgs        = $contents->{'messages'};
-        my $trash_these = [];
-        foreach my $m(@{$msgs}) {
-            next if $self->chk_read->GetValue and not $m->{'has_read'};
-            push @{$trash_these}, $m->{'id'};
-        }
-
-        ### Get subsequent pages if necessary.
-        my $max_page = int($msg_count / 25);
-        $max_page++ if $msg_count % 25;
-        for my $page(2..$max_page) {    # already got page 1
-            $status->say("Reading page $page");
-            my $contents = try {
-                $self->inbox->view_inbox({page_number => $page, tags => $tags_to_trash});
-            }
-            catch {
-                my $msg = (ref $_) ? $_->text : $_;
-                $self->app->poperr("Unable to get page $page: $msg");
-                return;
-            } or return;
-            my $msgs = $contents->{'messages'};
-            my $found_count = 0;
-            foreach my $m(@{$msgs}) {
-                next if $self->chk_read->GetValue and not $m->{'has_read'};
-                push @{$trash_these}, $m->{'id'};
-            }
-        }
-=cut
 
         $status->say("Deleting selected messages");
         my $rv = try {
@@ -690,7 +649,7 @@ already used 'bless'.
         }
         catch {
             my $msg = (ref $_) ? $_->text : $_;
-            $self->app->poperr("Unable to delete messages: $msg");
+            $self->poperr("Unable to delete messages: $msg");
             return;
         } or return;
         my $trashed     = scalar @{$rv->{'success'}} || 0;
@@ -719,7 +678,7 @@ already used 'bless'.
     sub OnCorrespondenceCheckbox {#{{{
         my $self = shift;
         if( $self->chk_corr->IsChecked ) {
-            unless( wxYES == $self->app->popconf("You're about to delete mail sent by other players!  Are you sure?") ) {
+            unless( wxYES == $self->popconf("You're about to delete mail sent by other players!  Are you sure?") ) {
                 $self->chk_corr->SetValue(0);
             }
         }
@@ -734,17 +693,17 @@ already used 'bless'.
         $body = $self->fix_profanity($body);
 
         unless( $to and $subj and $body ) {
-            $self->app->poperr("The To and Body fields must not be blank.  Try again.");
+            $self->poperr("The To and Body fields must not be blank.  Try again.");
             return;
         }
 
         my $rv = try { $self->inbox->send_message( $to, $subj, $body ) };
         if( ref $rv eq 'HASH' ) {
-            $self->app->popmsg("Your message has been sent.");
+            $self->popmsg("Your message has been sent.");
             $self->clear_mail_form;
         }
         else {
-            $self->app->poperr("Unknown error sending message.");
+            $self->poperr("Unknown error sending message.");
         }
         return 1;
     }#}}}

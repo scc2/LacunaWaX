@@ -44,8 +44,8 @@ package LacunaWaX::MainFrame::MenuBar::Edit {
         my $self = shift;
 
         ### Determine starting point of Prefs window
-        my $top_window_point = $self->app->GetTopWindow()->GetPosition;
-        my $self_origin = Wx::Point->new( $top_window_point->x + 30, $top_window_point->y + 30 );
+        my $tlc         = $self->get_top_left_corner;
+        my $self_origin = Wx::Point->new( $tlc->x + 30, $tlc->y + 30 );
         my $prefs_frame = LacunaWaX::Dialog::Prefs->new(
             app         => $self->app,
             ancestor    => $self,

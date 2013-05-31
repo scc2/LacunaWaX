@@ -65,7 +65,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane::RecipeForm {
             wxDefaultPosition, 
             Wx::Size->new(150, $self->height)
         );
-        $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $v->SetFont( $self->get_font('/para_text_1') );
         return $v;
     }#}}}
     sub _build_lbl_recipe {#{{{
@@ -76,7 +76,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane::RecipeForm {
             wxDefaultPosition, 
             Wx::Size->new(270, $self->height)
         );
-        $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $v->SetFont( $self->get_font('/para_text_1') );
         return $v;
     }#}}}
     sub _build_spin_quantity {#{{{
@@ -88,7 +88,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane::RecipeForm {
             wxSP_ARROW_KEYS, 
             0, 5000, 0
         );
-        $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $v->SetFont( $self->get_font('/para_text_1') );
         return $v;
     }#}}}
     sub _build_btn_assemble {#{{{
@@ -97,20 +97,20 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane::RecipeForm {
             $self->parent, -1,
             "Assemble"
         );
-        $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $v->SetFont( $self->get_font('/para_text_1') );
         return $v;
     }#}}}
     sub _build_list_glyphs {#{{{
         my $self = shift;
-        $self->app->throb();
-        $self->app->Yield;
+        $self->throb();
+        $self->yield;
 
         my $sorted_glyphs = try {
-            $self->app->game_client->get_glyphs($self->parent->planet_id);
+            $self->game_client->get_glyphs($self->parent->planet_id);
         }
         catch {
             $self->has_arch_min(0);
-            $self->app->poperr($_->text);
+            $self->poperr($_->text);
             return;
         };
 
@@ -131,7 +131,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane::RecipeForm {
         $list_ctrl->SetColumnWidth(2,100);
         $list_ctrl->Arrange(wxLIST_ALIGN_TOP);
         $list_ctrl->AssignImageList( $self->app->build_img_list_glyphs, wxIMAGE_LIST_SMALL );
-        $self->app->Yield;
+        $self->yield;
 
         ### Add glyphs to the listctrl
         my $row = 0;
@@ -143,10 +143,10 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane::RecipeForm {
             $list_ctrl->SetItem($row_idx, 2, $hr->{quantity});
 
             $row++;
-            $self->app->Yield;
+            $self->yield;
         }#}}}
 
-        $self->app->endthrob();
+        $self->endthrob();
         return $list_ctrl;
     }#}}}
     sub _make_dialog_status {#{{{
@@ -207,18 +207,18 @@ arg is not necessary there.
         my $panel   = shift;    # Wx::Panel or Wx::ScrolledWindow
         my $event   = shift;    # Wx::CommandEvent
 
-        my $logger = $self->app->bb->resolve( service => '/Log/logger' );
-        $self->app->throb();
+        my $logger = $self->get_logger;
+        $self->throb();
 
         my $recipe_name     = $self->recipe_name;
         my $quantity        = $self->spin_quantity->GetValue // 0;
         unless( $quantity ) {
-            $self->app->poperr('You must choose a quantity to assemble.', "Can't Make Zero!");
-            $self->app->endthrob();
+            $self->poperr('You must choose a quantity to assemble.', "Can't Make Zero!");
+            $self->endthrob();
             return;
         }
 
-        my $gc = $self->app->game_client;
+        my $gc = $self->game_client;
 
         ### 'Halls of Vrbansk (all)' is not a recipe, it's an indication that 
         ### we're supposed to build each of the 5 halls recipes.
@@ -255,15 +255,15 @@ arg is not necessary there.
                     }
 
                     my $ringredients = $gc->glyph_recipes->{$rname};
-                    $self->app->Yield;
+                    $self->yield;
                     my $rv = try {
                         $gc->cook_glyphs($self->ancestor->planet_id, $ringredients, $quantity);
                     }
                     catch {
-                        $self->app->poperr($_->text);
+                        $self->poperr($_->text);
                         return;
                     };
-                    $self->app->Yield;
+                    $self->yield;
                     if( ref $rv eq 'HASH' ) {
                         my $built = $rv->{'quantity'} // 0;
                         $total_built += $built;
@@ -290,38 +290,38 @@ arg is not necessary there.
         }#}}}
         else {#{{{
             my $plan_plural = ($quantity == 1) ? 'plan' : 'plans';
-            $self->app->Yield;
+            $self->yield;
             my $ringredients = $gc->glyph_recipes->{$recipe_name};
             my $built = try {
                 $gc->cook_glyphs($self->ancestor->planet_id, $ringredients, $quantity);
             }
             catch {
-                $self->app->poperr($_->text);
+                $self->poperr($_->text);
                 return;
             };
 
-            $self->app->Yield;
+            $self->yield;
             if( ref $built eq 'HASH' ) {
                 if( $built->{'error'} ) {
-                    $self->app->poperr($built->{'error'});
-                    $self->app->endthrob();
+                    $self->poperr($built->{'error'});
+                    $self->endthrob();
                     return;
                 }
                 $response = "Created $built->{'quantity'} $plan_plural of $built->{'item_name'}.";
             }
             else {
                 ### Shouldn't ever happen.
-                $self->app->endthrob();
+                $self->endthrob();
                 $logger->error("Glyph assembler event got back non-hashref '-$built-' from cook_glyphs.");
-                $self->app->poperr("Attempt to build glyphs produced an unexpected error.");
-                $self->app->endthrob();
+                $self->poperr("Attempt to build glyphs produced an unexpected error.");
+                $self->endthrob();
                 return;
             }
         }#}}}
 
-        $self->app->Yield;   # allow throbber to update if it's on
-        $self->app->endthrob();
-        $self->app->popmsg($response, "Success!");
+        $self->yield;   # allow throbber to update if it's on
+        $self->endthrob();
+        $self->popmsg($response, "Success!");
         return 1;
     }#}}}
 

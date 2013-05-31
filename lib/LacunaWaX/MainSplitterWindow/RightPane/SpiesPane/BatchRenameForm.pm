@@ -54,7 +54,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::BatchRenameForm {
             $self->parent, -1,
             "Rename all spies"
         );
-        $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $v->SetFont( $self->get_font('/para_text_1') );
         return $v;
     }#}}}
     sub _build_dialog_status {#{{{
@@ -108,7 +108,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::BatchRenameForm {
             wxDefaultPosition, 
             Wx::Size->new(150, 20)
         );
-        $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $v->SetFont( $self->get_font('/para_text_1') );
         $v->SetToolTip( 'This will be the name of all of your spies, modified by the Pre- or Suf- fix' );
         return $v;
     }#}}}
@@ -161,25 +161,25 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::BatchRenameForm {
         my $fix       = $self->rdo_fix->GetString( $self->rdo_fix->GetSelection );
 
         unless($base_name) {
-            $self->app->poperr("You must enter a name to rename spies.");
+            $self->poperr("You must enter a name to rename spies.");
             return;
         }
         if( $fix eq 'None' ) {
-            if( wxNO == $self->app->popconf("Without a prefix or suffix, all of your spies on this planet will have the same name.\nThis is legal if it's what you really want - is it?", "Are you sure?") ) {
-                $self->app->popmsg("OK - add either a prefix or suffix and try again.");
+            if( wxNO == $self->popconf("Without a prefix or suffix, all of your spies on this planet will have the same name.\nThis is legal if it's what you really want - is it?", "Are you sure?") ) {
+                $self->popmsg("OK - add either a prefix or suffix and try again.");
                 return;
             }
         }
 
         $self->dialog_status->erase;
         $self->dialog_status->show;
-        $self->app->Yield;
+        $self->yield;
 
         ### Most people will have 90 spies, and the server seems to handle 
         ### renames pretty quickly, so make sure that we're sleeping a second 
         ### between each request.  We'll put it back again when we're done.
-        my $old_rpc_sleep = $self->app->game_client->rpc_sleep;
-        $self->app->game_client->rpc_sleep(1);
+        my $old_rpc_sleep = $self->game_client->rpc_sleep;
+        $self->game_client->rpc_sleep(1);
 
         my $cnt = my $renamed = 0;
         SPY_ROW:
@@ -214,7 +214,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::BatchRenameForm {
                 my $msg = (ref $_) ? $_->text : $_;
                 if( $msg =~ /slow down/i ) {
                     my $start = time();
-                    my $resp  = $self->app->popconf("You just went over 60 RPC/minute - wait a minute and try again?");
+                    my $resp  = $self->popconf("You just went over 60 RPC/minute - wait a minute and try again?");
                     if( $resp == wxYES ) {
                         my $slp_cnt = 0;
                         SLEEP:
@@ -224,7 +224,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::BatchRenameForm {
                             last SLEEP if $slp_cnt > 62;    # failsafe
                             $self->dialog_status_say("$slp_cnt) Sleeping...");
                             sleep 1;
-                            $self->app->Yield;
+                            $self->yield;
                         }
                         return 'redo';
                     }
@@ -234,7 +234,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::BatchRenameForm {
                         return 'last';
                     }
                 }
-                $self->app->poperr($msg);
+                $self->poperr($msg);
                 $self->clear_dialog_status;
                 return;
             };
@@ -246,20 +246,20 @@ package LacunaWaX::MainSplitterWindow::RightPane::SpiesPane::BatchRenameForm {
                 $row->change_name( $new_name );
                 $renamed++;
             }
-            $self->app->Yield;
+            $self->yield;
         }
 
         if( $renamed ) {
             ### Spies have been renamed, so expire the spies currently in the 
             ### cache so the new names show up on the next screen load.
-            if( $self->app->wxbb ) {
-                my $chi  = $self->app->wxbb->resolve( service => '/Cache/raw_memory' );
+            if( $self->wxbb ) {
+                my $chi  = $self->get_chi;
                 my $key  = join q{:}, ('BODIES', 'SPIES', $self->ancestor->planet_id);
                 $chi->remove($key);
             }
         }
 
-        $self->app->game_client->rpc_sleep($old_rpc_sleep);
+        $self->game_client->rpc_sleep($old_rpc_sleep);
         $self->dialog_status_say_recsep;
         $self->dialog_status_say("Renamed $renamed spies.");
         $self->dialog_status_say("You may now close this window.");

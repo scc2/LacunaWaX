@@ -1,6 +1,7 @@
 
 package LacunaWaX::MainFrame::IntroPanel {
     use v5.14;
+    use Data::Dumper;
     use Moose;
     use Try::Tiny;
     use Wx qw(:everything);
@@ -84,7 +85,7 @@ package LacunaWaX::MainFrame::IntroPanel {
 
         ### The logo is already the correct size and does not need to be 
         ### rescaled.
-        my $img  = $self->app->wxbb->resolve(service => '/Assets/images/app/logo-280x70.png');
+        my $img  = $self->wxbb->resolve(service => '/Assets/images/app/logo-280x70.png');
         my $bmp  = Wx::Bitmap->new($img);
         return Wx::StaticBitmap->new(
             $self->top_panel, -1, 
@@ -132,26 +133,26 @@ package LacunaWaX::MainFrame::IntroPanel {
         my $self = shift;
         foreach my $srvr_id(keys %{$self->buttons}) {
             my $btn = $self->buttons->{$srvr_id};
-            EVT_BUTTON( $self->main_panel,  $btn->GetId,   sub{$self->app->main_frame->OnGameServerConnect($srvr_id, @_)} );
+            EVT_BUTTON( $self->main_panel,  $btn->GetId,   sub{$self->get_main_frame->OnGameServerConnect($srvr_id, @_)} );
         }
         return 1;
     }#}}}
 
     sub add_connect_buttons {#{{{
         my $self    = shift;
-        my $schema  = $self->app->bb->resolve( service => '/Database/schema' );
+        my $schema  = $self->get_main_schema;
 
         ### One connect button per server
-        foreach my $srvr_id( keys %{$self->app->servers} ) {
-            my $rec = $self->app->servers->{$srvr_id};
+        for my $srvr_id( sort{$a<=>$b}$self->server_ids ) {
+            my $srvr_rec = $self->server_record_by_id($srvr_id);
             my $b = Wx::Button->new(
                 $self->bottom_panel, -1,
-                "Connect to " . $rec->name,
+                "Connect to " . $srvr_rec->name,
                 wxDefaultPosition,
                 Wx::Size->new(200, 30),
                 0,
             );
-            $b->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_2') );
+            $b->SetFont( $self->wxbb->resolve(service => '/Fonts/para_text_2') );
 
             if(
                 my $prefs = $schema->resultset('ServerAccounts')->find({ server_id => $srvr_id, default_for_server => 1 })

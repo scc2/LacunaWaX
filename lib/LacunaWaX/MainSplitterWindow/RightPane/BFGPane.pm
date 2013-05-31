@@ -71,7 +71,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::BFGPane {
             wxDefaultPosition,
             Wx::Size->new(400, 50),
         );
-        $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/bold_para_text_3') );
+        $v->SetFont( $self->get_font('/bold_para_text_3') );
         $v->SetBackgroundColour(Wx::Colour->new(200,0,0));      # Brits!
         $v->SetForegroundColour(Wx::Colour->new(255,255,255));  # Brits!
         my $tt = Wx::ToolTip->new("Dispatch war rocket Ajax to bring back his body!");
@@ -88,7 +88,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::BFGPane {
             Wx::Size->new(50, 25), 
             [1..8],
         );
-        $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $v->SetFont( $self->get_font('/bold_para_text_1') );
 
         return $v;
     }#}}}
@@ -110,7 +110,7 @@ ${indent}Remember that this form only creates a proposition to fire the BFG, and
             wxDefaultPosition, 
             Wx::Size->new(-1, 270)
         );
-        $y->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_2') );
+        $y->SetFont( $self->get_font('/para_text_2') );
         $y->Wrap(560);
 
         return $y;
@@ -118,60 +118,52 @@ ${indent}Remember that this form only creates a proposition to fire the BFG, and
     sub _build_lbl_orbit {#{{{
         my $self = shift;
 
-        my $text = "Orbit:";
-
         my $y = Wx::StaticText->new(
             $self->parent, -1, 
-            $text,
+            "Orbit:",
             wxDefaultPosition, 
             Wx::Size->new(-1, 25)
         );
-        $y->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_2') );
+        $y->SetFont( $self->get_font('/para_text_2') );
 
         return $y;
     }#}}}
     sub _build_lbl_reason {#{{{
         my $self = shift;
 
-        my $text = "Reason:";
-
         my $y = Wx::StaticText->new(
             $self->parent, -1, 
-            $text,
+            "Reason:",
             wxDefaultPosition, 
             Wx::Size->new(-1, 25)
         );
-        $y->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_2') );
+        $y->SetFont( $self->get_font('/para_text_2') );
 
         return $y;
     }#}}}
     sub _build_lbl_star_name {#{{{
         my $self = shift;
 
-        my $text = "Star Name:";
-
         my $y = Wx::StaticText->new(
             $self->parent, -1, 
-            $text,
+            "Star Name:",
             wxDefaultPosition, 
             Wx::Size->new(-1, 25)
         );
-        $y->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_2') );
+        $y->SetFont( $self->get_font('/para_text_2') );
 
         return $y;
     }#}}}
     sub _build_lbl_target_id {#{{{
         my $self = shift;
 
-        my $text = "Target Planet ID:";
-
         my $y = Wx::StaticText->new(
             $self->parent, -1, 
-            $text,
+            "Target Planet ID:",
             wxDefaultPosition, 
             Wx::Size->new(-1, 40)
         );
-        $y->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_2') );
+        $y->SetFont( $self->get_font('/para_text_2') );
 
         return $y;
     }#}}}
@@ -182,18 +174,18 @@ ${indent}Remember that this form only creates a proposition to fire the BFG, and
             "Fire BFG on " . $self->planet_name, 
             wxDefaultPosition, Wx::Size->new(-1, 40)
         );
-        $y->SetFont( $self->app->wxbb->resolve(service => '/Fonts/header_1') );
+        $y->SetFont( $self->get_font('/header_1') );
         return $y;
     }#}}}
     sub _build_parl {#{{{
         my $self = shift;
 
         my $parl = try {
-            $self->app->game_client->get_building($self->planet_id, 'Parliament', 1);
+            $self->game_client->get_building($self->planet_id, 'Parliament', 1);
         }
         catch {
             my $msg = (ref $_) ? $_->text : $_;
-            $self->app->poperr($msg);
+            $self->poperr($msg);
             return;
         };
 
@@ -201,7 +193,7 @@ ${indent}Remember that this form only creates a proposition to fire the BFG, and
     }#}}}
     sub _build_planet_id {#{{{
         my $self = shift;
-        return $self->app->game_client->planet_id( $self->planet_name );
+        return $self->game_client->planet_id( $self->planet_name );
     }#}}}
     sub _build_szr_form {#{{{
         my $self = shift;
@@ -237,7 +229,7 @@ ${indent}Remember that this form only creates a proposition to fire the BFG, and
             wxDefaultPosition, 
             Wx::Size->new(250,25)
         );
-        $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $v->SetFont( $self->get_font('/para_text_1') );
         my $tt = Wx::ToolTip->new("This can be anything - feel free to change the default.");
         $v->SetToolTip($tt);
         return $v;
@@ -254,7 +246,7 @@ ${indent}Remember that this form only creates a proposition to fire the BFG, and
             wxDefaultPosition, 
             Wx::Size->new(200,25)
         );
-        $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $v->SetFont( $self->get_font('/bold_para_text_1') );
         my $tt = Wx::ToolTip->new("You or somebody in your alliances must have this star probed.");
         $v->SetToolTip($tt);
         return $v;
@@ -267,7 +259,7 @@ ${indent}Remember that this form only creates a proposition to fire the BFG, and
             wxDefaultPosition, 
             Wx::Size->new(70,25)
         );
-        $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/para_text_1') );
+        $v->SetFont( $self->get_font('/bold_para_text_1') );
         return $v;
     }#}}}
     sub _set_events {#{{{
@@ -359,13 +351,13 @@ without ever having to probe them.
 
         my $star_name = $self->trim( $self->txt_star_name->GetLineText(0) ) or return;
         my $star = try {
-            my $map = $self->app->game_client->map();
+            my $map = $self->game_client->map();
             my $star = $map->get_star_by_name($star_name);
             return $star;
         }
         catch {
             my $msg = (ref $_) ? $_->text : $_;
-            $self->app->poperr("Attempt to find star named '$star_name' failed: $msg", "No such star"); 
+            $self->poperr("Attempt to find star named '$star_name' failed: $msg", "No such star"); 
             return;
         } or return;
         my $sid = $star->{'star'}{'id'};
@@ -411,7 +403,7 @@ without ever having to probe them.
         my $event   = shift;    # Wx::CommandEvent
 
         my $target = $self->get_target or do {
-            $self->app->poperr("I was unable to determine the target - something's funky.", "Like George Clinton");
+            $self->poperr("I was unable to determine the target - something's funky.", "Like George Clinton");
             return;
         };
         my $target_id   = $target->{'id'};
@@ -422,8 +414,8 @@ without ever having to probe them.
         ### orbit
         $self->txt_target_id->SetValue($target_id);
 
-        unless( wxYES == $self->app->popconf("Fire the BFG at $target_name - are you sure?", "Really really?") ) {
-            $self->app->popmsg("You seem to have had a change of heart.", "No pew pew"); 
+        unless( wxYES == $self->popconf("Fire the BFG at $target_name - are you sure?", "Really really?") ) {
+            $self->popmsg("You seem to have had a change of heart.", "No pew pew"); 
             return;
         }
 
@@ -432,11 +424,11 @@ without ever having to probe them.
         }
         catch {
             my $msg = (ref $_) ? $_->text : $_;
-            $self->app->poperr("Attempt to fire the BFG failed: $msg", "No pew pew"); 
+            $self->poperr("Attempt to fire the BFG failed: $msg", "No pew pew"); 
             return;
         } or return;
 
-        $self->app->popmsg("Proposal to fire the BFG at $target_name has been submitted; don't forget to vote.", "Success!"); 
+        $self->popmsg("Proposal to fire the BFG at $target_name has been submitted; don't forget to vote.", "Success!"); 
         return 1;
     }#}}}
 

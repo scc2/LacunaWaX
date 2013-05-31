@@ -60,7 +60,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::RearrangerPane {
     }
     sub _build_blank_image {#{{{
         my $self = shift;
-        my $img = $self->app->wxbb->resolve(service => '/Assets/images/planetside/blank.png');
+        my $img = $self->get_image('/planetside/blank.png');
         $img->Rescale(50, 50);
         return Wx::Bitmap->new($img);
     }#}}}
@@ -69,10 +69,10 @@ package LacunaWaX::MainSplitterWindow::RightPane::RearrangerPane {
         my $force = shift || 0;
 
         my $bldgs = try {
-            $self->app->game_client->get_buildings($self->planet_id, undef, $force);
+            $self->game_client->get_buildings($self->planet_id, undef, $force);
         }
         catch {
-            $self->app->poperr($_->text);
+            $self->poperr($_->text);
             return;
         };
 
@@ -85,13 +85,13 @@ package LacunaWaX::MainSplitterWindow::RightPane::RearrangerPane {
     sub _build_btn_rearrange {#{{{
         my $self = shift;
         my $v = Wx::Button->new($self->parent, -1, 'Rearrange');
-        $v->SetFont($self->app->wxbb->resolve(service => '/Fonts/para_text_2'));
+        $v->SetFont( $self->get_font('/para_text_2') );
         return $v;
     }#}}}
     sub _build_btn_reload {#{{{
         my $self = shift;
         my $v = Wx::Button->new($self->parent, -1, 'Reload');
-        $v->SetFont($self->app->wxbb->resolve(service => '/Fonts/para_text_2'));
+        $v->SetFont( $self->get_font('/para_text_2') );
         return $v;
     }#}}}
     sub _build_gridszr_buttons {#{{{
@@ -106,12 +106,12 @@ package LacunaWaX::MainSplitterWindow::RightPane::RearrangerPane {
             wxDefaultPosition, 
             Wx::Size->new(640, 40)
         );
-        $v->SetFont( $self->app->wxbb->resolve(service => '/Fonts/header_1') );
+        $v->SetFont( $self->get_font('/header_1') );
         return $v;
     }#}}}
     sub _build_planet_id {#{{{
         my $self = shift;
-        return $self->app->game_client->planet_id( $self->planet_name );
+        return $self->game_client->planet_id( $self->planet_name );
     }#}}}
     sub _build_saved_bldg {#{{{
         my $self = shift;
@@ -153,7 +153,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::RearrangerPane {
         my $panel   = shift;
         my $event   = shift;
 
-        $self->app->throb();
+        $self->throb();
         my $layout = [];
         foreach my $b( $self->buttons->all ) {
             next if $b->name eq 'Empty';
@@ -170,24 +170,24 @@ package LacunaWaX::MainSplitterWindow::RightPane::RearrangerPane {
         }
 
         my $rv = try {
-            $self->app->game_client->rearrange($self->planet_id, $layout);
+            $self->game_client->rearrange($self->planet_id, $layout);
         }
         catch {
-            $self->app->poperr($_->text);
+            $self->poperr($_->text);
             return;
         };
-        $self->app->endthrob();
+        $self->endthrob();
 
         if( ref $rv eq 'HASH' and defined $rv->{'moved'} and scalar @{$rv->{'moved'}} ) {
             my $n = scalar @{$rv->{'moved'}};
             my $plural = ($n == 1) ? ' was' : 's were';
-            $self->app->popmsg(
+            $self->popmsg(
                 "$n building${plural} relocated.",
                 'Success!'
             );
         }
         else {
-            $self->app->popmsg(
+            $self->popmsg(
                 'Nothing changed position.',
                 "What's wrong with you?"
             );
@@ -213,7 +213,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::RearrangerPane {
         my $self = shift;
         my $inc  = shift || 1;
         $self->gauge_value($self->gauge_value + $inc); 
-        my $sb = $self->app->main_frame->status_bar;
+        my $sb = $self->get_main_frame->status_bar;
         $sb->gauge->SetValue($self->gauge_value);
         $sb->gauge->Update();
         return $self->gauge_value;
@@ -262,7 +262,7 @@ building, then makes the one the user just clicked out currently-saved.
     }#}}}
     sub reset_gauge {#{{{
         my $self = shift;
-        my $sb = $self->app->main_frame->status_bar;
+        my $sb = $self->get_main_frame->status_bar;
         $sb->gauge->SetRange(121);
         $self->gauge_value(0); 
         $sb->gauge->SetValue($self->gauge_value);
@@ -284,7 +284,7 @@ building, then makes the one the user just clicked out currently-saved.
 
                 my $bitmap;
                 if( defined $bldg_hr->{'image'} ) {
-                    my $img = $self->app->wxbb->resolve(service => "/Assets/images/planetside/$bldg_hr->{'image'}.png");
+                    my $img = $self->get_image("/planetside/$bldg_hr->{'image'}.png");
                     $img->Rescale(50, 50);
                     $bitmap = Wx::Bitmap->new($img);
                 }
