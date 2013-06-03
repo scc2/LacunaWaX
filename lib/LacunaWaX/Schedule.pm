@@ -401,7 +401,14 @@ they'll simply be picked up on the next run.
 
             STATION:
             foreach my $ss_rec(@ss_recs) {#{{{
-                my $station_name = $self->game_client->planet_name($ss_rec->body_id) or next STATION;
+
+                my $station_name = $self->game_client->planet_name($ss_rec->body_id);
+                unless($station_name) {
+                    $logger->info("Station " . $ss_rec->body_id . " no longer exists; removing voting prefs.");
+                    $ss_rec->delete;
+                    next STATION;
+                }
+
                 $logger->info("Attempting to vote on $station_name" );
                 my $station_votes = try {
                     $self->_vote_on_station($ss_rec, $av_rec);
