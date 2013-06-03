@@ -2,7 +2,7 @@ LacunaWaX
 =========
 A GUI for The Lacuna Expanse
 
-Copyright 2012-2013 Jonathan D. Barton (tmtowtdi@gmail.com)
+Copyright 2012-2013 Jonathan D. Barton (tmtowtdi@gmail.com) 
 
 STATUS
 ------
