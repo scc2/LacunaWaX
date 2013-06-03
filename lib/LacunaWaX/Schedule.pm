@@ -12,7 +12,9 @@ package LacunaWaX::Schedule {
     use Moose;
     use Try::Tiny;
 
-    use LacunaWaX::Model::Lottery::Links;
+    use LacunaWaX::Model::Lottery::Links;       # this should go away.
+    use LacunaWaX::Schedule::Autovote;
+    use LacunaWaX::Schedule::Lottery;
 
     has 'bb'            => (is => 'rw', isa => 'LacunaWaX::Model::Container',   required    => 1);
     has 'schedule'      => (is => 'rw', isa => 'Str',                           required    => 1);
@@ -367,262 +369,29 @@ they'll simply be picked up on the next run.
         my $self = shift;
 
         my $logger = $self->bb->resolve( service => '/Log/logger' );
-        $logger->component('Autovote');
-        my $schema = $self->bb->resolve( service => '/Database/schema' );
+        my $schedule_av = LacunaWaX::Schedule::Autovote->new(
+            bb      => $self->bb,
+            logger  => $logger,
+            schema  => $self->bb->resolve( service => '/Database/schema' ),
+        );
+        my $cnt = $schedule_av->vote_all_servers;
+        $logger->info("--- Autovote Run Complete ---");
 
-        my @av_recs = $schema->resultset('ScheduleAutovote')->search()->all;
-        my $plural = (@av_recs == 1) ? 'server' : 'servers';
-        $logger->info("Autovote prefs are enabled on " . @av_recs . " $plural.");
-
-        SERVER:
-        foreach my $av_rec( @av_recs ) {#{{{
-            $logger->info("Autovoting for props proposed by " . $av_rec->proposed_by . " on server " . $av_rec->server_id);
-            my $server_votes = 0;
-
-            if($av_rec->proposed_by eq 'none') {
-                $logger->info("Specifically requested not to perform autovoting on this server.  Skipping.");
-                next SERVER if $av_rec->proposed_by eq 'none';
-            }
-
-            if( my $server = $schema->resultset('Servers')->find({id => $av_rec->server_id}) ) {
-                unless( $self->game_connect($server->id) ) {
-                    $logger->info("Failed to connect to " . $server->name . " - check your credentials!");
-                    next SERVER;
-                }
-            }
-            else {
-                next SERVER;
-            }
-
-            my $ss_rs = $schema->resultset('BodyTypes')->search({type_general => 'space station', server_id => $av_rec->server_id});
-            my @ss_recs = $ss_rs->all;
-
-            $logger->info("User has set up autovote on " . @ss_recs . " stations.");
-
-            STATION:
-            foreach my $ss_rec(@ss_recs) {#{{{
-
-                my $station_name = $self->game_client->planet_name($ss_rec->body_id);
-                unless($station_name) {
-                    $logger->info("Station " . $ss_rec->body_id . " no longer exists; removing voting prefs.");
-                    $ss_rec->delete;
-                    next STATION;
-                }
-
-                $logger->info("Attempting to vote on $station_name" );
-                my $station_votes = try {
-                    $self->_vote_on_station($ss_rec, $av_rec);
-                }
-                catch {
-                    my $msg = (ref $_) ? $_->text : $_;
-                    $logger->error("Attempt to vote failed: $msg");
-                    return;
-                };
-                $station_votes // next STATION;
-                $server_votes += $station_votes;
-                $logger->info("$station_votes votes cast.");
-            }#}}}
-            $logger->info("$server_votes votes recorded server-wide.");
-            $logger->info("--- Autovote Run Complete ---");
-        }#}}}
-        return;
+        return $cnt;
     }#}}}
-    sub _vote_on_station {#{{{
-        my $self    = shift;
-        my $ss_rec  = shift;    # BodyTypes record
-        my $av_rec  = shift;    # ScheduleAutovote record
-
-        my $logger    = $self->bb->resolve( service => '/Log/logger' );
-        my $votecount = 0;
-
-        my $ss_status = try {
-            $self->game_client->get_body_status($ss_rec->body_id);
-        }
-        catch { return; };
-        $ss_status or croak "Could not get station status";
-        my $ss_name   = $ss_status->{'name'};
-        my $ss_owner  = $ss_status->{'empire'}{'name'};
-
-        my $parl = try {
-            $self->game_client->get_building($ss_rec->body_id, 'Parliament');
-        }
-        catch { return; };
-        $parl or croak "No parliament";
-
-        my $props = try {
-            $parl->view_propositions;
-        }
-        catch { return; };
-        $props or croak "No props";
-        $logger->info("Checking props on $ss_name.");
-
-        unless($props and ref $props eq 'HASH' and defined $props->{'propositions'}) {
-            croak "No active props";
-        }
-        $props = $props->{'propositions'};
-        $logger->info(@{$props} . " props active on $ss_name.");
-
-        PROP:
-        foreach my $prop(@{$props}) {#{{{
-            try {
-                $self->_vote_on_prop($parl, $prop, $av_rec, $ss_owner);
-            }
-            catch {
-                my $msg = (ref $_) ? $_->text : $_;
-                $logger->info($msg);
-                return;
-            };
-            $votecount++;
-        }#}}}
-        return $votecount;
-    }#}}}
-    sub _vote_on_prop {#{{{
-        my $self        = shift;
-        my $parl        = shift;
-        my $prop        = shift;
-        my $av_rec      = shift;    # ScheduleAutovote record
-        my $ss_owner    = shift;    # SS owner name - string
-
-        if( $prop->{my_vote} ) {
-            croak "$prop->{name} - I've already voted on this prop; skipping.";
-        }
-
-        my $propper = $prop->{'proposed_by'}{'name'};
-        if($av_rec->proposed_by eq 'owner' and $propper ne $ss_owner) {
-            croak "Prop $prop->{name} was proposed by $propper, who is not the SS owner - skipped.";
-        }
-
-        my $rv = try {
-            $parl->cast_vote($prop->{'id'}, 1);
-        }
-        catch { croak "Attempt to vote failed with: $_"; };
-
-        unless( $rv->{proposition}{my_vote} ) {
-            croak "Vote attempt did not produce an error, but did not succeed either.";
-        }
-
-        return 1;
-    }#}}}
-
     sub lottery {#{{{
         my $self = shift;
 
         my $logger = $self->bb->resolve( service => '/Log/logger' );
-        $logger->component('Lottery');
-
-        my $schema      = $self->bb->resolve( service => '/Database/schema' );
-        my @server_recs = $schema->resultset('Servers')->search()->all;
-
-        my $ua = LWP::UserAgent->new(
-            agent                   => 'Mozilla/5.0 (Windows NT 5.1; rv:20.0) Gecko/20100101 Firefox/20.0',
-            max_redirects           => 3,
-            requests_redirectable   => ['GET'],
-            timeout                 => 20,  # high, but the server's been awfully laggy lately.
+        my $schedule_lottery = LacunaWaX::Schedule::Lottery->new(
+            bb      => $self->bb,
+            logger  => $logger,
+            schema  => $self->bb->resolve( service => '/Database/schema' ),
         );
+        my $cnt = $schedule_lottery->play_all_servers;
+        $logger->info("--- LLottery Run Complete ---");
 
-        SERVER:
-        foreach my $server_rec( @server_recs ) {#{{{
-            unless( $self->game_connect($server_rec->id) ) {
-                $logger->info("Failed to connect to " . $server_rec->name . " - check your credentials!");
-                next SERVER;
-            }
-            $logger->info("Playing lottery on server " . $server_rec->name);
-
-            my @lottery_planet_recs = $schema->resultset('LotteryPrefs')->search({
-                server_id => $server_rec->id
-            })->all;
-
-            my $links       = q{};
-            my $total_plays = 0;
-
-            PLANET:
-            foreach my $lottery_rec(@lottery_planet_recs) {
-
-                ### Don't muck up the logs if the user set the number of plays 
-                ### on this planet to 0.
-                next PLANET unless $lottery_rec->count;
-
-                unless( $links ) {
-                    ### Must only get $links once per server so the iterators 
-                    ### work properly.
-                    $links = try {
-                        LacunaWaX::Model::Lottery::Links->new(
-                            client      => $self->game_client,
-                            planet_id   => $lottery_rec->body_id,
-                        );
-                    }
-                    catch {
-                        my $msg = (ref $_) ? $_->text : $_;
-                        $logger->error("Unable to get lottery links: $msg");
-                        ### Likely a server problem, maybe a planet problem.
-                    } or next PLANET;
-                }
-
-                ### Make sure the lottery links are using the current planet's 
-                ### ID so our plays will take place in the correct zone.
-                unless( $lottery_rec->body_id eq $links->planet_id ) {
-                    try {
-                        $links->change_planet($lottery_rec->body_id);
-                    }
-                    catch {
-                        my $msg = (ref $_) ? $_->text : $_;
-                        $logger->error("Unable to change links' planet to " . $lottery_rec->body_id . " - $msg");
-                        next PLANET;
-                    }
-                }
-
-                my $pname = $self->game_client->planet_name($lottery_rec->body_id);
-                $logger->info("Playing lottery " . $lottery_rec->count . " times on $pname ");
-                my $planet_plays = 0;
-
-                if( $links->remaining <= 0 ) {
-                    $logger->info("You've already played out the lottery on this server today.");
-                    next SERVER;
-                }
-                $logger->info("There are " . $links->remaining . " lottery links left to play.");
-
-                PLAY:
-                for( 1..$lottery_rec->count ) {
-                    my $link = $links->next or do {
-                        $logger->error("I ran out of links before playing all assigned slots; re-do your assignments!");
-                        last PLANET;
-                    };
-
-                    $logger->info("Trying link for " . $link->name);
-                    my $resp = $ua->get($link->url);
-                    if( $resp->is_success ) {
-                        $logger->info(" -- Success!");
-                        $planet_plays++;
-                    }
-                    else {
-                        $logger->error(" -- Failure! " . $resp->status_line);
-                        $logger->error(" -- This /probably/ means that the voting site is down, but you /probably/ still got credit for this vote.");
-                        ### connect() pinged the game server, so we're 
-                        ### reasonably sure it's still up.
-                        ###
-                        ### Lottery links hit the game server, and from there 
-                        ### get redirected to the voting site.
-                        ###
-                        ### But if the voting site is down or forbidding $ua 
-                        ### hits or whatever, we were most likely still able to 
-                        ### hit the game server's redirect, and that redirect is 
-                        ### what recorded our lottery vote (which is all we 
-                        ### really care about).
-                        ###
-                        ### So count it.
-                        $planet_plays++;
-                    }
-                }
-
-                $logger->info("The lottery has been played $planet_plays times on $pname.");
-                $total_plays += $planet_plays;
-            }
-            $logger->info("The lottery has been played $total_plays times on server " . $server_rec->name);
-
-        }#}}}
-
-        $logger->info("--- Lottery Run Complete ---");
-        return;
+        return $cnt;
     }#}}}
 
     sub train_spies {#{{{
