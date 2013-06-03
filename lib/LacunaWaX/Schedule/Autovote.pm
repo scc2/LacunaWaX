@@ -10,13 +10,14 @@ package LacunaWaX::Schedule::Autovote {
     sub BUILD {
         my $self = shift;
         $self->logger->component('Autovote');
+        return $self;
     }
 
     sub vote_all_servers {#{{{
         my $self        = shift;
         my $all_votes   = 0;
 
-        my @av_recs = $self->schema->resultset('ScheduleAutovote')->search()->all;
+        my @av_recs = $self->schema->resultset('ScheduleAutovote')->search()->all;  ## no critic qw(ProhibitLongChainsOfMethodCalls)
         $self->logger->info(
             "Autovote prefs are enabled on " 
             . @av_recs 
@@ -79,8 +80,8 @@ package LacunaWaX::Schedule::Autovote {
             $self->logger->info("$station_votes votes cast.");
         }#}}}
 
-        return $server_votes;
         $self->logger->info("$server_votes votes recorded server-wide.");
+        return $server_votes;
     }#}}}
     sub vote_station {#{{{
         my $self        = shift;

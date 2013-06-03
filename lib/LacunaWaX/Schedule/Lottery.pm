@@ -2,6 +2,7 @@ use v5.14;
 
 package LacunaWaX::Schedule::Lottery {
     use Carp;
+    use English qw( -no_match_vars );
     use LacunaWaX::Model::Lottery::Links;
     use LWP::UserAgent;
     use Moose;
@@ -27,6 +28,7 @@ package LacunaWaX::Schedule::Lottery {
     sub BUILD {
         my $self = shift;
         $self->logger->component('Lottery');
+        return $self;
     }
     sub _build_ua {#{{{
         my $self = shift;
@@ -61,7 +63,7 @@ package LacunaWaX::Schedule::Lottery {
         my $self    = shift;
         my $ttl     = 0;
 
-        my @server_recs = $self->schema->resultset('Servers')->search()->all;
+        my @server_recs = $self->schema->resultset('Servers')->search()->all;   ## no critic qw(ProhibitLongChainsOfMethodCalls)
 
         foreach my $server_rec( @server_recs ) {
             my $server_count = $self->play_server($server_rec);
@@ -82,7 +84,7 @@ package LacunaWaX::Schedule::Lottery {
         }
         $self->logger->info("Playing lottery on server " . $server_rec->name);
 
-        my @lottery_planet_recs = $self->schema->resultset('LotteryPrefs')->search({
+        my @lottery_planet_recs = $self->schema->resultset('LotteryPrefs')->search({    ## no critic qw(ProhibitLongChainsOfMethodCalls)
             server_id => $server_rec->id
         })->all;
 
@@ -98,7 +100,7 @@ package LacunaWaX::Schedule::Lottery {
                 $self->play_planet($lottery_rec);
             }
             catch {
-                $self->logger->error("Unable to play lottery on body " . $lottery_rec->body_id . ": $!");
+                $self->logger->error("Unable to play lottery on body " . $lottery_rec->body_id . ": $ERRNO");
             } or next PLANET;
             $server_plays += $planet_count;
 

@@ -1,6 +1,16 @@
+use v5.14;
+
+=pod
+
+The Lottery and Autovote functions have both been cleaned up, and live in 
+their own classes under the LacunaWaX::Schedule:: namespace now.
+
+The other scheduled functions need to be moved under there too.  See those two 
+already-fixed classes for inspiration.
+
+=cut
 
 package LacunaWaX::Schedule {
-    use v5.14;
     use Carp;
     use Data::Dumper;
     use LacunaWaX::Model::Container;
