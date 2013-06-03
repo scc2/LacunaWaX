@@ -38,12 +38,9 @@ package LacunaWaX::Model::DefaultData {
     sub _build_stations {#{{{
         my $self = shift;
         return [
-            '360612',   # Cloembiozzoa 3
+            '71423',    # Graegheum 3
             '11971',    # Urn Oochaid Rie 2
-            '480714',   # SASS Absolut Darkness
             '596628',   # SASS Absolut Punishment
-            '153256',   # SASS Absolut Retribution
-            '210382',   # SASS Absolut Salvation
             '578020',   # SASS Afrass
             '288617',   # SASS Ashanti High Lightning
             '471875',   # SASS Basestar
@@ -67,6 +64,7 @@ package LacunaWaX::Model::DefaultData {
             '86085',    # SASS Silmarilos Outpost 02
             '289142',   # SASS Silmarilos Silvertongue
             '370033',   # SASS Silmarilos Trelinator
+            '360612',   # SASS temp
             '144971',   # SASS Ultra
             '593205',   # SASS Unimatrix 0
             '61303',    # SASS Wine Cellar
