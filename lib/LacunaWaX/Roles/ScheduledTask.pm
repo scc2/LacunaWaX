@@ -23,13 +23,22 @@ package LacunaWaX::Roles::ScheduledTask {
     has 'logger' => (
         is          => 'rw',
         isa         => 'Log::Dispatch',
-        required    => 1,
+        lazy_build  => 1,
     );
     has 'schema' => (
         is          => 'rw',
         isa         => 'LacunaWaX::Model::Schema',
-        required    => 1,
+        lazy_build  => 1,
     );
+
+    sub _build_logger {#{{{
+        my $self = shift;
+        return $self->bb->resolve( service => '/Log/logger' );
+    }#}}}
+    sub _build_schema {#{{{
+        my $self = shift;
+        return $self->bb->resolve( service => '/Database/schema' );
+    }#}}}
 
     sub game_connect {#{{{
         my $self      = shift;

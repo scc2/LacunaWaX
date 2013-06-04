@@ -109,10 +109,10 @@ package LacunaWaX {
     sub _build_bb {#{{{
         my $self = shift;
         return LacunaWaX::Model::Container->new(
-            name        => 'my container',
-            root_dir    => $self->root_dir,
-            db_file     => $self->db_file,
-            db_log_file => $self->db_log_file,
+            name            => 'my container',
+            root_dir        => $self->root_dir,
+            db_file         => $self->db_file,
+            db_log_file     => $self->db_log_file,
         );
     }#}}}
     sub _build_db_file {#{{{

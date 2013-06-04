@@ -24,8 +24,7 @@ package LacunaWaX::Model::DBILogger {
         my $sth  = $self->{'dbh'}->prepare("SELECT MAX(run) FROM $self->{'table'}");
         $sth->execute() or croak DBI::errstr;
         $maxrun = $sth->fetchrow_array() || 0;
-        $maxrun += 1;
-        return 1;
+        return ++$maxrun;
     }#}}}
     sub create_statement {#{{{
         my $self = shift;

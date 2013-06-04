@@ -16,13 +16,13 @@ package LacunaWaX::Schedule {
     use LacunaWaX::Model::Container;
     use LacunaWaX::Model::Mutex;
     use LacunaWaX::Model::Client;
-    use List::Util qw(first);
+    use List::Util qw(first);   # CHECK should go away.
     use LWP::UserAgent;
     use Memoize;
     use Moose;
     use Try::Tiny;
 
-    use LacunaWaX::Model::Lottery::Links;       # this should go away.
+    use LacunaWaX::Schedule::Archmin;
     use LacunaWaX::Schedule::Autovote;
     use LacunaWaX::Schedule::Lottery;
 
@@ -35,8 +35,7 @@ package LacunaWaX::Schedule {
         }
     );
 
-    ### CONSTANTS
-    sub GLYPH_CARGO_SIZE()  { 100 }                                 ## no critic qw(ProhibitSubroutinePrototypes RequireFinalReturn)
+    ### CONSTANTS (should go away)
     sub TRAINING_TYPES()    { qw(Intel Mayhem Politics Theft) }     ## no critic qw(ProhibitSubroutinePrototypes RequireFinalReturn)
 
     sub BUILD {
@@ -116,290 +115,28 @@ package LacunaWaX::Schedule {
     sub archmin {#{{{
         my $self = shift;
 
-        my $logger = $self->bb->resolve( service => '/Log/logger' );
-        $logger->component('Archmin');
+        my $am       = LacunaWaX::Schedule::Archmin->new( bb => $self->bb );
+        my $pushes   = $am->push_all_servers;
+        my $searches = $am->search_all_servers;
+        $am->logger->info("--- Archmin Run Complete ---");
 
-        my $schema      = $self->bb->resolve( service => '/Database/schema' );
-        my @server_recs = $schema->resultset('Servers')->search()->all;
-
-        SERVER:
-        foreach my $server_rec( @server_recs ) {#{{{
-            my $server_searches         = 0;
-            my $server_glyphs_pushed    = 0;
-
-            $logger->info("Checking Arch Mins on server " . $server_rec->id);
-            if( my $server = $schema->resultset('Servers')->find({id => $server_rec->id}) ) {
-                unless( $self->game_connect($server->id) ) {
-                    $logger->info("Failed to connect to " . $server->name . " - check your credentials!");
-                    next SERVER;
-                }
-            }
-            else {
-                next SERVER;
-            }
-
-            my @am_recs = $schema->resultset('ArchMinPrefs')->search({server_id => $server_rec->id})->all;
-            $logger->info("User has Arch Min pref records on " . @am_recs . " planets.");
-
-            BODY:
-            foreach my $am_rec(@am_recs) {
-                my $body_name = $self->game_client->planet_name($am_rec->body_id);
-
-                unless($body_name) {
-                    $logger->info("Scheduler found prefs for a planet that you've since abandoned; skipping.");
-### CHECK
-### I can't continue to just leave these old prefs here.  Along with skipping, I 
-### need to be deleting those old prefs.
-                    next BODY;
-                }
-                $logger->info("- Dealing with the Arch Min on $body_name.");
-
-                unless( ($am_rec->glyph_home_id and $am_rec->pusher_ship_name) or $am_rec->auto_search_for ) {
-                    $logger->info("Arch Min pref record exists but is empty; skipping $body_name.");
-                    next BODY;
-                }
-
-                $server_glyphs_pushed   += $self->_archmin_push($am_rec, $logger)   || 0;
-                $server_searches        += $self->_archmin_search($am_rec, $logger) || 0;
-            }
-
-            $logger->info("- Pushed $server_glyphs_pushed glyphs to their homes.");
-            $logger->info("- Started $server_searches glyph searches.");
-        }#}}}
-
-        $logger->info("--- Arch Min Manager Complete ---");
-        return;
+        return($searches, $pushes);
     }#}}}
-    sub _archmin_push {#{{{
-        my $self    = shift;
-        my $am_rec  = shift;    # ArchMinPrefs record
-        my $logger  = shift;
-
-        my $this_body_name = $self->game_client->planet_name($am_rec->body_id) or return;
-
-        unless( $am_rec->glyph_home_id and $am_rec->pusher_ship_name ) {
-            $logger->info("No glyph push requested.");
-            return;
-        }
-
-        my $glyph_home_name;
-        unless( $glyph_home_name = $self->_planet_exists($am_rec->glyph_home_id) ) {
-            $logger->info("Specified glyph home is invalid; perhaps it was abandoned?");
-        }
-        $logger->info("Planning to push to $glyph_home_name.");
-
-        my $pusher_ship = $self->_ship_exists($am_rec->pusher_ship_name, $am_rec->body_id);
-        unless($pusher_ship) {
-            $logger->info("Requested pusher ship " . $am_rec->pusher_ship_name . " either does not exist or is not currently available.");
-            return;
-        }
-        my $hold_size = $pusher_ship->{'hold_size'} || 0;
-        $logger->info("Pushing with ship " . $am_rec->pusher_ship_name . q{.});
-
-        my $glyphs;
-        unless( $glyphs = $self->_glyphs_available($am_rec->body_id) ) {
-            $logger->info("No glyphs are on $this_body_name right now.");
-            return;
-        }
-        $logger->debug( scalar @{$glyphs} . " glyphs onsite about to be pushed.");
-
-        my $cargo = $self->_load_glyphs_in_cargo($glyphs, $hold_size);
-        my $count = scalar @{$cargo};
-        unless( $count ) { # Don't attempt the push with zero glyphs
-            $logger->info("Cargo is empty, so nothing is going to be pushed home.");
-            return;
-        }
-
-        my $trademin = $self->_trademin($am_rec->body_id);
-        my $rv = try {
-            $trademin->push_items($am_rec->glyph_home_id, $cargo, {ship_id => $pusher_ship->{'id'}});
-        }
-        catch {
-            $logger->error("Attempt to push glyphs failed with: $_");
-            return;
-        };
-        $rv or return;
-
-        $logger->info("Pushed $count glyphs to $glyph_home_name.");
-
-        return $count;
-    }#}}}
-    sub _archmin_search {#{{{
-        my $self    = shift;
-        my $am_rec  = shift;
-        my $logger  = shift;
-
-        my $body_name      = $self->game_client->planet_name($am_rec->body_id) or return;   # no body name == no arch min
-        my $ore_types      = $self->game_client->ore_types;
-        my $total_searches = 0;
-
-        unless( $am_rec->auto_search_for ~~ $ore_types ) {
-            $logger->error("Somehow you're attempting to search for an invalid ore type.");
-            return;
-        }
-
-        my $archmin = try {
-            $self->game_client->get_building($am_rec->body_id, 'Archaeology');
-        }
-        catch {
-            $logger->error("Attempt to get archmin failed with: $_");
-            return;
-        };
-        unless($archmin) {
-            ### The last time we mentioned $body_name, we should have gotten 
-            ### out if it was undef.  But Newpyre says he's still getting 
-            ### undefined errors on $body_name on this next line.  I cannot 
-            ### see how that can possibly be happening, but this will fix his 
-            ### leetle red wagon:
-            $body_name ||= q{};
-            ### If he's still getting undefined errors on line 216, then he 
-            ### hasn't updated, as the following is no longer line 216:
-            $logger->info("No Arch Min exists on $body_name.");
-            return;
-        }
-
-        ### Arch Min is currently idle?
-        my $view = $archmin->view;
-        if( my $work = $view->{'building'}{'work'} ) {
-            my $glyph     = $work->{'searching'};
-            my $secs_left = $work->{'seconds_remaining'};
-            $logger->info("Already searching for a $glyph glyph; complete in $secs_left seconds.");
-            return;
-        }
-
-        ### Get ores available to this arch min
-        my $ores_onsite = $archmin->get_ores_available_for_processing;
-        unless( defined $ores_onsite->{'ore'} and %{$ores_onsite->{'ore'}} ) {
-            $logger->info("Not enough of any type of ore to search.");
-            return;
-        }
-
-        ### If the type requested by the user is not available, chose another 
-        ### type to search for at 'random'.
-        my $ore_to_search = q{};
-        if( defined $ores_onsite->{'ore'}{$am_rec->auto_search_for} ) {
-            $ore_to_search = $am_rec->auto_search_for;
-        }
-        else {
-            $ore_to_search = each %{$ores_onsite->{'ore'}};
-            keys %{$ores_onsite->{'ore'}};    # Reset hash after each.
-            $logger->info("There's not enough " . $am_rec->auto_search_for . " ore to perform a search.");
-        }
-        unless($ore_to_search) {
-            $logger->error("I can't figure out what to search for; we should never get here.");
-            return;
-        }
-
-        ### Perform the search
-        my $rv = try {
-            my $rv = $archmin->search_for_glyph($ore_to_search);
-            $logger->info("Arch Min is now searching for one $ore_to_search glyph.");
-            return 1;
-        }
-        catch {
-            $logger->error("Arch Min ore search failed because: $_");
-            return 0;
-        };
-
-        return $rv;
-    }#}}}
-    sub _glyphs_available {#{{{
-        my $self    = shift;
-        my $pid     = shift;
-
-        my $trademin = $self->_trademin($pid);
-        my $glyphs_rv = try {
-            $trademin->get_glyph_summary;
-        };
-
-        unless( ref $glyphs_rv eq 'HASH' and defined $glyphs_rv->{'glyphs'} and @{$glyphs_rv->{'glyphs'}} ) {
-            return;
-        }
-
-        return $glyphs_rv->{'glyphs'};
-    }#}}}
-    sub _load_glyphs_in_cargo {#{{{
-        my $self        = shift;
-        my $glyphs      = shift;
-        my $hold_size   = shift;
-
-=head2 _load_glyphs_in_cargo
-
-Accepts an arrayref of glyphs, as returned by get_glyph_summary, and an integer 
-hold size.
-
-Adds the glyphs as cargo up to the limit defined by the hold size, and returns 
-the cargo as an arrayref.
-
-If any glyphs are left over (they would have exceeded hold size), it's assumed 
-they'll simply be picked up on the next run.
-
-=cut
-
-        my $cargo = [];
-        my $count = 0;
-        ADD_GLYPHS:
-        foreach my $g( @{$glyphs} ) {
-            $count += $g->{'quantity'};
-            if( $count * GLYPH_CARGO_SIZE > $hold_size ) { # Whoops
-                $count -= $g->{'quantity'};
-                last ADD_GLYPHS;
-            }
-            push @{$cargo}, {type => 'glyph', name => $g->{'name'}, quantity => $g->{'quantity'}};
-        }
-        return $cargo;
-    }#}}}
-    sub _planet_exists {#{{{
-        my $self = shift;
-        my $pid  = shift;
-        my $glyph_home_name = $self->game_client->planet_name($pid);
-        return $glyph_home_name;    # undef if the pid wasn't found
-    }#}}}
-    sub _ship_exists {#{{{
-        my $self        = shift;
-        my $ship_name   = shift;
-        my $pid         = shift;
-
-        my $ships = $self->game_client->get_available_ships($pid);
-        my($ship) = first{ $_->{'name'} eq $ship_name }@{$ships};
-        return $ship;
-    }#}}}
-    sub _trademin {#{{{
-        my $self        = shift;
-        my $pid         = shift;
-
-        my $trademin = try {
-            $self->game_client->get_building($pid, 'Trade');
-        };
-
-        return $trademin;
-    }#}}}
-
     sub autovote {#{{{
         my $self = shift;
 
-        my $logger = $self->bb->resolve( service => '/Log/logger' );
-        my $schedule_av = LacunaWaX::Schedule::Autovote->new(
-            bb      => $self->bb,
-            logger  => $logger,
-            schema  => $self->bb->resolve( service => '/Database/schema' ),
-        );
-        my $cnt = $schedule_av->vote_all_servers;
-        $logger->info("--- Autovote Run Complete ---");
+        my $av  = LacunaWaX::Schedule::Autovote->new( bb => $self->bb );
+        my $cnt = $av->vote_all_servers;
+        $av->logger->info("--- Autovote Run Complete ---");
 
         return $cnt;
     }#}}}
     sub lottery {#{{{
         my $self = shift;
 
-        my $logger = $self->bb->resolve( service => '/Log/logger' );
-        my $schedule_lottery = LacunaWaX::Schedule::Lottery->new(
-            bb      => $self->bb,
-            logger  => $logger,
-            schema  => $self->bb->resolve( service => '/Database/schema' ),
-        );
-        my $cnt = $schedule_lottery->play_all_servers;
-        $logger->info("--- LLottery Run Complete ---");
+        my $lottery = LacunaWaX::Schedule::Lottery->new( bb => $self->bb );
+        my $cnt     = $lottery->play_all_servers;
+        $lottery->logger->info("--- LLottery Run Complete ---");
 
         return $cnt;
     }#}}}

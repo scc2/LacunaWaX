@@ -205,7 +205,6 @@ package LacunaWaX::Model::Container {
                         block => sub {
                             my $s = shift;
 
-
                             my %args = (
                                 name        => 'dbi',
                                 min_level   => 'debug',
