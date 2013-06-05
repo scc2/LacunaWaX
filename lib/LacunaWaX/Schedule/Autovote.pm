@@ -131,6 +131,7 @@ package LacunaWaX::Schedule::Autovote {
             }
             catch {
                 my $msg = (ref $_) ? $_->text : $_;
+                chomp $msg;
                 $self->logger->info($msg);
                 return;
             };
@@ -146,23 +147,32 @@ package LacunaWaX::Schedule::Autovote {
         my $av_rec      = shift;    # ScheduleAutovote record
         my $ss_owner    = shift;    # SS owner name - string
 
+        ### The die messages will appear in the log viewer; we don't need 
+        ### filenames and line numbers in there, so end them with newlines.
+        ### This is also why we're using die() rather than croak().
+        ###
+        ### So death messages caught from this will end with newlines; chomp 
+        ### them before output.
+
+        ## no critic qw(RequireCarping)
         if( $prop->{my_vote} ) {
-            croak "$prop->{name} - I've already voted on this prop; skipping.";
+            die "$prop->{name} - I've already voted on this prop; skipping.\n";
         }
 
         my $propper = $prop->{'proposed_by'}{'name'};
         if($av_rec->proposed_by eq 'owner' and $propper ne $ss_owner) {
-            croak "Prop $prop->{name} was proposed by $propper, who is not the SS owner - skipped.";
+            die "Prop $prop->{name} was proposed by $propper, who is not the SS owner - skipped.\n";
         }
 
         my $rv = try {
             $parl->cast_vote($prop->{'id'}, 1);
         }
-        catch { croak "Attempt to vote failed with: $_"; };
+        catch { die "Attempt to vote failed with: $_"; };
 
         unless( $rv->{proposition}{my_vote} ) {
-            croak "Vote attempt did not produce an error, but did not succeed either.";
+            die "Vote attempt did not produce an error, but did not succeed either.\n";
         }
+        ## use critic qw(RequireCarping)
 
         return 1;
     }#}}}

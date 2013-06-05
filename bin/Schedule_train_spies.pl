@@ -1,4 +1,5 @@
 use v5.14;
+use DateTime::TimeZone;
 use FindBin;
 
 use lib $FindBin::Bin . '/../lib';
@@ -15,13 +16,11 @@ my $bb = LacunaWaX::Model::Container->new(
     root_dir    => $root_dir,
     db_file     => $db_file,
     db_log_file => $db_log_file,
+    log_time_zone   => DateTime::TimeZone->new( name => 'local' )->name() || 'UTC',
 );
 
-### For now, just instantiating this runs the scheduler.  This may change.
-my $scheduler = LacunaWaX::Schedule->new( 
-    bb       => $bb,
-    schedule => 'train_spies'
-);
+my $scheduler = LacunaWaX::Schedule->new( bb => $bb );
+$scheduler->spies();
 
 exit 0;
 

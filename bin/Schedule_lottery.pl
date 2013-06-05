@@ -20,10 +20,8 @@ my $bb = LacunaWaX::Model::Container->new(
     log_time_zone   => DateTime::TimeZone->new( name => 'local' )->name() || 'UTC',
 );
 
-my $scheduler = LacunaWaX::Schedule->new( 
-    bb       => $bb,
-    schedule => 'lottery',
-);
+my $scheduler = LacunaWaX::Schedule->new( bb => $bb );
+$scheduler->lottery();
 
 exit 0;
 

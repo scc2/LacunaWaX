@@ -20,11 +20,8 @@ my $bb = LacunaWaX::Model::Container->new(
     log_time_zone   => DateTime::TimeZone->new( name => 'local' )->name() || 'UTC',
 );
 
-### For now, just instantiating this runs the scheduler.  This may change.
-my $scheduler = LacunaWaX::Schedule->new( 
-    bb       => $bb,
-    schedule => 'autovote',
-);
+my $scheduler = LacunaWaX::Schedule->new( bb => $bb );
+$scheduler->autovote();
 
 exit 0;
 
