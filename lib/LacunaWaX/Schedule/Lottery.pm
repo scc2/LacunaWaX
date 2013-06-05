@@ -8,6 +8,41 @@ package LacunaWaX::Schedule::Lottery {
     use Moose;
     use Try::Tiny;
 
+### POD {#{{{
+
+=head2 Review
+
+There is a limited number of links to voting sites (15 right now) per server.  
+Clicking each link counts as a single entry in the lottery /in the zone in 
+which the entertainment district exists/.
+
+Those 15 links can be played, in any combination, across the user's Ent Dists.  
+Each link can be played once every 24 hours.
+
+LacunaWaX allows the user to create 15 assignments (one per link, the number 
+of assignment slots will increase if the game increases the number of playable 
+links).
+
+So, LacunaWaX will have 15 "play" assginments (10 at Ent Dist 1, 5 at Ent Dist 
+2, or whatever) to play the 15 links.  The lottery scheduled task will attempt 
+to click a link for each of those 15 assignments.
+
+
+The possible issue is that, it's entirely possible for the user to (eg) 
+manually click two of those 15 links.  As far as LacunaWaX is concerned, the 
+user still has 15 assignments.  But as far as the game is concerned, the user 
+only has 13 more playable links (today).
+
+
+So, it's entirely possible for the play() method to be called when there are 
+no more actual links to be played.  If that happens, play() will throw an 
+exception that's meant to indicate that we should stop attempting to play the 
+lottery on this server; we're done.
+
+=cut
+
+### }#}}}
+
     with 'LacunaWaX::Roles::ScheduledTask';
 
     has 'links' => (
@@ -66,7 +101,15 @@ package LacunaWaX::Schedule::Lottery {
         my @server_recs = $self->schema->resultset('Servers')->search()->all;   ## no critic qw(ProhibitLongChainsOfMethodCalls)
 
         foreach my $server_rec( @server_recs ) {
-            my $server_count = $self->play_server($server_rec);
+            my $server_count = try {
+                $self->play_server($server_rec);
+            }
+            catch {
+                chomp(my $msg = $_);
+                $self->logger->error($msg);
+                return;
+            };
+            $server_count // return $ttl;   # We're out of links on this server.
             $ttl += $server_count;
         }
         $self->logger->info("The lottery has been played $ttl times on all servers.");
@@ -143,7 +186,6 @@ package LacunaWaX::Schedule::Lottery {
         }
         $self->logger->info("There are " . $self->links->remaining . " lottery links left to play.");
 
-        PLAY:
         for( 1..$lottery_rec->count ) {
             $planet_count += $self->play();
         }
@@ -155,13 +197,26 @@ package LacunaWaX::Schedule::Lottery {
         my $self    = shift;
         my $plays   = 0;
 
+=head2 play 
+
+Attempts to play the next link in $self->links.
+
+If $self->links->next returns undef, we're at the end of our list of links for 
+the entire server.  In that case, play() will throw an exception.
+
+That exception needs to be caught further up the chain to keep from attempting 
+to play any remaining assignments.
+
+=cut
+
         unless( $self->has_links ) {
             carp "We need to have links set up before playing the lottery.";    # wtf?
         }
 
         my $link = $self->links->next or do {
-            $self->logger->error("I ran out of links before playing all assigned slots; re-do your assignments!");
-            return $plays;
+            #$self->logger->error("I ran out of links before playing all assigned slots; re-do your assignments!");
+            die "I ran out of links before playing all assigned slots.\n"; ## no critic qw(RequireCarping)
+            #return $plays;
         };
         $self->logger->info("Trying link for " . $link->name);
 

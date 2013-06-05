@@ -88,6 +88,7 @@ package LacunaWaX::Dialog::LogViewer {
         $v->Arrange(wxLIST_ALIGN_TOP);
         $self->yield;
         return $v;
+
     }#}}}
     sub _build_size {#{{{
         my $self = shift;

@@ -192,7 +192,6 @@ However, it's generally more convenient to call L<change_planet|change_planet>.
         ### Do not use the ->next or ->prev iterators here; we don't want to 
         ### change the user's idx on him if he's already partway through the 
         ### list.
-        #while(my $l = $self->next) {
         foreach my $l(@{ $self->links }) {
             $l->change_building($bid);
         }
@@ -299,6 +298,15 @@ Resets the internal pointer back to the start of the list.
 
 Returns the next LacunaWaX::Model::Lottery::Link object in the list.  Returns 
 undef upon reaching the end of the list, and then resets the pointer.
+
+***
+That's true for now, but I'm now unsure if that's the 'correct' behavior.  
+Once next() reaches the end of the list, I'm beginning to think that it should 
+be the user's responsibility to reset the list to the beginning (with 
+reset_idx) rather than doing it automatically.
+
+It's a little academic right now, since nothing is relying on either behavior.
+***
 
  while(my $l = $links->next ) {
     say $l->name;

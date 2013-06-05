@@ -15,6 +15,7 @@ package LacunaWaX::MainSplitterWindow {
     use LacunaWaX::MainSplitterWindow::RightPane::SummaryPane;
     use LacunaWaX::MainSplitterWindow::RightPane::BFGPane;
     use LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane;
+    use LacunaWaX::MainSplitterWindow::RightPane::SSIncoming;
     use LacunaWaX::MainSplitterWindow::RightPane::LotteryPane;
     use LacunaWaX::MainSplitterWindow::RightPane::RearrangerPane;
     use LacunaWaX::MainSplitterWindow::RightPane::SpiesPane;

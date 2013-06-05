@@ -82,9 +82,17 @@ package LacunaWaX::MainSplitterWindow::LeftPane::BodiesTreeCtrl {
             foreach my $pname( sort{lc $a cmp lc $b} keys %{$self->game_client->planets} ) {#{{{
                 my $pid = $self->game_client->planet_id($pname);
 
-                ### Set up the data that gets passed with a leaf click.
+                ### Both Planet and Station
                 my $b64_planet      = encode_base64(join q{:}, ('name', $pid));
                 my $b64_rearrange   = encode_base64(join q{:}, ('rearrange', $pid));
+                ### Planet
+                my $b64_glyphs      = encode_base64(join q{:}, ('glyphs', $pid));
+                my $b64_lottery     = encode_base64(join q{:}, ('lottery', $pid));
+                my $b64_spies       = encode_base64(join q{:}, ('spies', $pid));
+                ### Station
+                my $b64_bfg         = encode_base64(join q{:}, ('bfg', $pid));
+                my $b64_inc         = encode_base64(join q{:}, ('incoming', $pid));
+                my $b64_props       = encode_base64(join q{:}, ('propositions', $pid));
 
                 ### Planet name produces summary and should be bolded
                 my $planet_name_id  = $self->treectrl->AppendItem(
@@ -104,18 +112,15 @@ package LacunaWaX::MainSplitterWindow::LeftPane::BodiesTreeCtrl {
                         server_id       => $self->get_connected_server->id,
                     })->next
                 ) {
+                    ### 
                     ### Space Station
-                    my $b64_props = encode_base64(join q{:}, ('propositions', $pid));
-                    my $b64_bfg   = encode_base64(join q{:}, ('bfg', $pid));
-
-                    ### Since BFG firing is now part of the game, this leaf no 
-                    ### longer needs to be here.  However, IO mentioned that 
-                    ### he liked having it so he didn't have to switch between 
-                    ### windows as much, so it stays in.
+                    ###
                     my $bfg_id = $self->treectrl->AppendItem( $planet_name_id, 
                         'Fire the BFG', -1, -1, Wx::TreeItemData->new($b64_bfg)
                     );
-
+                    my $inc_id = $self->treectrl->AppendItem( 
+                        $planet_name_id, 'Incoming', -1, -1, Wx::TreeItemData->new($b64_inc)
+                    );
                     my $props_id = $self->treectrl->AppendItem( 
                         $planet_name_id, 'Propositions', -1, -1, Wx::TreeItemData->new($b64_props)
                     );
@@ -124,11 +129,9 @@ package LacunaWaX::MainSplitterWindow::LeftPane::BodiesTreeCtrl {
                     );
                 }
                 else {
-                    ### Non Space Station
-                    my $b64_glyphs  = encode_base64(join q{:}, ('glyphs', $pid));
-                    my $b64_lottery = encode_base64(join q{:}, ('lottery', $pid));
-                    my $b64_spies   = encode_base64(join q{:}, ('spies', $pid));
-
+                    ### 
+                    ### Planet
+                    ###
                     my $glyphs_id = $self->treectrl->AppendItem( 
                         $planet_name_id, 'Glyphs', -1, -1, Wx::TreeItemData->new($b64_glyphs)
                     );
@@ -193,8 +196,6 @@ package LacunaWaX::MainSplitterWindow::LeftPane::BodiesTreeCtrl {
         my $root = $tree_ctrl->GetRootItem();
 
         if( $leaf == $tree_ctrl->GetRootItem ) {
-            ### I've hidden the root items, so this won't ("shouldn't") 
-            ### happen.
             $self->poperr("Selected item is root item.");
             return;
         }
@@ -251,6 +252,20 @@ package LacunaWaX::MainSplitterWindow::LeftPane::BodiesTreeCtrl {
                 }
 
                 ### Space Station only
+                when(/^bfg$/) {
+                    $self->get_right_pane->show_right_pane(
+                        'LacunaWaX::MainSplitterWindow::RightPane::BFGPane',
+                        $planet,
+                        { required_buildings => {'Parliament' => 25} } 
+                    );
+                }
+                when(/^incoming$/) {
+                    $self->get_right_pane->show_right_pane(
+                        'LacunaWaX::MainSplitterWindow::RightPane::SSIncoming',
+                        $planet,
+                        { required_buildings => {'Police' => undef} } 
+                    );
+                }
                 when(/^propositions$/) {
                     $self->get_right_pane->show_right_pane(
                         'LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane',
@@ -259,13 +274,6 @@ package LacunaWaX::MainSplitterWindow::LeftPane::BodiesTreeCtrl {
                             required_buildings  => {'Parliament' => undef}, 
                             nothrob             => 1,
                         } 
-                    );
-                }
-                when(/^bfg$/) {
-                    $self->get_right_pane->show_right_pane(
-                        'LacunaWaX::MainSplitterWindow::RightPane::BFGPane',
-                        $planet,
-                        { required_buildings => {'Parliament' => 25} } 
                     );
                 }
 

@@ -1,9 +1,4 @@
 
-
-### There are a number of commented-out lines (/^say/) in here that I've been 
-### using to try to track down the occasional crash this produces.
-
-
 =head2 CHILD WINDOWS
 
 Each prop displayed in the PropositionsPane is its own PropRow object.  Each of 
