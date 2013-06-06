@@ -20,7 +20,7 @@ package LacunaWaX::Schedule {
     use Moose;
     use Try::Tiny;
 
-    ### These need to be here to let Cava Packager know to pull them in.  
+    ### Needs to be here to let Cava Packager know to pull them in.  
     ### Unnecessary when running from source.
     use LacunaWaX::Roles::ScheduledTask;
 

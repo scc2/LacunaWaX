@@ -893,7 +893,7 @@ planet.
                 my $schema = $self->bb->resolve( service => '/Database/schema' );
 
                 my $body_type_rec = $schema->resultset('BodyTypes')->find_or_create({ 
-                    body_id => $cbs->{'id'}, 
+                    body_id   => $cbs->{'id'}, 
                     server_id => $self->server_id
                 });
                 if( $cbs->{'type'} eq 'space station' ) {

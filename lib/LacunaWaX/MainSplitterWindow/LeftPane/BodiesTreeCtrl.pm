@@ -176,8 +176,7 @@ package LacunaWaX::MainSplitterWindow::LeftPane::BodiesTreeCtrl {
 
                 COLLAPSE:
                 while( 1 ) {
-                    ($child, $cookie) = 
-                    $self->treectrl->GetNextChild($self->bodies_id, $cookie); 
+                    ($child, $cookie) = $self->treectrl->GetNextChild($self->bodies_id, $cookie); 
                     last COLLAPSE unless $child->IsOk;
                     $self->treectrl->CollapseAllChildren( $child );
                 }

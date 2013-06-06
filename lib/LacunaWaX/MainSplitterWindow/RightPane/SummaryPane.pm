@@ -37,6 +37,9 @@ package LacunaWaX::MainSplitterWindow::RightPane::SummaryPane {
         $self->content_sizer->Add($self->szr_header, 0, 0, 0);
         $self->content_sizer->AddSpacer(20);
         $self->content_sizer->Add($self->lbl_text, 0, 0, 0);
+
+        $self->fix_tree_for_stations();
+
         return $self;
     }
     sub _build_szr_header {#{{{
@@ -151,6 +154,64 @@ Orbit $s->{orbit} around $s->{star_name} (ID $s->{star_id}), in zone $s->{zone}\
         return ($self->status->{'type'} eq 'space station') ? 'Station' : 'Planet';
     }#}}}
     sub _set_events {}
+
+    sub fix_tree_for_stations {#{{{
+        my $self = shift;
+
+        return unless defined $self->status->{'influence'};
+
+        ### Still here?  The current body is a Space Station.
+
+        my $tree = $self->get_left_pane->bodies_tree->treectrl;
+        my $leaf = $tree->GetFirstVisibleItem;  # "Bodies"
+
+        ### Find the $body_leaf (Wx::TreeItemId) that represents the current 
+        ### body, which we now know to be a Space Station.
+        my($body_leaf, $leaf_cookie) = $tree->GetFirstChild($leaf);
+        my $body_leafname = $tree->GetItemText($body_leaf);
+        while( $body_leafname ne $self->planet_name ) {
+            ($body_leaf, $leaf_cookie) = $tree->GetNextChild($leaf, $leaf_cookie); 
+            last unless $body_leaf->IsOk;
+            $body_leafname = $tree->GetItemText($body_leaf);
+        }
+        ### This would be a true exception; there's no leaf on the tree that 
+        ### matches our current planet name (huzzuh?)
+        return if $body_leafname ne $self->planet_name;
+
+
+        ### Now search the child leaves of our current Space Station.  If it's 
+        ### already displaying Station-specific child leaves, we're ok 
+        ### (meaning that this station is known to the application as a 
+        ### station).
+        my($body_child, $child_cookie) = $tree->GetFirstChild($body_leaf);
+        my $body_child_leafname = $tree->GetItemText($body_child);
+        while( 1 ) {
+
+            ### These are SS-only leaves.  If we find one, the app already 
+            ### knows this body is a station and we're done.
+            return if (
+                   $body_child_leafname eq 'Fire the BFG'
+                or $body_child_leafname eq 'Incoming'
+            );
+
+            ### These are Planet-only leaves.  If we find one, the app does 
+            ### _NOT_ already know that this body is a station.  Break out of 
+            ### our loop and go fix the tree.
+            last if (
+                   $body_child_leafname eq 'Glyphs'
+                or $body_child_leafname eq 'Lottery'
+                or $body_child_leafname eq 'Spies'
+            );
+
+            ($body_child, $child_cookie) = $tree->GetNextChild($body_leaf, $child_cookie); 
+            last unless $body_child->IsOk;
+            $body_child_leafname = $tree->GetItemText($body_child);
+        }
+
+        ### Still here?  We have a station whose tree is currently showing the 
+        ### default 'body' child leaves.  Fix that.
+        $self->get_left_pane->bodies_tree->fill_tree();
+    }#}}}
 
     no Moose;
     __PACKAGE__->meta->make_immutable;

@@ -37,6 +37,13 @@ package LacunaWaX::Model::DefaultData {
     }#}}}
     sub _build_stations {#{{{
         my $self = shift;
+
+        ### this is now much less important.  If a new station shows up in the 
+        ### tree incorrectly showing Planet child leaves, the user can now 
+        ### just double-click on the station's name and that left tree will be 
+        ### automatically updated to correctly show the Station child leaves 
+        ### (without restarting the app.)
+
         return [
             '71423',    # Graegheum 3
             '11971',    # Urn Oochaid Rie 2

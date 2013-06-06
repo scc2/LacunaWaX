@@ -52,12 +52,15 @@ package LacunaWaX::MainSplitterWindow::RightPane::DefaultPane {
     }#}}}
     sub _build_text {#{{{
         my $self = shift;
-        my $txt = "Now that you've logged in, be sure to check the Preferences window again.\n
-You had to check it to enter your empire name and password, but now that you're logged in, there are new options there that weren't available before logging in.\n
-*** Also, PLEASE eyeball the list of bodies in the tree to the left. ***\n
-If any of the listed bodies are new, they're probably space stations.  For this program to be able recognize the difference between a space station and a planet, you have to double-click the station's name on the left there. \n
-Doing so will let LacunaWaX figure out whether the new body is a station or not.  You only need to do this one time per new station - once you've done it once, LacunaWaX will remember that it's a station.\n";
+
+        my $txt = "Now that you've logged in, be sure to check the Preferences window again.
+
+You had to check it to enter your empire name and password, but now that you're logged in, there are new options there that weren't available before logging in.
+
+If any of your Space Stations in the tree on the left are displaying child leaves that would only apply to Planets, not stations (eg 'Glyphs', 'Lottery', 'Spies'), just double-click on the Station's name.  This will display a summary screen and update the tree to display the correct leaves.";
         return $txt;
+
+
         
     }#}}}
     sub _set_events {}
