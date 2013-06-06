@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 blib/
 .build/
 _build/
@@ -22,9 +21,6 @@ nytprof.out
 pm_to_blib
 *.sqlite
 .svn/
+*.swo
+*.swp
 user/doc/html/html.idx/
-=======
-.svn/
-Cava/
-user/
->>>>>>> 2b312cd8a790c5833c59458edb37d1a907ec6da0

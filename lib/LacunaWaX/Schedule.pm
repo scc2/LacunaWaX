@@ -20,12 +20,17 @@ package LacunaWaX::Schedule {
     use Moose;
     use Try::Tiny;
 
+    ### These need to be here to let Cava Packager know to pull them in.  
+    ### Unnecessary when running from source.
+    use LacunaWaX::Roles::ScheduledTask;
+
     use LacunaWaX::Schedule::Archmin;
     use LacunaWaX::Schedule::Autovote;
     use LacunaWaX::Schedule::Lottery;
     use LacunaWaX::Schedule::Spies;
 
     has 'bb'            => (is => 'rw', isa => 'LacunaWaX::Model::Container',   required    => 1);
+    has 'schedule'      => (is => 'rw', isa => 'Str',                           required    => 1);
     has 'mutex'         => (is => 'rw', isa => 'LacunaWaX::Model::Mutex',       lazy_build  => 1);
     has 'game_client'   => (is => 'rw', isa => 'LacunaWaX::Model::Client',
         documentation =>q{
@@ -37,34 +42,33 @@ package LacunaWaX::Schedule {
         my $self = shift;
         return $self;
     }
-    for my $meth( qw(archmin autovote lottery spies) ) {
-        around $meth => sub {
-            my $orig = shift;
-            my $self = shift;
 
-            my $logger = $self->bb->resolve( service => '/Log/logger' );
-            $logger->component('Schedule');
-            $logger->info("# -=-=-=-=-=-=- #");
-            $logger->info("Scheduler beginning with task '$meth'.");
+    around 'lottery', 'archmin' => sub {
+        my $orig = shift;
+        my $self = shift;
 
-            ### ex lock for the entire run might seem a little heavy-handed.  But 
-            ### I'm not just trying to limit database collisions; I'm also 
-            ### limiting simultaneous RPCs; multiple schedulers firing at the same 
-            ### time could be seen as a low-level DOS.
-            $logger->info("$meth attempting to obtain exclusive lock.");
-            unless( $self->mutex->lock_exnb ) {
-                $logger->info("$meth found existing scheduler lock; this run will pause until the lock releases.");
-                $self->mutex->lock_ex;
-            }
-            $logger->info("$meth succesfully obtained exclusive lock.");
+        my $logger = $self->bb->resolve( service => '/Log/logger' );
+        $logger->component('Schedule');
+        $logger->info("# -=-=-=-=-=-=- #");
+        $logger->info("Scheduler beginning with task '" . $self->schedule .  q{'.});
 
-            $self->$orig();
+        ### ex lock for the entire run might seem a little heavy-handed.  But 
+        ### I'm not just trying to limit database collisions; I'm also 
+        ### limiting simultaneous RPCs; multiple schedulers firing at the same 
+        ### time could be seen as a low-level DOS.
+        $logger->info($self->schedule . " attempting to obtain exclusive lock.");
+        unless( $self->mutex->lock_exnb ) {
+            $logger->info($self->schedule . " found existing scheduler lock; this run will pause until the lock releases.");
+            $self->mutex->lock_ex;
+        }
+        $logger->info($self->schedule . " succesfully obtained exclusive lock.");
 
-            $self->mutex->lock_un;
-            $logger->info("Scheduler run of task $meth complete.");
-            return $self;
-        };
-    }
+        $self->$orig();
+
+        $self->mutex->lock_un;
+        $logger->info("Scheduler run of task " . $self->schedule . " complete.");
+        return $self;
+    };
 
 
 
@@ -124,6 +128,7 @@ package LacunaWaX::Schedule {
         my $am       = LacunaWaX::Schedule::Archmin->new( bb => $self->bb );
         my $pushes   = $am->push_all_servers;
         my $searches = $am->search_all_servers;
+        $am->logger->info("--- Archmin Run Complete ---");
 
         return($searches, $pushes);
     }#}}}
@@ -132,6 +137,7 @@ package LacunaWaX::Schedule {
 
         my $av  = LacunaWaX::Schedule::Autovote->new( bb => $self->bb );
         my $cnt = $av->vote_all_servers;
+        $av->logger->info("--- Autovote Run Complete ---");
 
         return $cnt;
     }#}}}
@@ -140,6 +146,7 @@ package LacunaWaX::Schedule {
 
         my $lottery = LacunaWaX::Schedule::Lottery->new( bb => $self->bb );
         my $cnt     = $lottery->play_all_servers;
+        $lottery->logger->info("--- LLottery Run Complete ---");
 
         return $cnt;
     }#}}}
@@ -148,6 +155,7 @@ package LacunaWaX::Schedule {
 
         my $spies = LacunaWaX::Schedule::Spies->new( bb => $self->bb );
         my $cnt   = $spies->train_all_servers;
+        $spies->logger->info("--- Spy Training Run Complete ---");
 
         return $cnt;
     }#}}}

@@ -207,16 +207,35 @@ the entire server.  In that case, play() will throw an exception.
 That exception needs to be caught further up the chain to keep from attempting 
 to play any remaining assignments.
 
+=head3 Failed $ua->get
+
+When an attempt to hit the voting site link with our LWP::UserAgent object 
+fails, we still count that link as having been played in the lottery.
+
+When we reach the point of attempting to hit the lottery URL, we've jalready 
+pinged the TLE server, so we're reasonably sure it's still up.
+
+Lottery links first hit the TLE server, recording the fact that we've clicked 
+the link and played the lottery.  After that, the TLE server redirects us to 
+the voting site.
+
+So a $ua failure means that, though we were unable to hit the final 
+destination voting website, we almost certainly _were_ able to hit the TLE 
+server, which recorded the attempt as a successful lottery play.
+
 =cut
 
         unless( $self->has_links ) {
-            carp "We need to have links set up before playing the lottery.";    # wtf?
+            ### This is a carp because we really don't expect to ever hit 
+            ### this; if we get to this point, we _should_ ->has_links.
+            carp "We need to have links set up before playing the lottery.";
         }
 
         my $link = $self->links->next or do {
-            #$self->logger->error("I ran out of links before playing all assigned slots; re-do your assignments!");
+            ### This is a die because we do fully expect to hit this 
+            ### periodically, and we don't need carp's extra info (line 
+            ### number, etc) showing up in the logs.
             die "I ran out of links before playing all assigned slots.\n"; ## no critic qw(RequireCarping)
-            #return $plays;
         };
         $self->logger->info("Trying link for " . $link->name);
 
@@ -228,25 +247,6 @@ to play any remaining assignments.
         else {
             $self->logger->error(" -- Failure! " . $resp->status_line);
             $self->logger->error(" -- This /probably/ means that the voting site is down, but you /probably/ still got credit for this vote.");
-
-            ### 
-            ### The attempt to hit the voting site link failed.
-            ### 
-            ### But we've already pinged the TLE server, so we're reasonably 
-            ### sure it's still up.
-            ###
-            ### Lottery links first hit the TLE server, recording the fact 
-            ### that we've clicked the link and played the lottery.  After 
-            ### that, the TLE server redirects us to the voting site.
-            ### 
-            ### So this failure means that, though we were unable to hit the 
-            ### final destination voting website, we almost certainly _were_ 
-            ### able to hit the TLE server, which recorded this attempt as a 
-            ### successful lottery play.
-            ###
-            ### So count it.
-            ### 
-
             $plays++;
         }
 

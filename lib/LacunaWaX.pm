@@ -12,6 +12,12 @@ package LacunaWaX {
     use Wx qw(:everything);
     use Wx::Event qw(EVT_MOVE EVT_CLOSE);
 
+    ### These need to be here to let Cava Packager know to pull them in.  
+    ### Unnecessary when running from source.
+    use B::Hooks::EndOfScope::XS;
+    use LacunaWaX::Roles::ScheduledTask;
+    use Variable::Magic;
+
     use LacunaWaX::MainFrame;
     use LacunaWaX::MainSplitterWindow;
     use LacunaWaX::Model::Client;
@@ -23,7 +29,7 @@ package LacunaWaX {
     use MooseX::NonMoose;
     extends 'Wx::App';
 
-    our $VERSION = 1.12;
+    our $VERSION = 1.14;
 
     has 'root_dir'          => (is => 'rw', isa => 'Str',                               required   => 1);
     has 'bb'                => (is => 'rw', isa => 'LacunaWaX::Model::Container',       lazy_build => 1);
