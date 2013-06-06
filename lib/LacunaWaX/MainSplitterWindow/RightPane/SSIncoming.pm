@@ -1,9 +1,5 @@
 use v5.14;
 
-
-### see CHECK
-
-
 package LacunaWaX::MainSplitterWindow::RightPane::SSIncoming {
     use Data::Dumper;
     use LacunaWaX::Model::Client;
@@ -114,14 +110,15 @@ package LacunaWaX::MainSplitterWindow::RightPane::SSIncoming {
         my $self = shift;
 
         $self->get_incoming();
+        $self->add_pagination();
 
         $self->szr_header->Add($self->lbl_header, 0, 0, 0);
         $self->szr_header->AddSpacer(5);
         $self->szr_header->Add($self->lbl_instructions, 0, 0, 0);
+        $self->szr_header->AddSpacer(5);
         $self->szr_header->Add($self->lbl_incoming, 0, 0, 0);
 
         $self->show_list_page(1);
-        $self->add_pagination();    # this has to happen here, not a few lines up.
         $self->szr_list->Add($self->lst_incoming, 0, 0, 0);
 
         $self->content_sizer->Add($self->szr_header, 0, 0, 0);
@@ -170,7 +167,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::SSIncoming {
     sub _build_lbl_instructions {#{{{
         my $self = shift;
 
-        my $text = "Brief explanation goes here.";
+        my $text = "The list below will usually be empty, and that's probably a good thing.";
 
         my $v = Wx::StaticText->new(
             $self->parent, -1, 
@@ -200,7 +197,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::SSIncoming {
 
         my $v = Wx::StaticText->new(
             $self->parent, -1, 
-            q{},
+            q{Page 1},
             wxDefaultPosition, 
             Wx::Size->new(-1, 20)
         );
