@@ -21,7 +21,7 @@ package LacunaWaX::Schedule::Autovote {
         $self->logger->info(
             "Autovote prefs are enabled on " 
             . @av_recs 
-            . ( (@av_recs == 1) ? 'server' : 'servers' )
+            . ( (@av_recs == 1) ? ' server' : ' servers' )
         );
 
         foreach my $av_rec( @av_recs ) {
@@ -174,6 +174,7 @@ package LacunaWaX::Schedule::Autovote {
         }
         ## use critic qw(RequireCarping)
 
+        $self->logger->info("Voted on '$prop->{'name'}'");
         return 1;
     }#}}}
 

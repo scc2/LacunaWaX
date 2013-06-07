@@ -12,12 +12,7 @@ package LacunaWaX {
     use Wx qw(:everything);
     use Wx::Event qw(EVT_MOVE EVT_CLOSE);
 
-    ### These need to be here to let Cava Packager know to pull them in.  
-    ### Unnecessary when running from source.
-    use B::Hooks::EndOfScope::XS;
-    use LacunaWaX::Roles::ScheduledTask;
-    use Variable::Magic;
-
+    use LacunaWaX::CavaPreload;
     use LacunaWaX::MainFrame;
     use LacunaWaX::MainSplitterWindow;
     use LacunaWaX::Model::Client;

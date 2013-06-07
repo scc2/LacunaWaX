@@ -13,16 +13,13 @@ already-fixed classes for inspiration.
 package LacunaWaX::Schedule {
     use Carp;
     use Data::Dumper;
+    use LacunaWaX::CavaPreload;
     use LacunaWaX::Model::Container;
     use LacunaWaX::Model::Mutex;
     use LacunaWaX::Model::Client;
     use LWP::UserAgent;
     use Moose;
     use Try::Tiny;
-
-    ### Needs to be here to let Cava Packager know to pull them in.  
-    ### Unnecessary when running from source.
-    use LacunaWaX::Roles::ScheduledTask;
 
     use LacunaWaX::Schedule::Archmin;
     use LacunaWaX::Schedule::Autovote;
@@ -146,7 +143,7 @@ package LacunaWaX::Schedule {
 
         my $lottery = LacunaWaX::Schedule::Lottery->new( bb => $self->bb );
         my $cnt     = $lottery->play_all_servers;
-        $lottery->logger->info("--- LLottery Run Complete ---");
+        $lottery->logger->info("--- Lottery Run Complete ---");
 
         return $cnt;
     }#}}}
