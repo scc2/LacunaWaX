@@ -52,7 +52,7 @@ package LacunaWaX::Dialog::LogViewer {
             $self, -1, 
             "Component", 
             wxDefaultPosition, 
-            Wx::Size->new(370,50), 
+            Wx::Size->new(390,50), 
             $self->component_labels,
             1, 
             wxRA_SPECIFY_ROWS
@@ -145,10 +145,12 @@ package LacunaWaX::Dialog::LogViewer {
                 ],
                 ### Max (MorL) of 24 planets, 90 spies per planet, == max 2160 
                 ### spies trained during Schedule_train_spies, so that many 
-                ### useful log entries are possible.  That's probably the most 
-                ### log entries we'll have for a single run.  Pad a little for 
-                ### a nice round number.
-                rows => 2500,
+                ### useful log entries are possible.
+                ### CHECK
+                ### However, displaying that many records is slow and ugly.  I 
+                ### should have some pagination in here instead of trying to 
+                ### show everything on one screen.
+                rows => 100,
             }
         );
 

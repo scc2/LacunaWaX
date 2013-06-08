@@ -96,7 +96,6 @@ lottery on this server; we're done.
 
     sub play_all_servers {#{{{
         my $self    = shift;
-        my $ttl     = 0;
 
         my @server_recs = $self->schema->resultset('Servers')->search()->all;   ## no critic qw(ProhibitLongChainsOfMethodCalls)
 
@@ -108,13 +107,10 @@ lottery on this server; we're done.
                 chomp(my $msg = $_);
                 $self->logger->error($msg);
                 return;
-            };
-            $server_count // return $ttl;   # We're out of links on this server.
-            $ttl += $server_count;
+            } or return;
         }
-        $self->logger->info("The lottery has been played $ttl times on all servers.");
-
-        return $ttl;
+        $self->logger->info("The lottery has been played on all servers.");
+        return;
     }#}}}
     sub play_server {#{{{
         my $self            = shift;
@@ -131,40 +127,36 @@ lottery on this server; we're done.
             server_id => $server_rec->id
         })->all;
 
-        PLANET:
+        LOTTERY_RECORD:
         foreach my $lottery_rec(@lottery_planet_recs) {
-
-            ### Create the links just once per server...
             unless( $self->has_links ) {
+                ### Create the links just once per server...
                 $self->make_links( $lottery_rec->body_id );
             }
 
-            my $planet_count = try {
-                $self->play_planet($lottery_rec);
+            my $pname = $self->game_client->planet_name($lottery_rec->body_id);
+            try {
+                $self->play_lottery($lottery_rec);
             }
             catch {
-                $self->logger->error("Unable to play lottery on body " . $lottery_rec->body_id . ": $ERRNO");
-            } or next PLANET;
-            $server_plays += $planet_count;
-
-            ### ...clear them before working on the next server.
-            $self->clear_links;
+                $self->logger->error("Unable to play lottery on $pname: $ARG");
+            } or next LOTTERY_RECORD;
         }
-        $self->logger->info("The lottery has been played $server_plays times on server " . $server_rec->name);
-        return $server_plays;
+
+        ### ...clear the links again before working on the next server.
+        $self->clear_links;
+        return 1;
     }#}}}
-    sub play_planet {#{{{
-        my $self            = shift;
-        my $lottery_rec     = shift;    # LotteryPrefs table record
-        my $planet_count    = 0;
+    sub play_lottery {#{{{
+        my $self        = shift;
+        my $lottery_rec = shift;    # LotteryPrefs table record
 
-        return $planet_count unless $lottery_rec->count;
-
+        return unless $lottery_rec->count;
         unless( $self->has_links ) {
-            carp "We need to have links set up before playing a planet.";    # wtf?
+            croak "We need to have links set up before playing a planet.";    # wtf?
         }
 
-        ### Make sure the lottery links are using the current planet's ID so 
+        ### Make sure the links are using the lottery record's planet's ID so 
         ### our plays will take place in the correct zone.
         unless( $lottery_rec->body_id eq $self->links->planet_id ) {
             try {
@@ -172,8 +164,7 @@ lottery on this server; we're done.
             }
             catch {
                 my $msg = (ref $_) ? $_->text : $_;
-                $self->logger->error("Unable to change links' planet to " . $lottery_rec->body_id . " - $msg");
-                return $planet_count;
+                croak "Unable to change links' planet to " . $lottery_rec->body_id . " - $msg";
             }
         }
 
@@ -182,16 +173,15 @@ lottery on this server; we're done.
 
         if( $self->links->remaining <= 0 ) {
             $self->logger->info("You've already played out the lottery on this server today.");
-            return $planet_count;
+            return;
         }
         $self->logger->info("There are " . $self->links->remaining . " lottery links left to play.");
 
         for( 1..$lottery_rec->count ) {
-            $planet_count += $self->play();
+            $self->play();
         }
 
-        $self->logger->info("The lottery has been played $planet_count times on $pname.");
-        return $planet_count;
+        return;
     }#}}}
     sub play {#{{{
         my $self    = shift;
@@ -239,6 +229,8 @@ server, which recorded the attempt as a successful lottery play.
         };
         $self->logger->info("Trying link for " . $link->name);
 
+### CHECK
+$link->url('http://www.google.com');
         my $resp = $self->ua->get($link->url);
         if( $resp->is_success ) {
             $self->logger->info(" -- Success!");
