@@ -4,28 +4,23 @@ use utf8;
 
 =pod
 
-It seems like Cava Packager is scanning the source code for obvious things 
-like "use Foo;" to figure out which modules it needs to package up.
+Cava Packager is scanning the source code for obvious things like "use Foo;" 
+to figure out which modules it needs to package up.
 
 This means that it (Cava) misses modules that have been loaded dynamically; 
 these modules need to be explicitly use'd so Cava knows enough to load them, 
 which is why this module exists.
 
-This module needs to be explicitly use'd somewhere along the chain of anything 
-that gets packaged by Cava.  Right now, that means LacunaWaX.pm and 
-LacunaWaX/Schedule.pm - all of the packaged programs are using one or the 
-other of those two modules.
-
 =cut
 
-package LacunaWaX::CavaPreload {
+package LacunaWaX::Preload::Cava {
+
+    use if $^O eq 'linux',   'LacunaWaX::Preload::Unix';
+    use if $^O eq 'MSWin32', 'LacunaWaX::Preload::Win32';
 
     use B::Hooks::EndOfScope::XS;
     use LacunaWaX::Roles::ScheduledTask;
     use Variable::Magic;
-
-    use DateTime::TimeZone::Local::Unix;
-    use DateTime::TimeZone::Local::Win32;
 
     ### Ugh.
     ###

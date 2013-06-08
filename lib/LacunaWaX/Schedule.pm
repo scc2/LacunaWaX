@@ -13,7 +13,7 @@ already-fixed classes for inspiration.
 package LacunaWaX::Schedule {
     use Carp;
     use Data::Dumper;
-    use LacunaWaX::CavaPreload;
+    use LacunaWaX::Preload::Cava;
     use LacunaWaX::Model::Container;
     use LacunaWaX::Model::Mutex;
     use LacunaWaX::Model::Client;
