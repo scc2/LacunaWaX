@@ -124,7 +124,6 @@ package LacunaWaX::Dialog::Help {
         ### On Ubuntu, there's a margin inside the button.  If the image is 
         ### the same size as the button, that margin obscures part of the 
         ### image.  So the image must be a bit smaller than the button.
-        ### CHECK on Windows.
         $img->Rescale($self->nav_img_w - 10, $self->nav_img_h - 10);
         my $bmp = Wx::Bitmap->new($img);
         my $v = Wx::BitmapButton->new(

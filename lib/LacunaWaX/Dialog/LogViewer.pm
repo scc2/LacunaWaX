@@ -150,7 +150,7 @@ package LacunaWaX::Dialog::LogViewer {
                 ### However, displaying that many records is slow and ugly.  I 
                 ### should have some pagination in here instead of trying to 
                 ### show everything on one screen.
-                rows => 100,
+                rows => 250,
             }
         );
 

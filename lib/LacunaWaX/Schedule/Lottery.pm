@@ -229,8 +229,6 @@ server, which recorded the attempt as a successful lottery play.
         };
         $self->logger->info("Trying link for " . $link->name);
 
-### CHECK
-$link->url('http://www.google.com');
         my $resp = $self->ua->get($link->url);
         if( $resp->is_success ) {
             $self->logger->info(" -- Success!");

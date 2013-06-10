@@ -222,10 +222,6 @@ package LacunaWaX::MainFrame {
         my $self        = shift;
         my $server_id   = shift;
 
-### CHECK
-### I'm beginning to feel like this event should be in LacunaWaX.pm, not here.  
-### But I'm not 100% convinced yet.
-
         if( $self->has_intro_panel ) {
             ### Keep the user from double clicking the connect button and thus 
             ### producing a "You're already connected" poperr.

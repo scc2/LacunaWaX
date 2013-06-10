@@ -99,12 +99,6 @@ package LacunaWaX::MainFrame::MenuBar::Tools {
     ### currently connected or not.  These are not automatic; if we connect or 
     ### disconnect, these need to be called by whatever connected/disconnected 
     ### us.
-    ###
-    ### CHECK
-    ### That's a problem.  There should be app-wide connected() and 
-    ### disconnected() methods that get called whenever we connect/disconnect.  For 
-    ### now, show_connected() is having to be called by 
-    ### MainFrame::OnGameServerConnect.  It works, but it's too hacky.
     sub show_connected {#{{{
         my $self = shift;
         $self->Enable($self->itm_mail->GetId, 1);

@@ -19,6 +19,68 @@ package LacunaWaX::Schedule::Archmin {
         return $self;
     }
 
+    sub get_glyphs_available {#{{{
+        my $self    = shift;
+        my $pid     = shift;
+
+        my $trademin = $self->get_trademin($pid);
+        my $glyphs_rv = try {
+            $trademin->get_glyph_summary;
+        };
+
+        unless( ref $glyphs_rv eq 'HASH' and defined $glyphs_rv->{'glyphs'} and @{$glyphs_rv->{'glyphs'}} ) {
+            return;
+        }
+
+        return $glyphs_rv->{'glyphs'};
+    }#}}}
+    sub get_trademin {#{{{
+        my $self        = shift;
+        my $pid         = shift;
+
+        my $trademin = try {
+            $self->game_client->get_building($pid, 'Trade');
+        };
+
+        return $trademin;
+    }#}}}
+    sub load_glyphs_in_cargo {#{{{
+        my $self        = shift;
+        my $glyphs      = shift;
+        my $hold_size   = shift;
+
+=head2 load_glyphs_in_cargo
+
+Accepts an arrayref of glyphs, as returned by get_glyph_summary, and an integer 
+hold size.
+
+Adds the glyphs as cargo up to the limit defined by the hold size, and returns 
+the cargo as an arrayref.
+
+If any glyphs are left over (they would have exceeded hold size), it's assumed 
+they'll simply be picked up on the next run.
+
+=cut
+
+        my $cargo = [];
+        my $count = 0;
+        ADD_GLYPHS:
+        foreach my $g( @{$glyphs} ) {
+            $count += $g->{'quantity'};
+            if( $count * $self->GLYPH_CARGO_SIZE > $hold_size ) { # Whoops
+                $count -= $g->{'quantity'};
+                last ADD_GLYPHS;
+            }
+            push @{$cargo}, {type => 'glyph', name => $g->{'name'}, quantity => $g->{'quantity'}};
+        }
+        return $cargo;
+    }#}}}
+    sub planet_exists {#{{{
+        my $self = shift;
+        my $pid  = shift;
+        my $glyph_home_name = $self->game_client->planet_name($pid);
+        return $glyph_home_name;    # undef if the pid wasn't found
+    }#}}}
     sub push_all_servers {#{{{
         my $self = shift;
         my $ttl  = 0;
@@ -138,7 +200,6 @@ represented by the ArchMinPrefs record passed as the first argument.
         $self->logger->info("- Pushed $pushes glyphs to $glyph_home_name.");
         return $pushes;
     }#}}}
-
     sub search_all_servers {#{{{
         my $self = shift;
         my $ttl  = 0;
@@ -282,17 +343,6 @@ represented by the ArchMinPrefs record passed as the first argument.
 
         return $searches;
     }#}}}
-
-
-
-### CHECK
-### these two might be better off in Client.pm
-    sub planet_exists {#{{{
-        my $self = shift;
-        my $pid  = shift;
-        my $glyph_home_name = $self->game_client->planet_name($pid);
-        return $glyph_home_name;    # undef if the pid wasn't found
-    }#}}}
     sub ship_exists {#{{{
         my $self        = shift;
         my $ship_name   = shift;
@@ -302,66 +352,6 @@ represented by the ArchMinPrefs record passed as the first argument.
         my($ship) = first{ $_->{'name'} eq $ship_name }@{$ships};
         return $ship;
     }#}}}
-
-### CHECK
-### Heck, these might as well.
-    sub get_glyphs_available {#{{{
-        my $self    = shift;
-        my $pid     = shift;
-
-        my $trademin = $self->get_trademin($pid);
-        my $glyphs_rv = try {
-            $trademin->get_glyph_summary;
-        };
-
-        unless( ref $glyphs_rv eq 'HASH' and defined $glyphs_rv->{'glyphs'} and @{$glyphs_rv->{'glyphs'}} ) {
-            return;
-        }
-
-        return $glyphs_rv->{'glyphs'};
-    }#}}}
-    sub get_trademin {#{{{
-        my $self        = shift;
-        my $pid         = shift;
-
-        my $trademin = try {
-            $self->game_client->get_building($pid, 'Trade');
-        };
-
-        return $trademin;
-    }#}}}
-    sub load_glyphs_in_cargo {#{{{
-        my $self        = shift;
-        my $glyphs      = shift;
-        my $hold_size   = shift;
-
-=head2 load_glyphs_in_cargo
-
-Accepts an arrayref of glyphs, as returned by get_glyph_summary, and an integer 
-hold size.
-
-Adds the glyphs as cargo up to the limit defined by the hold size, and returns 
-the cargo as an arrayref.
-
-If any glyphs are left over (they would have exceeded hold size), it's assumed 
-they'll simply be picked up on the next run.
-
-=cut
-
-        my $cargo = [];
-        my $count = 0;
-        ADD_GLYPHS:
-        foreach my $g( @{$glyphs} ) {
-            $count += $g->{'quantity'};
-            if( $count * $self->GLYPH_CARGO_SIZE > $hold_size ) { # Whoops
-                $count -= $g->{'quantity'};
-                last ADD_GLYPHS;
-            }
-            push @{$cargo}, {type => 'glyph', name => $g->{'name'}, quantity => $g->{'quantity'}};
-        }
-        return $cargo;
-    }#}}}
-
 
     no Moose;
     __PACKAGE__->meta->make_immutable;

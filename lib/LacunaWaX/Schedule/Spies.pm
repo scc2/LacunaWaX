@@ -3,7 +3,7 @@ use v5.14;
 package LacunaWaX::Schedule::Spies {
     use Carp;
     use English qw( -no_match_vars );
-    use List::Util qw(first);   # CHECK should go away.
+    use List::Util qw(first);
     use Memoize;
     use Moose;
     use Try::Tiny;

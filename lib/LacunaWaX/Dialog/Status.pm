@@ -41,7 +41,7 @@ This is optional to the constructor, and defaults to "Status".  Whatever string
 is in this attribute will be both the title and the header of the produced 
 status window.
 
-CHECK 'header' should probably be a different attribute, defaulting to the same 
+'header' should probably be a different attribute, defaulting to the same 
 value that's in 'title'.  Right now, they will both always display the same 
 string.
 
