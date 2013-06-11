@@ -40,6 +40,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::SSIncoming {
             are inbound and the user is playing with the pagination buttons.
         }
     );
+
     has 'incoming' => (
         is      => 'ro',
         isa     => 'ArrayRef',
