@@ -32,7 +32,6 @@ Cava::Packager::SetInfoProductVersion( version->parse($LacunaWaX::VERSION )->nor
 ### don't need these copies hanging around; just remove them.
 delete_old_databases($rp);
 
-
 sub delete_old_databases {#{{{
     my $release_path = shift;
 

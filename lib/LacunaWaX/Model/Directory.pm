@@ -72,7 +72,7 @@ package LacunaWaX::Model::Directory {
             open my $cperr, '>&', STDERR or croak $ERRNO;       ## no critic qw(RequireBriefOpen)
             open my $cpout, '>&', STDOUT or croak $ERRNO;       ## no critic qw(RequireBriefOpen)
             open STDOUT, File::Spec->devnull or croak $ERRNO;   ## no critic qw(ProhibitTwoArgOpen)
-            open STDERR, File::Spec->devnull or croak $ERRNO    ## no critic qw(ProhibitTwoArgOpen)
+            open STDERR, File::Spec->devnull or croak $ERRNO;   ## no critic qw(ProhibitTwoArgOpen)
             $rv = system $self->cacls, @args;
             open STDERR, '>&', $cperr or croak $ERRNO;
             open STDOUT, '>&', $cpout or croak $ERRNO;

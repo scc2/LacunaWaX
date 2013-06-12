@@ -20,6 +20,8 @@ package LacunaWaX::Preload::Cava {
 
     use B::Hooks::EndOfScope::XS;
     use LacunaWaX::Roles::ScheduledTask;
+    use SQL::Translator;
+    use SQL::Translator::Role::Error;
     use Variable::Magic;
 
     ### Ugh.
