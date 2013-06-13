@@ -1,5 +1,10 @@
 #!/usr/bin/perl
 
+
+### If upgrading the MAJOR version number from 1 to 2 (or to anything but 
+### '1'), be sure to see fix_tables().
+
+
 use v5.14;
 use version;
 use warnings;
@@ -18,17 +23,23 @@ use LacunaWaX::Model::Directory;
 use LacunaWaX::Model::LogsSchema;
 use LacunaWaX::Model::Schema;
 
-my $class_id = 'CFA9E4F9-9CB0-1020-AAC5-BF3F2B732F6F';
 
+### Creates 'TestOne' and 'TestTwo' test tables if true.  For debugging only; 
+### should usually be false.
+my $create_test_tables = 0; 
+
+
+### NOTES {#{{{
 =pod
 
+=head1 ABOUT
 
 This script is run by the executable installer created by Cava Packager.  If 
 you're running LacunaWaX from source, rather than from an executable (and if 
 you're reading this, that's probably the case), then you have zero need to run 
 this.
 
-
+=head1 REAON WE'RE NOT USING ->deploy
 
 When this is run as part of the install process, these statements...
     - $schema->deploy_statements()
@@ -45,41 +56,20 @@ So I'm abandoning deploy, for now at least, in favor of hard-coded SQL.  This
 works, but it means that any changes made to the schemas need to be reflected 
 here.
 
+=head1 VERSION NUMBERS
 
+"DisplayVersion" in the registry is being set by Cava, not by me, and it's 
+being set to Cava's internal version number, which I'm not using.
 
-This script's flow:
-    - Set perms on install dir to world-everything-able
-        - This could probably be reduced to install_dir/"user"/
+Starting with v1.16, I began adding "LacunaWaXVersion" to the registry, set to 
+the value of $LacunaWaX::VERSION.
 
-    - Attempt to create all tables/indexes/constraints needed for the app
-        - This is done in a try{} block, so attempts to create any tables that 
-          already exist as the result of a previous install will throw 
-          exceptions, which will be caught and ignored.
-        - create_main_tables_and_indexes() is doing this creation.
+So, in here, it's possible for $lw_version to be '0.0' but for $cava_version 
+to be $SOMETHING.  This means that the user does have a previous version 
+installed, and that version is < v1.16.  But past that, I can't tell which 
+version they have.
 
-    - Determine whether this install is an upgrade to a previous install
-        - If it is an upgrade, and any of the previously-existing tables have 
-          been changed in the current version of the app, alter those tables 
-          as necessary.
-        - Right now, fix_old_tables, which is what's meant to perform this 
-          upgrade, is a noop, but it is being called.
-
-    - Add default data to the fresh databases
-        - This currently consists of the known game servers, and known SMA space 
-          stations.
-            - When LacunaWaX sees a body for the first time, it can't know if 
-              that body is a SS or a Planet.  The first time the user clicks on 
-              that body's name in the tree, LacunaWaX will figure out and 
-              remember which type that body is.  But this requires that you 
-              click on all of your SSs on the first LacunaWaX run, then shut 
-              down and restart.
-            - Maintaining a list of known SSs saves people who have never 
-              installed LacunaWaX from doing all that clicking.
-            - But only SMA stations are currently recorded, as that's all I have 
-              convenient access to.  It's recommended that you add your 
-              alliance's SS.
-
-
+=head1 UPDATING
 
 When setting up a new version that includes new tables/indexes/constraints:
     - Create a sub in here containing the new definitions
@@ -90,35 +80,29 @@ When setting up a new version that includes new tables/indexes/constraints:
     - If your new version alters a table that existed in a previous version, 
       you'll need to change fix_old_tables() as appropriate.
 
-
 =cut
+### }#}}}
 
-
-### Creates 'TestOne' and 'TestTwo' test tables if true.
-my $create_test_tables = 0; 
-
+my $class_id = 'CFA9E4F9-9CB0-1020-AAC5-BF3F2B732F6F';
 
 $Registry->Delimiter('/');
-my $base_key                = 'HKEY_LOCAL_MACHINE/Software/Microsoft/Windows/CurrentVersion/Uninstall/{' . $class_id . '}_is1';
-my $install_dir_key         = join '/', ($base_key, 'InstallLocation');
-my $install_version_key     = join '/', ($base_key, 'DisplayVersion');
-my $display_name_key        = join '/', ($base_key, 'DisplayName');
+my $base_key            = 'HKEY_LOCAL_MACHINE/Software/Microsoft/Windows/CurrentVersion/Uninstall/{' . $class_id . '}_is1';
+my $install_dir_key     = join '/', ($base_key, 'InstallLocation');
+my $cava_version_key    = join '/', ($base_key, 'DisplayVersion');
+my $lw_version_key      = join '/', ($base_key, 'LacunaWaXVersion');
+my $display_name_key    = join '/', ($base_key, 'DisplayName');
 
-my $install_dir                     = $Registry->{$install_dir_key};        # ends with a \
-my $currently_installed_version     = $Registry->{$install_version_key};
-my $this_version                    = $LacunaWaX::VERSION;
-my $display_name                    = $Registry->{$display_name_key};       # 'LacunaWaX'
-
-
-my $dt = DateTime->now();
+my $install_dir     = $Registry->{$install_dir_key};        # ends with a \
+my $this_version    = $LacunaWaX::VERSION;
+my $cava_version    = $Registry->{$cava_version_key}    // q{0.0};
+my $lw_version      = $Registry->{$lw_version_key}      // q{0.0};
 
 open my $ilog, '>', $install_dir . 'install_log.txt';
-#open my $ilog, '>', 'C:/Documents and Settings/Jon/Desktop/' . 'install_log.txt';
-say $ilog "Install dir is '$install_dir'.";
-
+my $dt = DateTime->now();
 $ilog->autoflush(1);
 say $ilog "---------- " . $dt->ymd . ' ' . $dt->hms . " ----------";
-
+say $ilog "Install dir is '$install_dir'.";
+say $ilog "this version: $this_version -- currently-installed version: $lw_version";
 
 my $main_path   = $install_dir . 'user/lacuna_app.sqlite';
 my $logs_path   = $install_dir . 'user/lacuna_log.sqlite';
@@ -132,37 +116,30 @@ my $main_schema = LacunaWaX::Model::Schema->connect($main_dsn, $sql_options)    
 my $logs_schema = LacunaWaX::Model::LogsSchema->connect($logs_dsn, $sql_options) or die "no logs schema: $!";
 
 
-say $ilog "Setting perms";
 set_installdir_permissions($install_dir);
-say $ilog '';
-
-say $ilog "Creating logs schema elements";
 create_logs_tables_and_indexes($logs_schema);
-say $ilog '';
-
-say $ilog "Creating main schema elements";
 create_main_tables_and_indexes($main_schema);
-if( is_upgrade($this_version, $currently_installed_version) ) {
-    say $ilog "Upgrade, so fixing old tables";
-    fix_old_tables($main_schema, $this_version, $currently_installed_version);
+
+say $ilog q{};
+my $upgrade_rv = is_upgrade($this_version, $lw_version, $cava_version);
+if( $upgrade_rv ) {
+    fix_old_tables($main_schema, $this_version, $lw_version);
 }
-say $ilog '';
 
 my $d = LacunaWaX::Model::DefaultData->new();
 
 say $ilog "Adding known servers";
 $d->add_servers($main_schema);
-say $ilog '';
 
 ### This may go away.
 say $ilog "Adding known stations";
 $d->add_stations($main_schema);
 
-
 ### Set the DisplayVersion registry key to be equal to $LacunaWaX::VERSION so 
 ### on the next upgrade this script will know what had previously been 
 ### installed.
-$Registry->{$install_version_key} = $this_version;
+say $ilog "Setting registry version to '$this_version'";
+$Registry->{$lw_version_key} = $this_version;
 
 say $ilog "---------- COMPLETE ----------";
 close $ilog;
@@ -191,7 +168,7 @@ sub create_logs_tables_and_indexes {#{{{
                 $dbh->do($stmt);
             }
             catch {
-                say $ilog "'$name' already exists; no need to re-create it. ($_)";
+                say $ilog "'$name' already exists; no need to re-create it.";
             };
         }
     }
@@ -418,48 +395,77 @@ CREATE TABLE TestTwo (
 }#}}}
 sub is_upgrade {#{{{
     my $new_version     = shift;    # $LacunaWaX::VERSION
-    my $inst_version    = shift;    # Whatever was in the registry as the previous version
+    my $inst_version    = shift;    # Whatever was in the registry as the previous version.  '0.0' if this is a brand new install.
+    my $cava_version    = shift;    # Pre-1.16 there was no "inst_version".  In that case, if this is not '0.0', we're doing a pre-1.16 upgrade.
+
+=pod
+
+Returns true if the user has a previous version of LacunaWaX installed, else 
+returns false.
+
+=cut
 
     say $ilog "The version being installed right now is $new_version.";
-    unless($inst_version) {
+    if( $cava_version eq '0.0' ) {
         say $ilog "No previous install version number was found.";
-        $inst_version = 0;
+        return 0;
     }
-    say $ilog "The previously-installed version was $inst_version.";
-
-    ### CHECK
-    ### This is simplistic and naive and will probably need to be updated at 
-    ### some point.
-    my($text, $is_upgrade) = ( $inst_version eq $new_version )
-        ? ('is not', 0) : ('is', 1);
-
-    say $ilog "This install $text an upgrade to a previous install.";
-    return $is_upgrade;
+    if( $inst_version eq '0.0' ) {
+        say $ilog "Previous cava version exists, but no previous LacunaWaX version.  So we're upgrading from < 1.16.";
+        return 1;
+    }
+    say $ilog "This is an upgrade.  The previously-installed version was $inst_version.";
+    return 1;
 }#}}}
 sub fix_old_tables {#{{{
     my $schema          = shift;
-    my $new_version     = shift;
-    my $inst_version    = shift;
+    my $new_version     = shift;    # The version we're installing right now
+    my $lw_version      = shift;    # The previously-installed lw version.  '0.0' means '< 1.16'
 
-    say $ilog "Upgrading tables from $inst_version to $new_version.";
+=pod
 
-    my $some_sort_of_table_altering_is_needed = 0;
-    if( $some_sort_of_table_altering_is_needed ) {
-        ### alter them as appropriate.
+We should only get here if is_upgrade() returned true, so we already know that 
+the current install is an upgrade.
+
+However, since I didn't start setting LacunaWaXVersion in the registry until 
+v1.16, it's completely possible for $lw_version to be '0.0' in here.
+
+=cut
+
+
+    if( $lw_version eq '0.0' ) {
+        $lw_version = '1.0';
     }
 
-    ### 1.0 Tables:
-    ###     AppPrefsKeystore
-    ###     BodyTypes
-    ###     ServerAccounts
-    ###     Servers
-    ###     SpyTrainPrefs
+    say $ilog "Upgrading tables from $lw_version to $new_version.";
+    my( $imajor, $iminor ) = split/\./, $lw_version;
+    unless( $imajor == 1 ) {
+        say $ilog "GONNNNNNNNG!";
+        say $ilog "The post install script is about to die because we're upgrading to an unexpected major version ($imajor).";
+        say $ilog "That means that this install should be considered to have FAILED.";
+        say $ilog "**********************";
+        die "Installed major version number is unexpected; I don't know what to do with it.";
+    }
 
-    ### 1.1 (rel 1) Tables:
-    ###     + ArchMinPrefs
-    ###     + ScheduleAutovote
+    if( $iminor < 16 ) {
+        say $ilog "Adding reserve_glyphs column to ArchMinPrefs table";
+        add_reserve_glyphs_to_arch_min_prefs($schema);
+    }
 
-    ### 1.1 (rel 2) Tables:
-    ###     + SitterPasswords
+}#}}}
+sub add_reserve_glyphs_to_arch_min_prefs {#{{{
+    my $schema = shift;
+
+    ### reserve_glyphs is new as of v1.16
+
+    my @args = ();
+    say $ilog "Altering the ArchMinPrefs table right now";
+    $schema->storage->dbh_do(
+        sub {
+            my ($storage, $dbh, @args) = @_;
+            $dbh->do('ALTER TABLE "main"."ArchMinPrefs" ADD COLUMN "reserve_glyphs" INTEGER NOT NULL DEFAULT 0')
+        }, @args 
+    );
+    
 }#}}}
 

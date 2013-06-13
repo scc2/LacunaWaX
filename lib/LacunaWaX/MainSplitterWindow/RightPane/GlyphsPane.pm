@@ -41,19 +41,23 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane {
         }
     );
 
-    has 'halls_btn_sizer'   => (is => 'rw', isa => 'Wx::BoxSizer',  lazy_build => 1, documentation => 'horizontal');
-    has 'header_sizer'      => (is => 'rw', isa => 'Wx::BoxSizer',  lazy_build => 1, documentation => 'vertcal');
-    has 'list_sizer'        => (is => 'rw', isa => 'Wx::BoxSizer',  lazy_build => 1, documentation => 'vertcal');
-    has 'lbl_planet_name'   => (is => 'rw', isa => 'Wx::StaticText',        lazy_build => 1);
-    has 'list_glyphs'       => (is => 'rw', isa => 'Maybe[Wx::ListCtrl]',   lazy_build => 1);
-    has 'glyph_pusher_box'  => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1);
-    has 'chc_glyph_home'    => (is => 'rw', isa => 'Wx::Choice',   lazy_build => 1);
-    has 'txt_pusher_ship'   => (is => 'rw', isa => 'Wx::TextCtrl', lazy_build => 1);
-    has 'btn_push_glyphs'   => (is => 'rw', isa => 'Wx::Button',   lazy_build => 1);
-    has 'auto_search_box'   => (is => 'rw', isa => 'Wx::BoxSizer',  lazy_build => 1);
-    has 'chc_auto_search'   => (is => 'rw', isa => 'Wx::Choice',    lazy_build => 1);
-    has 'btn_auto_search'   => (is => 'rw', isa => 'Wx::Button',    lazy_build => 1);
-    has 'btn_build_all_halls' => (is => 'rw', isa => 'Wx::Button', lazy_build => 1);
+    has 'auto_search_box'       => (is => 'rw', isa => 'Wx::BoxSizer',  lazy_build => 1);
+    has 'btn_push_glyphs'       => (is => 'rw', isa => 'Wx::Button',   lazy_build => 1);
+    has 'chc_glyph_home'        => (is => 'rw', isa => 'Wx::Choice',   lazy_build => 1);
+    has 'chc_auto_search'       => (is => 'rw', isa => 'Wx::Choice',    lazy_build => 1);
+    has 'btn_auto_search'       => (is => 'rw', isa => 'Wx::Button',    lazy_build => 1);
+    has 'btn_build_all_halls'   => (is => 'rw', isa => 'Wx::Button', lazy_build => 1);
+    has 'halls_btn_sizer'       => (is => 'rw', isa => 'Wx::BoxSizer',  lazy_build => 1, documentation => 'horizontal');
+    has 'glyph_pusher_box'      => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1);
+    has 'header_sizer'          => (is => 'rw', isa => 'Wx::BoxSizer',  lazy_build => 1, documentation => 'vertcal');
+    has 'lbl_glyph_home'        => (is => 'rw', isa => 'Wx::StaticText',        lazy_build => 1);
+    has 'lbl_planet_name'       => (is => 'rw', isa => 'Wx::StaticText',        lazy_build => 1);
+    has 'lbl_pusher_ship'       => (is => 'rw', isa => 'Wx::StaticText',        lazy_build => 1);
+    has 'lbl_reserve_glyphs'    => (is => 'rw', isa => 'Wx::StaticText',        lazy_build => 1);
+    has 'list_glyphs'           => (is => 'rw', isa => 'Maybe[Wx::ListCtrl]',   lazy_build => 1);
+    has 'list_sizer'            => (is => 'rw', isa => 'Wx::BoxSizer',  lazy_build => 1, documentation => 'vertcal');
+    has 'txt_pusher_ship'       => (is => 'rw', isa => 'Wx::TextCtrl', lazy_build => 1);
+    has 'txt_reserve_glyphs'    => (is => 'rw', isa => 'Wx::TextCtrl', lazy_build => 1);
 
     has 'recipe_box'    => (is => 'rw', isa => 'Wx::BoxSizer',  lazy_build => 1);
     has 'recipe_forms'  => (is => 'rw', isa => 'ArrayRef',      lazy_build => 1);
@@ -208,13 +212,43 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane {
     sub _build_glyph_pusher_box {#{{{
         my $self = shift;
 
+        my $dest_and_ship_sizer = $self->build_sizer($self->parent, wxHORIZONTAL, 'Dest and Ship');
+        $dest_and_ship_sizer->Add($self->lbl_glyph_home, 0, 0, 0);
+        $dest_and_ship_sizer->Add($self->chc_glyph_home, 0, 0, 0);
+        $dest_and_ship_sizer->AddSpacer(15);
+        $dest_and_ship_sizer->Add($self->lbl_pusher_ship, 0, 0, 0);
+        $dest_and_ship_sizer->Add($self->txt_pusher_ship, 0, 0, 0);
+        $dest_and_ship_sizer->AddSpacer(10);
+        $dest_and_ship_sizer->Add($self->btn_push_glyphs, 0, 0, 0);
+
+
+        my $res_glyphs_sizer = $self->build_sizer($self->parent, wxHORIZONTAL, 'Reserve Glyphs');
+        $res_glyphs_sizer->Add($self->lbl_reserve_glyphs, 0, 0, 0);
+        $res_glyphs_sizer->Add($self->txt_reserve_glyphs, 0, 0, 0);
+
+
         my $box = Wx::StaticBox->new(
             $self->parent, -1, 
             'Push Collected Glyphs', 
             wxDefaultPosition, 
             Wx::Size->new(-1, 40),
         );
-        my $sizer = Wx::StaticBoxSizer->new($box, wxHORIZONTAL);
+        my $sizer = Wx::StaticBoxSizer->new($box, wxVERTICAL);
+        $sizer->Add($dest_and_ship_sizer, 0, 0, 0);
+        $sizer->Add($res_glyphs_sizer, 0, 0, 0);
+
+        return $sizer;
+    }#}}}
+    sub _build_glyph_pusher_box_orig {#{{{
+        my $self = shift;
+
+        my $box = Wx::StaticBox->new(
+            $self->parent, -1, 
+            'Push Collected Glyphs', 
+            wxDefaultPosition, 
+            Wx::Size->new(-1, 40),
+        );
+        my $dest_and_ship_sizer = Wx::StaticBoxSizer->new($box, wxHORIZONTAL);
 
         my $lbl_glyph_home = Wx::StaticText->new(
             $self->parent, -1, 
@@ -232,15 +266,15 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane {
         );
         $lbl_pusher_ship->SetFont( $self->get_font('/para_text_1') );
 
-        $sizer->Add($lbl_glyph_home, 0, 0, 0);
-        $sizer->Add($self->chc_glyph_home, 0, 0, 0);
-        $sizer->AddSpacer(15);
-        $sizer->Add($lbl_pusher_ship, 0, 0, 0);
-        $sizer->Add($self->txt_pusher_ship, 0, 0, 0);
-        $sizer->AddSpacer(10);
-        $sizer->Add($self->btn_push_glyphs, 0, 0, 0);
+        $dest_and_ship_sizer->Add($lbl_glyph_home, 0, 0, 0);
+        $dest_and_ship_sizer->Add($self->chc_glyph_home, 0, 0, 0);
+        $dest_and_ship_sizer->AddSpacer(15);
+        $dest_and_ship_sizer->Add($lbl_pusher_ship, 0, 0, 0);
+        $dest_and_ship_sizer->Add($self->txt_pusher_ship, 0, 0, 0);
+        $dest_and_ship_sizer->AddSpacer(10);
+        $dest_and_ship_sizer->Add($self->btn_push_glyphs, 0, 0, 0);
 
-        return $sizer;
+        return $dest_and_ship_sizer;
     }#}}}
     sub _build_halls_btn_sizer {#{{{
         my $self = shift;
@@ -249,6 +283,17 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane {
     sub _build_header_sizer {#{{{
         my $self = shift;
         return $self->build_sizer($self->parent, wxVERTICAL, 'Header');
+    }#}}}
+    sub _build_lbl_glyph_home {#{{{
+        my $self = shift;
+        my $lbl_glyph_home = Wx::StaticText->new(
+            $self->parent, -1, 
+            "Destination planet: ",
+            wxDefaultPosition, 
+            Wx::Size->new(120, 30)
+        );
+        $lbl_glyph_home->SetFont( $self->get_font('/para_text_1') );
+        return $lbl_glyph_home;
     }#}}}
     sub _build_lbl_planet_name {#{{{
         my $self = shift;
@@ -260,6 +305,28 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane {
         );
         $v->SetFont( $self->get_font('/header_1') );
         return $v;
+    }#}}}
+    sub _build_lbl_pusher_ship {#{{{
+        my $self = shift;
+        my $lbl_pusher_ship = Wx::StaticText->new(
+            $self->parent, -1, 
+            "Ship name: ",
+            wxDefaultPosition, 
+            Wx::Size->new(90, 30)
+        );
+        $lbl_pusher_ship->SetFont( $self->get_font('/para_text_1') );
+        return $lbl_pusher_ship;
+    }#}}}
+    sub _build_lbl_reserve_glyphs {#{{{
+        my $self = shift;
+        my $lbl_pusher_ship = Wx::StaticText->new(
+            $self->parent, -1, 
+            "Reserve glyphs for missions: ",
+            wxDefaultPosition, 
+            Wx::Size->new(90, 30)
+        );
+        $lbl_pusher_ship->SetFont( $self->get_font('/para_text_1') );
+        return $lbl_pusher_ship;
     }#}}}
     sub _build_list_glyphs {#{{{
         my $self = shift;
@@ -365,6 +432,21 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane {
         );
 
         my $tt = Wx::ToolTip->new( "A ship with whatever name you type here must exist on this planet and be available, or the push will simply not happen.  Capitalization and spelling DO matter here!");
+        $v->SetToolTip($tt);
+
+        return $v;
+    }#}}}
+    sub _build_txt_reserve_glyphs {#{{{
+        my $self = shift;
+
+        my $v = Wx::TextCtrl->new(
+            $self->parent, -1, 
+            q{0},
+            wxDefaultPosition, 
+            Wx::Size->new(50,25)
+        );
+
+        my $tt = Wx::ToolTip->new( "The number of glyphs to leave onsite, usually for completing missions" );
         $v->SetToolTip($tt);
 
         return $v;
@@ -523,19 +605,24 @@ The problem here is:
         my $event   = shift;    # Wx::CommandEvent
 
         my $pusher_ship_name    = $self->txt_pusher_ship->GetLineText(0);
+        my $reserve_count       = $self->txt_reserve_glyphs->GetLineText(0);
         my $glyph_home_idx      = $self->chc_glyph_home->GetSelection;
         my $glyph_home_str      = $self->chc_glyph_home->GetString( $glyph_home_idx );
         my $glyph_home_id       = (lc $glyph_home_str ne 'none') ? $self->game_client->planet_id($glyph_home_str) : undef;
 
+        $reserve_count =~ s/\D//g;
+        $reserve_count ||= 0;
+
         $self->prefs_rec->glyph_home_id($glyph_home_id);
         $self->prefs_rec->pusher_ship_name($pusher_ship_name);
+        $self->prefs_rec->reserve_glyphs($reserve_count);
         $self->prefs_rec->update;
 
         if( lc $glyph_home_str eq 'none' or not $pusher_ship_name ) {
             $self->popmsg("Your glyphs will not be pushed anywhere.");
         }
         else {
-            $self->popmsg("Your glyphs will be pushed to $glyph_home_str onboard $pusher_ship_name.");
+            $self->popmsg("Your glyphs will be pushed to $glyph_home_str onboard $pusher_ship_name.  $reserve_count of each glyph type will remain onsite.");
         }
         return 1;
     }#}}}
