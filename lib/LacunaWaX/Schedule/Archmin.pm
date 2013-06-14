@@ -1,6 +1,7 @@
 use v5.14;
 
 package LacunaWaX::Schedule::Archmin {
+    use Data::Dumper;
     use List::Util qw(first);
     use Moose;
     use Try::Tiny;
@@ -21,18 +22,46 @@ package LacunaWaX::Schedule::Archmin {
 
     sub get_glyphs_available {#{{{
         my $self    = shift;
-        my $pid     = shift;
+        my $am_rec  = shift;
+        my $ret_ar  = [];
 
-        my $trademin = $self->get_trademin($pid);
+=head2 get_glyphs_available 
+
+Given an ArchMinPrefs record, returns an AoH of the glyphs available for 
+pushing.
+
+Automatically substracts $am_rec->reserve_glyphs (integer) of each glyph type 
+before returning the hash.
+
+[
+ {
+  "id" => "id-goes-here",
+  "name" => "bauxite",
+  "type" => "bauxite",
+  "quantity" => 2
+ },
+ {
+  "id" => "id-goes-here",
+  "name" => "beryl",
+  "type" => "beryl",
+  "quantity" => 6
+ },
+ ...
+]
+
+=cut
+
+        my $trademin = $self->get_trademin($am_rec->body_id);
         my $glyphs_rv = try {
             $trademin->get_glyph_summary;
         };
 
         unless( ref $glyphs_rv eq 'HASH' and defined $glyphs_rv->{'glyphs'} and @{$glyphs_rv->{'glyphs'}} ) {
-            return;
+            return $ret_ar;
         }
-
-        return $glyphs_rv->{'glyphs'};
+        
+        $ret_ar = [ map{ $_->{'quantity'} -= $am_rec->reserve_glyphs; $_->{'quantity'} = 0 if $_->{'quantity'} < 0; $_ }@{$glyphs_rv->{'glyphs'}} ];
+        return $ret_ar;
     }#}}}
     sub get_trademin {#{{{
         my $self        = shift;
@@ -66,6 +95,10 @@ they'll simply be picked up on the next run.
         my $count = 0;
         ADD_GLYPHS:
         foreach my $g( @{$glyphs} ) {
+            ### A quantity of 0 won't ever be returned by get_glyph_summary, 
+            ### but if the user wants to leave some glyphs onsite for 
+            ### missions, we may have subtracted the quantity down to 0.
+            next ADD_GLYPHS if $g->{'quantity'} == 0;
             $count += $g->{'quantity'};
             if( $count * $self->GLYPH_CARGO_SIZE > $hold_size ) { # Whoops
                 $count -= $g->{'quantity'};
@@ -174,11 +207,10 @@ represented by the ArchMinPrefs record passed as the first argument.
         $self->logger->info("- Pushing with ship " . $am_rec->pusher_ship_name . q{.});
 
         my $glyphs;
-        unless( $glyphs = $self->get_glyphs_available($am_rec->body_id) ) {
+        unless( $glyphs = $self->get_glyphs_available($am_rec) ) {
             $self->logger->info("- No glyphs are on $this_body_name right now.");
             return $pushes;
         }
-        $self->logger->debug( scalar @{$glyphs} . " glyphs onsite about to be pushed.");
 
         my $cargo = $self->load_glyphs_in_cargo($glyphs, $hold_size);
         $pushes = scalar @{$cargo};

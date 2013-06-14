@@ -218,13 +218,13 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane {
         $dest_and_ship_sizer->AddSpacer(15);
         $dest_and_ship_sizer->Add($self->lbl_pusher_ship, 0, 0, 0);
         $dest_and_ship_sizer->Add($self->txt_pusher_ship, 0, 0, 0);
-        $dest_and_ship_sizer->AddSpacer(10);
-        $dest_and_ship_sizer->Add($self->btn_push_glyphs, 0, 0, 0);
 
 
         my $res_glyphs_sizer = $self->build_sizer($self->parent, wxHORIZONTAL, 'Reserve Glyphs');
         $res_glyphs_sizer->Add($self->lbl_reserve_glyphs, 0, 0, 0);
         $res_glyphs_sizer->Add($self->txt_reserve_glyphs, 0, 0, 0);
+        $res_glyphs_sizer->AddSpacer(20);
+        $res_glyphs_sizer->Add($self->btn_push_glyphs, 0, 0, 0);
 
 
         my $box = Wx::StaticBox->new(
@@ -238,43 +238,6 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane {
         $sizer->Add($res_glyphs_sizer, 0, 0, 0);
 
         return $sizer;
-    }#}}}
-    sub _build_glyph_pusher_box_orig {#{{{
-        my $self = shift;
-
-        my $box = Wx::StaticBox->new(
-            $self->parent, -1, 
-            'Push Collected Glyphs', 
-            wxDefaultPosition, 
-            Wx::Size->new(-1, 40),
-        );
-        my $dest_and_ship_sizer = Wx::StaticBoxSizer->new($box, wxHORIZONTAL);
-
-        my $lbl_glyph_home = Wx::StaticText->new(
-            $self->parent, -1, 
-            "Destination planet: ",
-            wxDefaultPosition, 
-            Wx::Size->new(120, 30)
-        );
-        $lbl_glyph_home->SetFont( $self->get_font('/para_text_1') );
-
-        my $lbl_pusher_ship = Wx::StaticText->new(
-            $self->parent, -1, 
-            "Ship name: ",
-            wxDefaultPosition, 
-            Wx::Size->new(90, 30)
-        );
-        $lbl_pusher_ship->SetFont( $self->get_font('/para_text_1') );
-
-        $dest_and_ship_sizer->Add($lbl_glyph_home, 0, 0, 0);
-        $dest_and_ship_sizer->Add($self->chc_glyph_home, 0, 0, 0);
-        $dest_and_ship_sizer->AddSpacer(15);
-        $dest_and_ship_sizer->Add($lbl_pusher_ship, 0, 0, 0);
-        $dest_and_ship_sizer->Add($self->txt_pusher_ship, 0, 0, 0);
-        $dest_and_ship_sizer->AddSpacer(10);
-        $dest_and_ship_sizer->Add($self->btn_push_glyphs, 0, 0, 0);
-
-        return $dest_and_ship_sizer;
     }#}}}
     sub _build_halls_btn_sizer {#{{{
         my $self = shift;
@@ -290,7 +253,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane {
             $self->parent, -1, 
             "Destination planet: ",
             wxDefaultPosition, 
-            Wx::Size->new(120, 30)
+            Wx::Size->new(100, 30)
         );
         $lbl_glyph_home->SetFont( $self->get_font('/para_text_1') );
         return $lbl_glyph_home;
@@ -312,7 +275,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane {
             $self->parent, -1, 
             "Ship name: ",
             wxDefaultPosition, 
-            Wx::Size->new(90, 30)
+            Wx::Size->new(70, 30)
         );
         $lbl_pusher_ship->SetFont( $self->get_font('/para_text_1') );
         return $lbl_pusher_ship;
@@ -323,7 +286,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane {
             $self->parent, -1, 
             "Reserve glyphs for missions: ",
             wxDefaultPosition, 
-            Wx::Size->new(90, 30)
+            Wx::Size->new(160, 30)
         );
         $lbl_pusher_ship->SetFont( $self->get_font('/para_text_1') );
         return $lbl_pusher_ship;
@@ -441,7 +404,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane {
 
         my $v = Wx::TextCtrl->new(
             $self->parent, -1, 
-            q{0},
+            $self->prefs_rec->reserve_glyphs,
             wxDefaultPosition, 
             Wx::Size->new(50,25)
         );

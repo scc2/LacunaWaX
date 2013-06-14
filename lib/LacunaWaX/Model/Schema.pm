@@ -33,6 +33,7 @@ package LacunaWaX::Model::Schema::ArchMinPrefs {#{{{
         server_id           => {data_type => 'integer',                         is_nullable => 0, extra => {unsigned => 1} },
         body_id             => {data_type => 'integer',                         is_nullable => 0, extra => {unsigned => 1} },
         glyph_home_id       => {data_type => 'integer',                         is_nullable => 1, extra => {unsigned => 1} },
+        reserve_glyphs      => {data_type => 'integer',                         is_nullable => 0, default_value => '0' },
         pusher_ship_name    => {data_type => 'varchar', size => 32,             is_nullable => 1 },
         auto_search_for     => {data_type => 'varchar', size => 32,             is_nullable => 1 },
     );
