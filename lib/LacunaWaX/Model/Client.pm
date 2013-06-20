@@ -419,46 +419,6 @@ package LacunaWaX::Model::Client {
         return 1;
     }#}}}
 
-    sub cartesian_distance {#{{{
-        my $self = shift;
-        my $ox = shift;
-        my $oy = shift;
-        my $tx = shift;
-        my $ty = shift;
-
-=head2 cartesian_distance
-
-Returns the distance between two points.
-
- my $dist = $client->cartesian_distance(
-    $origin_x, $origin_y,
-    $target_x, $target_y,
- );
-
-Caution; the number returned is likely to be big and floaty.  Don't try to 
-perform arithmetic on it without Math::BigFloat.
-
-=cut
-
-        return sqrt( ($tx - $ox)**2 + ($ty - $oy)**2 );
-    }#}}}
-    sub halls_to_level {#{{{
-        my $self    = shift;
-        my $current = shift;
-        my $max     = shift;
-
-=head2 halls_to_level
-
-Returns the number of halls needed to get from one level to another.
-
- say "It will take " 
-    . $client->halls_to_level(4, 10)
-    . " halls to go from level 4 to level 10."; # 21
-
-=cut
-
-        return $self->triangle($max) - $self->triangle($current);
-    }#}}}
     sub make_key {## no critic qw(RequireArgUnpacking) {{{
         my $self = shift;
         return join q{:}, @_;
@@ -688,20 +648,6 @@ where rate is a ship's listed speed.
         $secs->bmul(360_000);
         $secs = sprintf "%.0f", $secs;
         return $secs;
-    }#}}}
-    sub triangle {#{{{
-        my $self = shift;
-        my $int  = shift;
-
-=head2 triangle 
-
-Returns the triangle sum of a given int.
-
- say $client->triangle(5);  # 15
-
-=cut
-
-        return( $int * ($int+1) / 2 ); 
     }#}}}
 
 ### These require hitting the game server, so try/catch as needed.

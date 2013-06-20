@@ -6,7 +6,9 @@ package LacunaWaX {
     use English qw( -no_match_vars );
     use Games::Lacuna::Client::TMTRPC;
     use Getopt::Long;
+    use Math::BigFloat;
     use Moose;
+    use Time::Duration;
     use Time::HiRes;
     use Try::Tiny;
     use Wx qw(:everything);
@@ -320,6 +322,29 @@ Really just a convenience method to keep you from having to call
         my $old_text = $self->main_frame->status_bar->change_caption($msg);
         return $old_text;
     }#}}}
+    sub cartesian_distance {#{{{
+        my $self = shift;
+        my $ox = shift;
+        my $oy = shift;
+        my $tx = shift;
+        my $ty = shift;
+
+=head2 cartesian_distance
+
+Returns the distance between two points.
+
+ my $dist = $client->cartesian_distance(
+    $origin_x, $origin_y,
+    $target_x, $target_y,
+ );
+
+Caution; the number returned is likely to be big and floaty.  Don't try to 
+perform arithmetic on it without Math::BigFloat.
+
+=cut
+
+        return sqrt( ($tx - $ox)**2 + ($ty - $oy)**2 );
+    }#}}}
     sub game_connect {#{{{
         my $self = shift;
 
@@ -373,6 +398,23 @@ Returns true/false on success/fail.
         }
         $self->Yield;
         return $self->game_client->ping;    # rslt of the previous call was cached, so this is OK.
+    }#}}}
+    sub halls_to_level {#{{{
+        my $self    = shift;
+        my $current = shift;
+        my $max     = shift;
+
+=head2 halls_to_level
+
+Returns the number of halls needed to get from one level to another.
+
+ say "It will take " 
+    . $client->halls_to_level(4, 10)
+    . " halls to go from level 4 to level 10."; # 21
+
+=cut
+
+        return $self->triangle($max) - $self->triangle($current);
     }#}}}
     sub endthrob {#{{{
         my $self = shift;
@@ -448,6 +490,26 @@ Instead, you need something like this...
                                     $self->main_frame->frame );
         return $resp;
     }#}}}
+    sub secs_to_human {#{{{
+        my $self        = shift;
+        my $secs        = shift;
+        my $exact_flag  = shift;
+
+=head2 secs_to_human
+
+Returns a nice string in English describing a number of seconds.  By default, 
+returns a rounded short string with two time elements.  Pass a true value as 
+the second argument to receive a fully accurate (to the second) result.
+
+ $secs = 3603243;
+
+ say $self->secs_to_human($secs);       # "41 days and 17 hours"
+ say $self->secs_to_human($secs, 1);    # "41 days, 16 hours, 54 minutes, and 3 seconds";
+
+=cut
+
+        return ($exact_flag) ? duration_exact($secs) : duration($secs);
+    }#}}}
     sub throb {#{{{
         my $self = shift;
 
@@ -461,6 +523,44 @@ Instead, you need something like this...
         };
         alarm 1;
         return;
+    }#}}}
+    sub travel_time {#{{{
+        my $self = shift;
+        my $rate = shift;
+        my $dist = shift;
+
+=head2 travel_time
+
+Returns the time (in seconds) to cover a given distance given a rate of speed, 
+where rate is a ship's listed speed.
+
+ my $dist = $client->cartesian_distance(
+    $origin_x, $origin_y,
+    $target_x, $target_y,
+ );
+ my $seconds_travelling = $client->travel_time($rate, $dist);
+
+=cut
+
+        my $secs = Math::BigFloat->new($dist);
+        $secs->bdiv($rate);
+        $secs->bmul(360_000);
+        $secs = sprintf "%.0f", $secs;
+        return $secs;
+    }#}}}
+    sub triangle {#{{{
+        my $self = shift;
+        my $int  = shift;
+
+=head2 triangle 
+
+Returns the triangle sum of a given int.
+
+ say $client->triangle(5);  # 15
+
+=cut
+
+        return( $int * ($int+1) / 2 ); 
     }#}}}
 
     sub OnClose {#{{{

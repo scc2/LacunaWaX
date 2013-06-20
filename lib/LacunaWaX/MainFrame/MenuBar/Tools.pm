@@ -6,6 +6,7 @@ package LacunaWaX::MainFrame::MenuBar::Tools {
     use Wx::Event qw(EVT_MENU);
     with 'LacunaWaX::Roles::GuiElement';
 
+    use LacunaWaX::Dialog::Calculator;
     use LacunaWaX::Dialog::LogViewer;
     use LacunaWaX::Dialog::Mail;
     use LacunaWaX::Dialog::SitterManager;
@@ -22,6 +23,7 @@ package LacunaWaX::MainFrame::MenuBar::Tools {
         }
     );
 
+    has 'itm_calc'      => (is => 'rw', isa => 'Wx::MenuItem',  lazy_build => 1);
     has 'itm_logview'   => (is => 'rw', isa => 'Wx::MenuItem',  lazy_build => 1);
     has 'itm_mail'      => (is => 'rw', isa => 'Wx::MenuItem',  lazy_build => 1);
     has 'itm_sitter'    => (is => 'rw', isa => 'Wx::MenuItem',  lazy_build => 1);
@@ -32,6 +34,7 @@ package LacunaWaX::MainFrame::MenuBar::Tools {
     }#}}}
     sub BUILD {
         my $self = shift;
+        $self->Append( $self->itm_calc      );
         $self->Append( $self->itm_logview   );
         $self->Append( $self->itm_mail      );
         $self->Append( $self->itm_sitter    );
@@ -42,10 +45,20 @@ package LacunaWaX::MainFrame::MenuBar::Tools {
         return $self;
     }
 
+    sub _build_itm_calc {#{{{
+        my $self = shift;
+        return Wx::MenuItem->new(
+            $self, -1,
+            '&Calculator',
+            'Calculator',
+            wxITEM_NORMAL,
+            undef   # if defined, this is a sub-menu
+        );
+    }#}}}
     sub _build_itm_logview {#{{{
         my $self = shift;
         return Wx::MenuItem->new(
-            $self, 1,
+            $self, -1,
             '&Log Viewer',
             'Log Viewer',
             wxITEM_NORMAL,
@@ -87,6 +100,7 @@ package LacunaWaX::MainFrame::MenuBar::Tools {
     }#}}}
     sub _set_events {#{{{
         my $self = shift;
+        EVT_MENU($self->parent,  $self->itm_calc->GetId,    sub{$self->OnCalculator(@_)});
         EVT_MENU($self->parent,  $self->itm_logview->GetId, sub{$self->OnLogViewer(@_)});
         EVT_MENU($self->parent,  $self->itm_mail->GetId,    sub{$self->OnMail(@_)});
         EVT_MENU($self->parent,  $self->itm_sitter->GetId,  sub{$self->OnSitterManager(@_)});
@@ -112,6 +126,21 @@ package LacunaWaX::MainFrame::MenuBar::Tools {
         return 1;
     }#}}}
 
+    sub OnCalculator {#{{{
+        my $self = shift;
+
+        ### Determine starting point of LogViewer window
+        my $tlc         = $self->get_top_left_corner;
+        my $self_origin = Wx::Point->new( $tlc->x + 30, $tlc->y + 30 );
+        my $calc = LacunaWaX::Dialog::Calculator->new( 
+            app         => $self->app,
+            ancestor    => $self->ancestor,
+            parent      => $self->parent,
+            position    => $self_origin,
+        );
+        $calc->Show(1);
+        return 1;
+    }#}}}
     sub OnLogViewer {#{{{
         my $self = shift;
 

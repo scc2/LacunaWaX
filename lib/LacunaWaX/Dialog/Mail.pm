@@ -409,7 +409,7 @@ package LacunaWaX::Dialog::Mail {
     }#}}}
     sub _build_title {#{{{
         my $self = shift;
-        return 'Log Viewer';
+        return 'Mail Tool';
     }#}}}
     sub _build_txt_body {#{{{
         my $self = shift;
