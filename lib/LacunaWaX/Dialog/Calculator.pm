@@ -12,6 +12,7 @@ package LacunaWaX::Dialog::Calculator {
     has 'sizer_debug'   => (is => 'rw', isa => 'Int',   lazy => 1, default => 0);
     has 'width'         => (is => 'rw', isa => 'Int',   lazy => 1, default => 450 );
     has 'height'        => (is => 'rw', isa => 'Int',   lazy => 1, default => 600 );
+    has 'line_height'   => (is => 'rw', isa => 'Int',   lazy => 1, default => 25 );
 
     has 'lbl_header'        => (is => 'rw', isa => 'Wx::StaticText',    lazy_build => 1);
     has 'lbl_instructions'  => (is => 'rw', isa => 'Wx::StaticText',    lazy_build => 1);
@@ -109,7 +110,7 @@ package LacunaWaX::Dialog::Calculator {
         $self->szr_coords->Add($self->szr_distance_from, 0, 0, 0);
         $self->szr_coords->AddSpacer(5);
         $self->szr_coords->Add($self->szr_distance_to, 0, 0, 0);
-        $self->szr_distance_btn->Add($self->lbl_blank, 7, 0, 0);
+        $self->szr_distance_btn->Add($self->lbl_blank, 5, 0, 0);
         $self->szr_distance_btn->Add($self->btn_distance, 2, 0, 0);
         $self->szr_distance->Add($self->szr_coords, 0, 0, 0);
         $self->szr_distance->AddSpacer(5);
@@ -187,7 +188,7 @@ package LacunaWaX::Dialog::Calculator {
             $self, -1, 
             "Calculate Halls",
             wxDefaultPosition, 
-            Wx::Size->new(80, 20)
+            Wx::Size->new(120, $self->line_height)
         );
         return $v;
     }#}}}
@@ -197,7 +198,7 @@ package LacunaWaX::Dialog::Calculator {
             $self, -1, 
             "Current Level:",
             wxDefaultPosition, 
-            Wx::Size->new(80, 20)
+            Wx::Size->new(100, $self->line_height)
         );
         $y->SetFont( $self->get_font('/bold_para_text_1') );
         return $y;
@@ -208,7 +209,7 @@ package LacunaWaX::Dialog::Calculator {
             $self, -1, 
             "Destination Level:",
             wxDefaultPosition, 
-            Wx::Size->new(100, 20)
+            Wx::Size->new(120, $self->line_height)
         );
         $y->SetFont( $self->get_font('/bold_para_text_1') );
         return $y;
@@ -222,7 +223,7 @@ package LacunaWaX::Dialog::Calculator {
         return Wx::TextCtrl->new(
             $self, -1, 
             q{},
-            wxDefaultPosition, Wx::Size->new(40,20),
+            wxDefaultPosition, Wx::Size->new(40,$self->line_height),
         );
     }#}}}
     sub _build_txt_halls_lvl_to {#{{{
@@ -230,7 +231,7 @@ package LacunaWaX::Dialog::Calculator {
         return Wx::TextCtrl->new(
             $self, -1, 
             q{},
-            wxDefaultPosition, Wx::Size->new(40,20),
+            wxDefaultPosition, Wx::Size->new(40,$self->line_height),
         );
     }#}}}
 
@@ -241,7 +242,7 @@ package LacunaWaX::Dialog::Calculator {
             $self, -1, 
             "Calculate Distance",
             wxDefaultPosition, 
-            Wx::Size->new(100, 20)
+            Wx::Size->new(140, $self->line_height)
         );
         return $v;
     }#}}}
@@ -259,9 +260,9 @@ package LacunaWaX::Dialog::Calculator {
         my $self = shift;
         my $y = Wx::StaticText->new(
             $self, -1, 
-            "X",
+            "X:",
             wxDefaultPosition, 
-            Wx::Size->new(10, 20)
+            Wx::Size->new(13, $self->line_height)
         );
         $y->SetFont( $self->get_font('/bold_para_text_1') );
         return $y;
@@ -270,9 +271,9 @@ package LacunaWaX::Dialog::Calculator {
         my $self = shift;
         my $y = Wx::StaticText->new(
             $self, -1, 
-            "Y",
+            "Y:",
             wxDefaultPosition, 
-            Wx::Size->new(10, 20)
+            Wx::Size->new(13, $self->line_height)
         );
         $y->SetFont( $self->get_font('/bold_para_text_1') );
         return $y;
@@ -281,9 +282,9 @@ package LacunaWaX::Dialog::Calculator {
         my $self = shift;
         my $y = Wx::StaticText->new(
             $self, -1, 
-            "X",
+            "X:",
             wxDefaultPosition, 
-            Wx::Size->new(10, 20)
+            Wx::Size->new(13, $self->line_height)
         );
         $y->SetFont( $self->get_font('/bold_para_text_1') );
         return $y;
@@ -292,9 +293,9 @@ package LacunaWaX::Dialog::Calculator {
         my $self = shift;
         my $y = Wx::StaticText->new(
             $self, -1, 
-            "Y",
+            "Y:",
             wxDefaultPosition, 
-            Wx::Size->new(10, 20)
+            Wx::Size->new(13, $self->line_height)
         );
         $y->SetFont( $self->get_font('/bold_para_text_1') );
         return $y;
@@ -324,7 +325,7 @@ package LacunaWaX::Dialog::Calculator {
         return Wx::TextCtrl->new(
             $self, -1, 
             q{},
-            wxDefaultPosition, Wx::Size->new(40,20),
+            wxDefaultPosition, Wx::Size->new(40,$self->line_height),
         );
     }#}}}
     sub _build_txt_from_y {#{{{
@@ -332,7 +333,7 @@ package LacunaWaX::Dialog::Calculator {
         return Wx::TextCtrl->new(
             $self, -1, 
             q{},
-            wxDefaultPosition, Wx::Size->new(40,20),
+            wxDefaultPosition, Wx::Size->new(40,$self->line_height),
         );
     }#}}}
     sub _build_txt_to_x {#{{{
@@ -340,7 +341,7 @@ package LacunaWaX::Dialog::Calculator {
         return Wx::TextCtrl->new(
             $self, -1, 
             q{},
-            wxDefaultPosition, Wx::Size->new(40,20),
+            wxDefaultPosition, Wx::Size->new(40,$self->line_height),
         );
     }#}}}
     sub _build_txt_to_y {#{{{
@@ -348,7 +349,7 @@ package LacunaWaX::Dialog::Calculator {
         return Wx::TextCtrl->new(
             $self, -1, 
             q{},
-            wxDefaultPosition, Wx::Size->new(40,20),
+            wxDefaultPosition, Wx::Size->new(40,$self->line_height),
         );
     }#}}}
 
@@ -359,7 +360,7 @@ package LacunaWaX::Dialog::Calculator {
             $self, -1, 
             "Calculate Time",
             wxDefaultPosition, 
-            Wx::Size->new(100, 20)
+            Wx::Size->new(110, $self->line_height)
         );
         return $v;
     }#}}}
@@ -373,7 +374,7 @@ package LacunaWaX::Dialog::Calculator {
             $self, -1, 
             q{Distance:},
             wxDefaultPosition, 
-            Wx::Size->new(45, 20)
+            Wx::Size->new(55, $self->line_height)
         );
         $y->SetFont( $self->get_font('/bold_para_text_1') );
         return $y;
@@ -383,7 +384,7 @@ package LacunaWaX::Dialog::Calculator {
         return Wx::TextCtrl->new(
             $self, -1, 
             q{},
-            wxDefaultPosition, Wx::Size->new(80,20),
+            wxDefaultPosition, Wx::Size->new(80,$self->line_height),
         );
     }#}}}
     sub _build_lbl_speed {#{{{
@@ -392,7 +393,7 @@ package LacunaWaX::Dialog::Calculator {
             $self, -1, 
             q{Speed:},
             wxDefaultPosition, 
-            Wx::Size->new(40, 20)
+            Wx::Size->new(40, $self->line_height)
         );
         $y->SetFont( $self->get_font('/bold_para_text_1') );
         return $y;
@@ -402,11 +403,21 @@ package LacunaWaX::Dialog::Calculator {
         return Wx::TextCtrl->new(
             $self, -1, 
             q{},
-            wxDefaultPosition, Wx::Size->new(80,20),
+            wxDefaultPosition, Wx::Size->new(80,$self->line_height),
         );
     }#}}}
 
 ### Trilateration
+    sub _build_btn_tri {#{{{
+        my $self = shift;
+        my $v = Wx::Button->new(
+            $self, -1, 
+            "Calculate Location",
+            wxDefaultPosition, 
+            Wx::Size->new(140, $self->line_height)
+        );
+        return $v;
+    }#}}}
     sub _build_szr_tri {#{{{
         my $self = shift;
         return $self->build_sizer($self, wxVERTICAL, 'Trilaterate', 1);
@@ -435,9 +446,9 @@ package LacunaWaX::Dialog::Calculator {
         my $self = shift;
         my $y = Wx::StaticText->new(
             $self, -1, 
-            q{X},
+            q{X:},
             wxDefaultPosition, 
-            Wx::Size->new(10, 20)
+            Wx::Size->new(13, $self->line_height)
         );
         $y->SetFont( $self->get_font('/bold_para_text_1') );
         return $y;
@@ -446,9 +457,9 @@ package LacunaWaX::Dialog::Calculator {
         my $self = shift;
         my $y = Wx::StaticText->new(
             $self, -1, 
-            q{Y},
+            q{Y:},
             wxDefaultPosition, 
-            Wx::Size->new(10, 20)
+            Wx::Size->new(13, $self->line_height)
         );
         $y->SetFont( $self->get_font('/bold_para_text_1') );
         return $y;
@@ -459,7 +470,7 @@ package LacunaWaX::Dialog::Calculator {
             $self, -1, 
             q{Speed:},
             wxDefaultPosition, 
-            Wx::Size->new(40, 20)
+            Wx::Size->new(45, $self->line_height)
         );
         $y->SetFont( $self->get_font('/bold_para_text_1') );
         $y->SetToolTip("Enter the speed as an integer, as it appears in-game.");
@@ -471,7 +482,7 @@ package LacunaWaX::Dialog::Calculator {
             $self, -1, 
             q{Time:},
             wxDefaultPosition, 
-            Wx::Size->new(40, 20)
+            Wx::Size->new(40, $self->line_height)
         );
         $y->SetFont( $self->get_font('/bold_para_text_1') );
         $y->SetToolTip( "Enter the time as given in-game, eg hh:mm:ss" );
@@ -482,7 +493,7 @@ package LacunaWaX::Dialog::Calculator {
         return Wx::TextCtrl->new(
             $self, -1, 
             q{},
-            wxDefaultPosition, Wx::Size->new(40,20),
+            wxDefaultPosition, Wx::Size->new(40,$self->line_height),
         );
     }#}}}
     sub _build_txt_p1_y {#{{{
@@ -490,7 +501,7 @@ package LacunaWaX::Dialog::Calculator {
         return Wx::TextCtrl->new(
             $self, -1, 
             q{},
-            wxDefaultPosition, Wx::Size->new(40,20),
+            wxDefaultPosition, Wx::Size->new(40,$self->line_height),
         );
     }#}}}
     sub _build_txt_p1_rate {#{{{
@@ -498,7 +509,7 @@ package LacunaWaX::Dialog::Calculator {
         my $y =  Wx::TextCtrl->new(
             $self, -1, 
             q{},
-            wxDefaultPosition, Wx::Size->new(80,20),
+            wxDefaultPosition, Wx::Size->new(80,$self->line_height),
         );
         $y->SetToolTip("Enter the speed as an integer, as it appears in-game.");
         return $y;
@@ -508,7 +519,7 @@ package LacunaWaX::Dialog::Calculator {
         my $y = Wx::TextCtrl->new(
             $self, -1, 
             q{},
-            wxDefaultPosition, Wx::Size->new(80,20),
+            wxDefaultPosition, Wx::Size->new(80,$self->line_height),
         );
         $y->SetToolTip( "Enter the time as given in-game, eg hh:mm:ss" );
         return $y;
@@ -517,9 +528,9 @@ package LacunaWaX::Dialog::Calculator {
         my $self = shift;
         my $y = Wx::StaticText->new(
             $self, -1, 
-            q{X},
+            q{X:},
             wxDefaultPosition, 
-            Wx::Size->new(10, 20)
+            Wx::Size->new(13, $self->line_height)
         );
         $y->SetFont( $self->get_font('/bold_para_text_1') );
         return $y;
@@ -528,9 +539,9 @@ package LacunaWaX::Dialog::Calculator {
         my $self = shift;
         my $y = Wx::StaticText->new(
             $self, -1, 
-            q{Y},
+            q{Y:},
             wxDefaultPosition, 
-            Wx::Size->new(10, 20)
+            Wx::Size->new(13, $self->line_height)
         );
         $y->SetFont( $self->get_font('/bold_para_text_1') );
         return $y;
@@ -541,7 +552,7 @@ package LacunaWaX::Dialog::Calculator {
             $self, -1, 
             q{Speed:},
             wxDefaultPosition, 
-            Wx::Size->new(40, 20)
+            Wx::Size->new(45, $self->line_height)
         );
         $y->SetFont( $self->get_font('/bold_para_text_1') );
         $y->SetToolTip("Enter the speed as an integer, as it appears in-game.");
@@ -553,7 +564,7 @@ package LacunaWaX::Dialog::Calculator {
             $self, -1, 
             q{Time:},
             wxDefaultPosition, 
-            Wx::Size->new(40, 20)
+            Wx::Size->new(40, $self->line_height)
         );
         $y->SetFont( $self->get_font('/bold_para_text_1') );
         $y->SetToolTip( "Enter the time as given in-game, eg hh:mm:ss" );
@@ -564,7 +575,7 @@ package LacunaWaX::Dialog::Calculator {
         return Wx::TextCtrl->new(
             $self, -1, 
             q{},
-            wxDefaultPosition, Wx::Size->new(40,20),
+            wxDefaultPosition, Wx::Size->new(40,$self->line_height),
         );
     }#}}}
     sub _build_txt_p2_y {#{{{
@@ -572,7 +583,7 @@ package LacunaWaX::Dialog::Calculator {
         return Wx::TextCtrl->new(
             $self, -1, 
             q{},
-            wxDefaultPosition, Wx::Size->new(40,20),
+            wxDefaultPosition, Wx::Size->new(40,$self->line_height),
         );
     }#}}}
     sub _build_txt_p2_rate {#{{{
@@ -580,7 +591,7 @@ package LacunaWaX::Dialog::Calculator {
         my $y = Wx::TextCtrl->new(
             $self, -1, 
             q{},
-            wxDefaultPosition, Wx::Size->new(80,20),
+            wxDefaultPosition, Wx::Size->new(80,$self->line_height),
         );
         $y->SetToolTip("Enter the speed as an integer, as it appears in-game.");
         return $y;
@@ -590,20 +601,10 @@ package LacunaWaX::Dialog::Calculator {
         my $y = Wx::TextCtrl->new(
             $self, -1, 
             q{},
-            wxDefaultPosition, Wx::Size->new(80,20),
+            wxDefaultPosition, Wx::Size->new(80,$self->line_height),
         );
         $y->SetToolTip( "Enter the time as given in-game, eg hh:mm:ss" );
         return $y;
-    }#}}}
-    sub _build_btn_tri {#{{{
-        my $self = shift;
-        my $v = Wx::Button->new(
-            $self, -1, 
-            "Calculate Location",
-            wxDefaultPosition, 
-            Wx::Size->new(100, 20)
-        );
-        return $v;
     }#}}}
 
 ### Screen
