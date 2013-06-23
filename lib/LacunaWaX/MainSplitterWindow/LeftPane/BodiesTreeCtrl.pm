@@ -40,7 +40,10 @@ package LacunaWaX::MainSplitterWindow::LeftPane::BodiesTreeCtrl {
         my $self = shift;
         my $v = Wx::TreeCtrl->new(
             $self->parent, -1, wxDefaultPosition, wxDefaultSize, 
-            wxTR_DEFAULT_STYLE|wxTR_HAS_BUTTONS|wxTR_LINES_AT_ROOT|wxSUNKEN_BORDER
+            wxTR_DEFAULT_STYLE
+            |wxTR_HAS_BUTTONS
+            |wxTR_LINES_AT_ROOT
+            |wxSUNKEN_BORDER
             |wxTR_HIDE_ROOT
         );
         $v->SetFont( $self->get_font('/para_text_1') );
@@ -146,6 +149,13 @@ package LacunaWaX::MainSplitterWindow::LeftPane::BodiesTreeCtrl {
                     );
                 }
             }#}}}
+
+            ### On Ubuntu, if the tree is taller than the height of the 
+            ### window, the last item in the tree is partially obscured by 
+            ### the status bar, even after scrolling all the way down.
+            ### Appending an empty item at the very end fixes this.
+            my $blank_id = $self->treectrl->AppendItem( $self->bodies_id, q{}, -1, -1 );
+
             $self->treectrl->Expand($self->bodies_id);
         }
         return 1;
