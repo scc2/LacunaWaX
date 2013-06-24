@@ -5,7 +5,6 @@ package LacunaWaX::Roles::ScheduledTask {
     use LacunaWaX::Model::Container;
     use Moose::Role;
     use Try::Tiny;
-    use Wx qw(:everything);
 
     has 'game_client' => (
         is          => 'rw', 

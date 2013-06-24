@@ -68,52 +68,6 @@ package LacunaWaX::Schedule {
     };
 
 
-
-    sub BUILD_ORIG {#{{{
-        my $self = shift;
-
-        my $logger = $self->bb->resolve( service => '/Log/logger' );
-        $logger->component('Schedule');
-        $logger->info("# -=-=-=-=-=-=- #"); # easier to visually find the start of a run in the Log Viewer
-        $logger->info("Scheduler beginning with task '" . $self->schedule .  q{'.});
-
-        ### ex lock for the entire run might seem a little heavy-handed.  But 
-        ### I'm not just trying to limit database collisions; I'm also 
-        ### limiting simultaneous RPCs; multiple schedulers firing at the same 
-        ### time could be seen as a low-level DOS.
-        $logger->info($self->schedule . " attempting to obtain exclusive lock.");
-        unless( $self->mutex->lock_exnb ) {
-            $logger->info($self->schedule . " found existing scheduler lock; this run will pause until the lock releases.");
-            $self->mutex->lock_ex;
-        }
-        $logger->info($self->schedule . " succesfully obtained exclusive lock.");
-
-        given( $self->schedule ) {
-            when('archmin') {
-                $self->archmin;
-            }
-            when('autovote') {
-                $self->autovote;
-            }
-            when('lottery') {
-                $self->lottery;
-            }
-            when('spies') {
-                $self->spies;
-            }
-            when('test') {
-                $self->test;
-            }
-            default {
-                $logger->error("Requested scheduled task $_, but I don't know what that is.");
-            }
-        }
-
-        $self->mutex->lock_un;
-
-        $logger->info("Scheduler run of task " . $self->schedule . " complete.");
-        return $self;
-    }#}}}
     sub _build_mutex {#{{{
         my $self = shift;
         return LacunaWaX::Model::Mutex->new( bb => $self->bb, name => 'schedule' );
