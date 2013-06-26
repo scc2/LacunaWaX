@@ -9,10 +9,10 @@ package LacunaWaX::Dialog::Calculator {
     use LacunaWaX::Dialog::NonScrolled;
     extends 'LacunaWaX::Dialog::NonScrolled';
 
-    has 'sizer_debug'   => (is => 'rw', isa => 'Int',   lazy => 1, default => 0);
-    has 'width'         => (is => 'rw', isa => 'Int',   lazy => 1, default => 450 );
-    has 'height'        => (is => 'rw', isa => 'Int',   lazy => 1, default => 600 );
-    has 'line_height'   => (is => 'rw', isa => 'Int',   lazy => 1, default => 25 );
+    has 'sizer_debug'   => (is => 'rw', isa => 'Int',   lazy => 1, default => 0     );
+    has 'width'         => (is => 'rw', isa => 'Int',   lazy => 1, default => 460   );
+    has 'height'        => (is => 'rw', isa => 'Int',   lazy => 1, default => 630   );
+    has 'line_height'   => (is => 'rw', isa => 'Int',   lazy => 1, default => 25    );
 
     has 'lbl_header'        => (is => 'rw', isa => 'Wx::StaticText',    lazy_build => 1);
     has 'lbl_instructions'  => (is => 'rw', isa => 'Wx::StaticText',    lazy_build => 1);
