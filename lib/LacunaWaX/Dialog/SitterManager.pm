@@ -4,7 +4,7 @@ package LacunaWaX::Dialog::SitterManager {
     use Moose;
     use Try::Tiny;
     use Wx qw(:everything);
-    use Wx::Event qw(EVT_BUTTON EVT_CLOSE EVT_SIZE);
+    use Wx::Event qw(EVT_BUTTON EVT_CLOSE);
     use LacunaWaX::Dialog::Scrolled;
     extends 'LacunaWaX::Dialog::Scrolled';
 
@@ -28,8 +28,9 @@ package LacunaWaX::Dialog::SitterManager {
         $self->SetSize( $self->size );
 
         $self->header_sizer->Add($self->lbl_header, 0, 0, 0);
-        $self->header_sizer->AddSpacer(5);
+        $self->header_sizer->AddSpacer(10);
         $self->header_sizer->Add($self->instructions_sizer, 0, 0, 0);
+        $self->header_sizer->AddSpacer(10);
 
         $self->main_sizer->AddSpacer(4);    # a little top margin
         $self->main_sizer->Add($self->header_sizer, 0, 0, 0);
@@ -89,8 +90,8 @@ package LacunaWaX::Dialog::SitterManager {
             $text,
             wxDefaultPosition, $size
         );
-        $y->Wrap( $self->size->GetWidth - 35 ); # - 35 accounts for the vertical scrollbar
-        $y->SetFont( $self->get_font('/bold_para_text_1') );
+        $y->Wrap( $self->size->GetWidth - 100 ); # - 255 accounts for the vertical scrollbar
+        $y->SetFont( $self->get_font('/para_text_1') );
 
         return $y;
     }#}}}
@@ -124,9 +125,8 @@ package LacunaWaX::Dialog::SitterManager {
     }#}}}
     sub _set_events {#{{{
         my $self = shift;
-        EVT_CLOSE(  $self,                                  sub{$self->OnClose(@_)}     );
-        EVT_SIZE(   $self->swindow,                                  sub{$self->OnResize(@_)}    );
-        EVT_BUTTON( $self->swindow, $self->btn_add_sitter->GetId,    sub{$self->OnAddSitter(@_)} );
+        EVT_CLOSE(  $self,                                          sub{$self->OnClose(@_)}     );
+        EVT_BUTTON( $self->swindow, $self->btn_add_sitter->GetId,   sub{$self->OnAddSitter(@_)} );
         return 1;
     }#}}}
 
@@ -234,14 +234,9 @@ package LacunaWaX::Dialog::SitterManager {
         my $self    = shift;
         my $dialog  = shift;    # Wx::Dialog (NOT Wx::ScrolledWindow here!)
         my $event   = shift;    # Wx::CommandEvent
-        $dialog->Destroy;
+        #$dialog->Destroy;
+        $self->Destroy;
         $event->Skip();
-        return 1;
-    }#}}}
-    sub OnResize {#{{{
-        my $self    = shift;
-        my $dialog  = shift;    # Wx::ScrolledWindow
-        my $event   = shift;    # Wx::SizeEvent
         return 1;
     }#}}}
 

@@ -10,6 +10,8 @@ package LacunaWaX::Dialog::SitterManager::SitterRow {
     use Wx::Event qw(EVT_BUTTON EVT_TEXT);
     with 'LacunaWaX::Roles::GuiElement';
 
+    has 'sizer_debug' => (is => 'rw', isa => 'Int',  lazy => 1, default => 0);
+
     has 'main_sizer' => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1, documentation => 'vertical');
 
     has 'row_panel'         => (is => 'rw', isa => 'Wx::Panel',     lazy_build => 1                             );
@@ -132,11 +134,13 @@ over the dialog while the row is being created.
     }
     sub _build_main_sizer {#{{{
         my $self = shift;
-        return Wx::BoxSizer->new(wxHORIZONTAL);
+        #return Wx::BoxSizer->new(wxHORIZONTAL);
+        return $self->build_sizer($self->parent, wxHORIZONTAL, 'Row Main Sizer');
     }#}}}
     sub _build_row_panel_sizer {#{{{
         my $self = shift;
-        return Wx::BoxSizer->new(wxHORIZONTAL);
+        #return Wx::BoxSizer->new(wxHORIZONTAL);
+        return $self->build_sizer($self->row_panel, wxHORIZONTAL, 'Row');
     }#}}}
     sub _build_row_panel {#{{{
         my $self = shift;
@@ -157,7 +161,7 @@ over the dialog while the row is being created.
         my $player_name = ($self->player_rec) ? $self->player_rec->player_name : q{};
         return Wx::TextCtrl->new(
             $self->row_panel, -1, 
-            $player_name, 
+            $player_name,
             wxDefaultPosition, 
             Wx::Size->new($self->input_width,$self->input_height),
         );
@@ -227,11 +231,18 @@ over the dialog while the row is being created.
     }#}}}
     sub _set_events {#{{{
         my $self = shift;
-        EVT_TEXT(   $self->row_panel, $self->txt_name->GetId,      sub{$self->OnTextChange(@_)} );
-        EVT_TEXT(   $self->row_panel, $self->txt_sitter->GetId,    sub{$self->OnTextChange(@_)} );
-        EVT_BUTTON( $self->row_panel, $self->btn_save->GetId,      sub{$self->OnSave(@_)} );
-        EVT_BUTTON( $self->row_panel, $self->btn_test->GetId,      sub{$self->OnTest(@_)} );
-        EVT_BUTTON( $self->row_panel, $self->btn_delete->GetId,    sub{$self->OnDelete(@_)} );
+        unless( $self->is_header ) {
+            ### Setting up these events will call the various widgets' lazy 
+            ### builders if the widgets have not already been built.  On the 
+            ### header row, they have not already been built, and we don't 
+            ### want them built, so don't set up events (and therefore create 
+            ### these widgets) for the header row.  Dummy.
+            EVT_TEXT(   $self->row_panel, $self->txt_name->GetId,      sub{$self->OnTextChange(@_)} );
+            EVT_TEXT(   $self->row_panel, $self->txt_sitter->GetId,    sub{$self->OnTextChange(@_)} );
+            EVT_BUTTON( $self->row_panel, $self->btn_save->GetId,      sub{$self->OnSave(@_)} );
+            EVT_BUTTON( $self->row_panel, $self->btn_test->GetId,      sub{$self->OnTest(@_)} );
+            EVT_BUTTON( $self->row_panel, $self->btn_delete->GetId,    sub{$self->OnDelete(@_)} );
+        }
         return 1;
     }#}}}
 

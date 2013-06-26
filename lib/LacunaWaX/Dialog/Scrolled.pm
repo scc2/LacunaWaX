@@ -12,9 +12,10 @@ package LacunaWaX::Dialog::Scrolled {
 
     has 'page_sizer'    => (is => 'rw', isa => 'Wx::BoxSizer',          lazy_build => 1, documentation => 'horizontal'  );
     has 'main_sizer'    => (is => 'rw', isa => 'Wx::Sizer',             lazy_build => 1, documentation => 'vertical'    );
+
     has 'swindow'       => (is => 'rw', isa => 'Wx::ScrolledWindow',    lazy_build => 1);
     has 'title'         => (is => 'rw', isa => 'Str',                   lazy_build => 1);
-    has 'position'      => (is => 'rw', isa => 'Wx::Point',             lazy_build => 1);
+    has 'position'      => (is => 'rw', isa => 'Wx::Point'                             );
     has 'size'          => (is => 'rw', isa => 'Wx::Size',              lazy_build => 1);
 
     sub FOREIGNBUILDARGS {## no critic qw(RequireArgUnpacking) {{{
@@ -48,10 +49,6 @@ package LacunaWaX::Dialog::Scrolled {
         my $v = $self->build_sizer($self->swindow, wxHORIZONTAL, 'Page Sizer');
         return $v;
     }#}}}
-    sub _build_position {#{{{
-        my $self = shift;
-        return wxDefaultPosition;
-    }#}}}
     sub _build_size {#{{{
         my $self = shift;
         return wxDefaultSize;
@@ -66,7 +63,6 @@ package LacunaWaX::Dialog::Scrolled {
             wxTAB_TRAVERSAL
             |wxALWAYS_SHOW_SB
         );
-        $v->SetScrollRate(10,10);
 
         return $v;
     }#}}}
@@ -74,7 +70,9 @@ package LacunaWaX::Dialog::Scrolled {
         my $self = shift;
         return 'Dialog Title';
     }#}}}
-    sub _set_events { }
+    sub _set_events {#{{{
+        my $self = shift;
+    }#}}}
 
     sub init_screen {#{{{
         my $self = shift;
@@ -83,13 +81,16 @@ package LacunaWaX::Dialog::Scrolled {
 
 The extending class needs to call init_screen at the end of its BUILD sub.
 
-I realize that '$self->init_screen' doesn't save us all that much over '$self->swindow->FitInside'.
-But NonScrolled.pm is requiring the user to end BUILD with its init_screen(), so I'm setting it up
-this way here too just for consistency.
-
 =cut
 
+        my $s = $self->GetSize;
+        my $h = $s->GetHeight;
+        my $w = $s->GetWidth + 1;
+        $self->SetSize( Wx::Size->new($w, $h) );
+
         $self->swindow->FitInside();
+        $self->swindow->SetScrollRate(10,10);
+
         return 1;
     }#}}}
 
@@ -142,12 +143,17 @@ their constructors.
  sub BUILD {
   my $self = shift;
 
-  # title and size attributes are provided by NonScrolled.pm, but you're not
-  # likely to enjoy the default values, so your extending class should set
-  # its own values.  These attributes are lazy, so your extending class can
-  # provide _build_*() methods for them:
+title and size attributes are provided by NonScrolled.pm, but you're not
+likely to enjoy the default values, so your extending class should set
+its own values.  These attributes are lazy, so your extending class can
+provide _build_*() methods for them:
+
   $self->SetTitle( $self->title );
   $self->SetSize( $self->size );
+
+Be sure to see the explanation of RESIZE DURING INIT, below.  The window's 
+actual width is going to be one pixel larger than you set it.  This will 
+likely never make a difference, but it's possible it could, so plan for it.
 
   # main_sizer is a vertical Wx::Sizer provided by NonScrolled.  Your
   # extending class's Wx components should be added to that sizer:
@@ -182,6 +188,41 @@ The standard arguments required by LacunaWaX::Roles::GuiElement
 =head2 position (optional)
 
 A Wx::Point object defining the NW corner of the dialog.  Defaults to (10,10).
+
+=head1 RESIZE DURING INIT; EXPLANATION
+
+init_screen() is resizing the produced window's width by 1 pixel, so the 
+actual width of the produced window will be one pixel larger than the width 
+you request in your _build_size method.
+
+Without doing this resize, we see the following behavior:
+
+=over4
+
+=item * The first time you open a window derived from Scrolled, everything 
+looks fine.
+
+=item * Close that window, and re-open it.
+
+=item * The second time the window is opened, the scrollbars are partially 
+buried in the border.  This doesn't break anything, but it's ugly.
+
+=item * A manual resize of the window, by any amount, fixes the scrollbars.  
+Simply clicking the border without an actual change in size does not.
+
+=item * The easiest fix for this is to programmatically force a slight resize 
+of the window by adding 1 pixel to its predefined size.
+
+=item * This pixel addition is not cumulative; it's only a single pixel 
+addition (not one extra pixel each time the window is resized or whatever, 
+just one more than the preset size at the beginning when the window is 
+created)
+
+=back
+
+I've tried every combination of ->Layout and ->Update that seems to make 
+sense, resulting in varying combinations of brokenness.  The forced change in 
+size is the only thing I've found that results in a proper-looking window.
 
 =cut
 
