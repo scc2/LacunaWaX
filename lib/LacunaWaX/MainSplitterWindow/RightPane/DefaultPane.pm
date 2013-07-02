@@ -57,11 +57,15 @@ package LacunaWaX::MainSplitterWindow::RightPane::DefaultPane {
 
 You had to check it to enter your empire name and password, but now that you're logged in, there are new options there that weren't available before logging in.
 
-If any of your Space Stations in the tree on the left are displaying child leaves that would only apply to Planets, not stations (eg 'Glyphs', 'Lottery', 'Spies'), just double-click on the Station's name.  This will display a summary screen and update the tree to display the correct leaves.";
+If any of your Space Stations in the tree on the left are displaying child leaves that would only apply to Planets, not stations (eg 'Glyphs', 'Lottery', 'Spies'), just double-click on the Station's name.  This will display a summary screen and update the tree to display the correct leaves.
+
+The main LacunaWaX program you're looking at right now provides some tools, and also allows you to set up preferences for exactly what you want the scheduled tasks (like Autovote) to do.
+
+But you must set those scheduled tasks up separately!
+
+Be sure to see the Help documentation (Help menu, above, then choose Help to bring up the help browser).  Especially see the 'Set up Scheduled Programs' section!";
+
         return $txt;
-
-
-        
     }#}}}
     sub _set_events {}
 
