@@ -91,6 +91,7 @@ package LacunaWaX::MainSplitterWindow::LeftPane::BodiesTreeCtrl {
                 ### Planet
                 my $b64_glyphs      = encode_base64(join q{:}, ('glyphs', $pid));
                 my $b64_lottery     = encode_base64(join q{:}, ('lottery', $pid));
+                my $b64_repair      = encode_base64(join q{:}, ('repair', $pid));
                 my $b64_spies       = encode_base64(join q{:}, ('spies', $pid));
                 ### Station
                 my $b64_bfg         = encode_base64(join q{:}, ('bfg', $pid));
@@ -143,6 +144,9 @@ package LacunaWaX::MainSplitterWindow::LeftPane::BodiesTreeCtrl {
                     );
                     my $rearrange_id = $self->treectrl->AppendItem( 
                         $planet_name_id, 'Rearrange', -1, -1, Wx::TreeItemData->new($b64_rearrange)
+                    );
+                    my $repair_id = $self->treectrl->AppendItem( 
+                        $planet_name_id, 'Repair', -1, -1, Wx::TreeItemData->new($b64_repair)
                     );
                     my $spies_id = $self->treectrl->AppendItem( 
                         $planet_name_id, 'Spies', -1, -1, Wx::TreeItemData->new($b64_spies)
@@ -250,6 +254,12 @@ package LacunaWaX::MainSplitterWindow::LeftPane::BodiesTreeCtrl {
                         'LacunaWaX::MainSplitterWindow::RightPane::LotteryPane',
                         $planet,
                         { required_buildings  => {'Entertainment District' => undef}, }
+                    );
+                }
+                when(/^repair$/) {
+                    $self->get_right_pane->show_right_pane(
+                        'LacunaWaX::MainSplitterWindow::RightPane::RepairPane',
+                        $planet,
                     );
                 }
                 when(/^spies$/) {

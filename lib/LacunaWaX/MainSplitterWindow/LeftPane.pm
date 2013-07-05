@@ -15,6 +15,8 @@ package LacunaWaX::MainSplitterWindow::LeftPane {
     use Wx qw(:everything);
     with 'LacunaWaX::Roles::GuiElement';
 
+    use LacunaWaX::MainSplitterWindow::LeftPane::BodiesTreeCtrl;
+
     has 'has_focus'     => (is => 'rw', isa => 'Int', lazy => 1, default => 0);
     has 'main_panel'    => (is => 'rw', isa => 'Wx::Panel');
     has 'main_sizer'    => (is => 'rw', isa => 'Wx::Sizer');

@@ -8,18 +8,7 @@ package LacunaWaX::MainSplitterWindow {
     with 'LacunaWaX::Roles::GuiElement';
 
     use LacunaWaX::MainSplitterWindow::LeftPane;
-    use LacunaWaX::MainSplitterWindow::LeftPane::BodiesTreeCtrl;
-
     use LacunaWaX::MainSplitterWindow::RightPane;
-    use LacunaWaX::MainSplitterWindow::RightPane::DefaultPane;
-    use LacunaWaX::MainSplitterWindow::RightPane::SummaryPane;
-    use LacunaWaX::MainSplitterWindow::RightPane::BFGPane;
-    use LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane;
-    use LacunaWaX::MainSplitterWindow::RightPane::SSIncoming;
-    use LacunaWaX::MainSplitterWindow::RightPane::LotteryPane;
-    use LacunaWaX::MainSplitterWindow::RightPane::RearrangerPane;
-    use LacunaWaX::MainSplitterWindow::RightPane::SpiesPane;
-    use LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane;
 
     has 'size' => (is => 'rw', isa => 'Wx::Size', lazy_build => 1);
 
