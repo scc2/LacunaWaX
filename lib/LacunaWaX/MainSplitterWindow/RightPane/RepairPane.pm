@@ -15,6 +15,15 @@ updated.
 I'm also thinking about a text box where the user can enter the lowest they 
 want their resources to go (but this is only after everything else works.)
 
+
+
+
+Sorting
+    - When sorting by X or Y, do a secondary sort by the other coord.
+    - Keep track of which direction we sorted by last, so the next click on 
+      the same heading sorts in the other direction.
+        - Sorting by any header should clear all of those remembered states.
+
 =cut
 
 
@@ -101,12 +110,14 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
     has 'szr_header'    => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1, documentation => 'vertical'     );
     has 'szr_btn_list'  => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1, documentation => 'vertical'     );
     has 'szr_lists'     => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1, documentation => 'horizontal'   );
+    has 'szr_repair'    => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1, documentation => 'horizontal'   );
 
     has 'btn_add'               => (is => 'rw', isa => 'Wx::Button',        lazy_build => 1     );
     has 'btn_add_all'           => (is => 'rw', isa => 'Wx::Button',        lazy_build => 1     );
     has 'btn_del'               => (is => 'rw', isa => 'Wx::Button',        lazy_build => 1     );
     has 'btn_del_all'           => (is => 'rw', isa => 'Wx::Button',        lazy_build => 1     );
     has 'btn_add_glyphs'        => (is => 'rw', isa => 'Wx::Button',        lazy_build => 1     );
+    has 'btn_repair'            => (is => 'rw', isa => 'Wx::Button',        lazy_build => 1     );
     has 'lst_bldgs_onsite'      => (is => 'rw', isa => 'Wx::ListCtrl',      lazy_build => 1     );
     has 'lst_bldgs_to_repair'   => (is => 'rw', isa => 'Wx::ListCtrl',      lazy_build => 1     );
     has 'lbl_header'            => (is => 'rw', isa => 'Wx::StaticText',    lazy_build => 1     );
@@ -139,9 +150,14 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
         my $s = $self->parent->GetSize;
         $self->szr_lists->SetMinSize( Wx::Size->new($s->GetWidth - $self->btn_w, -1) );
 
+        $self->szr_repair->AddSpacer(380);  # 380 is about perfect on Samwise - CHECK on windows.
+        $self->szr_repair->Add($self->btn_repair, 2, 0, 0);
+
         $self->content_sizer->Add($self->szr_header, 0, 0, 0);
         $self->content_sizer->AddSpacer(20);
         $self->content_sizer->Add($self->szr_lists, 0, 0, 0);
+        $self->content_sizer->AddSpacer(20);
+        $self->content_sizer->Add($self->szr_repair, 0, 0, 0);
         return $self;
     }
     sub _build_btn_add {#{{{
@@ -206,6 +222,19 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
         );
         $v->SetFont( $self->get_font('/bold_para_text_1') );
         my $tt = Wx::ToolTip->new("Remove All");
+        $v->SetToolTip($tt);
+        return $v;
+    }#}}}
+    sub _build_btn_repair {#{{{
+        my $self = shift;
+        my $v = Wx::Button->new(
+            $self->parent, -1, 
+            q{Repair!},
+            wxDefaultPosition,
+            Wx::Size->new(100, 50),
+        );
+        $v->SetFont( $self->get_font('/bold_para_text_1') );
+        my $tt = Wx::ToolTip->new("Repair all buildings listed on the right");
         $v->SetToolTip($tt);
         return $v;
     }#}}}
@@ -390,6 +419,10 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
         my $self = shift;
         return $self->build_sizer($self->parent, wxHORIZONTAL, 'Lists');
     }#}}}
+    sub _build_szr_repair {#{{{
+        my $self = shift;
+        return $self->build_sizer($self->parent, wxHORIZONTAL, 'Repair');
+    }#}}}
     sub _set_events {#{{{
         my $self = shift;
         EVT_BUTTON(         $self->parent, $self->btn_add->GetId,               sub{$self->OnAddSingle(@_)}  );
@@ -397,6 +430,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
         EVT_BUTTON(         $self->parent, $self->btn_del->GetId,               sub{$self->OnDelSingle(@_)}  );
         EVT_BUTTON(         $self->parent, $self->btn_del_all->GetId,           sub{$self->OnDelAll(@_)}  );
         EVT_BUTTON(         $self->parent, $self->btn_add_glyphs->GetId,        sub{$self->OnAddGlyphs(@_)}  );
+        EVT_BUTTON(         $self->parent, $self->btn_repair->GetId,            sub{$self->OnRepair(@_)}  );
         EVT_LIST_COL_CLICK( $self->parent, $self->lst_bldgs_onsite->GetId,      sub{$self->OnLeftLstHeaderClick(@_)}  );
         EVT_LIST_COL_CLICK( $self->parent, $self->lst_bldgs_to_repair->GetId,   sub{$self->OnRightLstHeaderClick(@_)}  );
         return 1;
@@ -650,7 +684,6 @@ Returns the index of the row just added.
         $self->populate_bldgs_list( $self->lst_bldgs_onsite );
         return 1;
     }#}}}
-
     sub OnLeftLstHeaderClick {#{{{
         my $self    = shift;
         my $parent  = shift;    # Wx::ScrolledWindow
@@ -700,6 +733,36 @@ Returns the index of the row just added.
         }
 
         $event->Skip;
+    }#}}}
+    sub OnRepair {#{{{
+        my $self    = shift;
+        my $parent  = shift;    # Wx::ScrolledWindow
+        my $event   = shift;    # Wx::CommandEvent
+
+say "repair";
+
+### - Iterate the list on the right, repair each building.  Stop the loop when a 
+### repair fails because out of res.
+###
+### - Clear the list on the right.
+###
+### - Clear the list on the left.
+###
+### - Call $self->clear_buildings;
+### - Call _build_buildings(1);
+###     - (1) is 'force'
+###
+### - Re-call populate_bldgs_list to show the current state after repairs.
+###
+###
+### - We really do need to display current res on this screen somewhere.  When 
+### we have that, we'll need to update it after the repairs.
+###
+###     - That "show res" #chunk should be its own object.  I'm thinking just 
+###     a horizontal sizer containing four vertical sizers with the res image, 
+###     label, and amount.  Probably /hr amount as well.
+
+        return 1;
     }#}}}
 
     no Moose;
