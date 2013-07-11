@@ -67,7 +67,6 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
         }
     );
 
-
     has 'glyph_bldgs' => (
         is          => 'rw',
         isa         => 'ArrayRef[Str]',
@@ -95,7 +94,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
     );
 
     has 'btn_w' => (is => 'rw', isa => 'Int', lazy => 1, default => 50);
-    has 'btn_h' => (is => 'rw', isa => 'Int', lazy => 1, default => 20);
+    has 'btn_h' => (is => 'rw', isa => 'Int', lazy => 1, default => 30);
     has 'lst_w' => (is => 'rw', isa => 'Int', lazy => 1, default => 25);
     has 'lst_h' => (is => 'rw', isa => 'Int', lazy => 1, default => 500);
 
