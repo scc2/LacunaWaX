@@ -113,6 +113,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
     has 'lst_h' => (is => 'rw', isa => 'Int', lazy => 1, default => 500 );
     has 'res_w' => (is => 'rw', isa => 'Int', lazy => 1, default => 140 );  # sizer size, not image size
     has 'res_h' => (is => 'rw', isa => 'Int', lazy => 1, default => -1  );  # sizer size, not image size
+    has 'num_w' => (is => 'rw', isa => 'Int', lazy => 1, default => 120  );  # Numeric res labels
 
     has 'szr_header'        => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1, documentation => 'vertical'     );
     has 'szr_btn_list'      => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1, documentation => 'vertical'     );
@@ -174,12 +175,6 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
         $self->szr_lists->Add($self->lst_bldgs_to_repair, 10, 0, 0);
         my $s = $self->parent->GetSize;
         $self->szr_lists->SetMinSize( Wx::Size->new($s->GetWidth - $self->btn_w, -1) );
-
-        ### CHECK
-        ### Center the Repair button with the nested stretch spacer trick.
-        ### Originally hardcoded a left spacer - 380 worked on samwise but was 
-        ### wrong on windows.
-        ### This is now looking good on Windows; re-check on samwise.
 
         ### Repair button
         $self->szr_repair_in->AddStretchSpacer(8);
@@ -430,7 +425,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
         my $y = Wx::StaticText->new(
             $self->parent, -1, 
             q{},
-            wxDefaultPosition, Wx::Size->new(80, 20)
+            wxDefaultPosition, Wx::Size->new($self->num_w, 20)
         );
         $y->SetFont( $self->get_font('/bold_para_text_2') );
         return $y;
@@ -440,7 +435,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
         my $y = Wx::StaticText->new(
             $self->parent, -1, 
             q{},
-            wxDefaultPosition, Wx::Size->new(80, 20)
+            wxDefaultPosition, Wx::Size->new($self->num_w, 20)
         );
         $y->SetFont( $self->get_font('/bold_para_text_2') );
         return $y;
@@ -450,7 +445,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
         my $y = Wx::StaticText->new(
             $self->parent, -1, 
             q{},
-            wxDefaultPosition, Wx::Size->new(80, 20)
+            wxDefaultPosition, Wx::Size->new($self->num_w, 20)
         );
         $y->SetFont( $self->get_font('/bold_para_text_2') );
         return $y;
@@ -460,7 +455,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
         my $y = Wx::StaticText->new(
             $self->parent, -1, 
             q{},
-            wxDefaultPosition, Wx::Size->new(80, 20)
+            wxDefaultPosition, Wx::Size->new($self->num_w, 20)
         );
         $y->SetFont( $self->get_font('/bold_para_text_2') );
         return $y;
