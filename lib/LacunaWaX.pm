@@ -510,6 +510,25 @@ the second argument to receive a fully accurate (to the second) result.
 
         return ($exact_flag) ? duration_exact($secs) : duration($secs);
     }#}}}
+    sub str_trim {#{{{
+        my $self = shift;
+        my $str  = shift;
+
+=head2 str_trim
+
+Basic string trimmer - removes whitespace from front and back of the given 
+string.
+
+ my $old = '   foo   ';
+ my $new = $self->str_trim($old);
+ say "-$new-";  # -foo-
+
+=cut
+
+        $str =~ s/^\s+//;
+        $str =~ s/\s+$//;
+        return $str;
+    }#}}}
     sub throb {#{{{
         my $self = shift;
 

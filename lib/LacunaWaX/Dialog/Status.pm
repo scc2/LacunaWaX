@@ -116,6 +116,53 @@ will be called by the Dialog::Status's OnClose event.
   say "You just closed the status dialog.";
  }
 
+=head2 Opening the same status dialog multiple times
+
+The situation:  The user does $something, to which you respond with some text 
+written in a status dialog.  The user then closes that dialog and then does 
+another iteration of $something, which attempts to write to that status dialog 
+again, but the user closed it.
+
+Attempting to write to an already-closed dialog will cause a crash.  And once 
+we've opened a status dialog, we have no idea if the user has closed it again 
+the next time we want to write to it.
+
+In that situation, I tend to add:
+
+ sub status_say {
+  my $self = shift;
+  my $msg  = shift;
+  if( $self->has_status ) {
+   try{ $self->status->say($msg) };
+  }
+  return 1;
+ }
+ sub status_say_recsep {
+  my $self = shift;
+  if( $self->has_status ) {
+   try{ $self->status->say_recsep };
+  }
+  return 1;
+ }
+ sub OnDialogStatusClose {
+  my $self    = shift;
+  my $status  = shift;    # LacunaWaX::Dialog::Status
+  if( $self->has_status ) {
+   $self->clear_status;
+  }
+  return 1;
+ }
+
+At the top of the event that triggers writing to the status window, be sure to 
+include $self->status->show.  This will call the lazy_builder for your status 
+window if it doesn't already exist, and cause no issues if it does.
+
+ sub SomeEvent {
+  my $self = shift;
+  $self->status->show;
+  $self->status_say("This is safe.");
+ }
+
 =cut
 
 package LacunaWaX::Dialog::Status {

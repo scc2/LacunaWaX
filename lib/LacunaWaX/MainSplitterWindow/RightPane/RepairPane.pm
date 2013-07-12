@@ -5,17 +5,12 @@
 
 =pod
 
-Everything that's here works.
 
+Res images need to be centered above their numeric labels (more sizers!)
 
-Need an acutal repair button to fix the stuff in the right list.  Anything not 
-fully repaired needs to end up back in the left list with its Damage column 
-updated.
 
 I'm also thinking about a text box where the user can enter the lowest they 
 want their resources to go (but this is only after everything else works.)
-
-
 
 
 Sorting
@@ -34,12 +29,16 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
     use LacunaWaX::Model::Client;
     use List::Util qw(first);
     use Moose;
+    use Number::Format;
     use Try::Tiny;
     use Wx qw(:everything);
-    use Wx::Event qw(EVT_BUTTON EVT_LIST_COL_CLICK);
+    use Wx::Event qw(EVT_BUTTON EVT_CLOSE EVT_LIST_COL_CLICK);
     with 'LacunaWaX::Roles::MainSplitterWindow::RightPane';
 
-    has 'sizer_debug'   => (is => 'rw', isa => 'Int', lazy => 1, default => 0);
+    has 'sizer_debug'   => (is => 'rw', isa => 'Int',                       lazy => 1,      default => 0    );
+    has 'planet_id'     => (is => 'rw', isa => 'Int',                       lazy_build => 1                 );
+    has 'planet_name'   => (is => 'rw', isa => 'Str',                                       required => 1   );
+    has 'status'        => (is => 'rw', isa => 'LacunaWaX::Dialog::Status', lazy_build => 1                 );
 
     has 'row' => (
         is => 'rw',
@@ -51,14 +50,9 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
             reset_row => 'reset',
         },
         default => 0,
-    );
-
-    has 'status' => (
-        is => 'rw',
-        isa => 'LacunaWaX::Dialog::Status', 
-        lazy_build => 1,
         documentation => q{
-            This is just for debugging and can go away.
+            Keeps track of which row we're working on while inserting items into a list.
+            Be careful with this.
         }
     );
 
@@ -69,10 +63,10 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
         default => 'all',
         documentation => q{
             Determines whether we show all buildings in the left ListCtrl, or only damaged buildings.
-
             If the value is anything other than 'all', we'll just display damaged buildings.
-
             "Only damaged" seems to make more sense for real use, but 'all' is easier to work on and test.
+
+            This should probably go away.
         }
     );
 
@@ -85,11 +79,12 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
             all_glyph_bldgs     => 'elements',
             add_glyph_bldg      => 'push',
             find_glyph_bldg     => 'first',
+        },
+        documentation => q{
+            Just a list of glyph buildings.  Spelling and spacing match the human names
+            ("space port" rather than "spaceport"), but all lc().
         }
     );
-
-    has 'planet_id'     => (is => 'rw', isa => 'Int', lazy_build => 1);
-    has 'planet_name'   => (is => 'rw', isa => 'Str', required => 1);
 
     has 'buildings' => (    # id => bldg_hashref
         is          => 'rw',
@@ -102,15 +97,34 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
         lazy_build  => 1,
     );
 
-    has 'btn_w' => (is => 'rw', isa => 'Int', lazy => 1, default => 50);
-    has 'btn_h' => (is => 'rw', isa => 'Int', lazy => 1, default => 30);
-    has 'lst_w' => (is => 'rw', isa => 'Int', lazy => 1, default => 25);
-    has 'lst_h' => (is => 'rw', isa => 'Int', lazy => 1, default => 500);
+    has 'num_formatter' => (
+        is      => 'rw',
+        isa     => 'Number::Format',
+        lazy    => 1,
+        default => sub{ Number::Format->new },
+        handles => {
+            format_num => 'format_number',
+        }
+    );
 
-    has 'szr_header'    => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1, documentation => 'vertical'     );
-    has 'szr_btn_list'  => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1, documentation => 'vertical'     );
-    has 'szr_lists'     => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1, documentation => 'horizontal'   );
-    has 'szr_repair'    => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1, documentation => 'horizontal'   );
+    has 'btn_w' => (is => 'rw', isa => 'Int', lazy => 1, default => 50  );
+    has 'btn_h' => (is => 'rw', isa => 'Int', lazy => 1, default => 30  );
+    has 'lst_w' => (is => 'rw', isa => 'Int', lazy => 1, default => 25  );
+    has 'lst_h' => (is => 'rw', isa => 'Int', lazy => 1, default => 500 );
+    has 'res_w' => (is => 'rw', isa => 'Int', lazy => 1, default => 140 );  # sizer size, not image size
+    has 'res_h' => (is => 'rw', isa => 'Int', lazy => 1, default => -1  );  # sizer size, not image size
+
+    has 'szr_header'        => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1, documentation => 'vertical'     );
+    has 'szr_btn_list'      => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1, documentation => 'vertical'     );
+    has 'szr_lists'         => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1, documentation => 'horizontal'   );
+    has 'szr_repair_out'    => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1, documentation => 'horizontal'   );
+    has 'szr_repair_in'     => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1, documentation => 'horizontal'   );
+    has 'szr_res_out'       => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1, documentation => 'horizontal'   );
+    has 'szr_res_in'        => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1, documentation => 'horizontal'   );
+    has 'szr_food'          => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1, documentation => 'vertical'     );
+    has 'szr_ore'           => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1, documentation => 'vertical'     );
+    has 'szr_water'         => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1, documentation => 'vertical'     );
+    has 'szr_energy'        => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1, documentation => 'vertical'     );
 
     has 'btn_add'               => (is => 'rw', isa => 'Wx::Button',        lazy_build => 1     );
     has 'btn_add_all'           => (is => 'rw', isa => 'Wx::Button',        lazy_build => 1     );
@@ -118,10 +132,18 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
     has 'btn_del_all'           => (is => 'rw', isa => 'Wx::Button',        lazy_build => 1     );
     has 'btn_add_glyphs'        => (is => 'rw', isa => 'Wx::Button',        lazy_build => 1     );
     has 'btn_repair'            => (is => 'rw', isa => 'Wx::Button',        lazy_build => 1     );
+    has 'img_food'              => (is => 'rw', isa => 'Wx::StaticBitmap',  lazy_build => 1     );
+    has 'img_ore'               => (is => 'rw', isa => 'Wx::StaticBitmap',  lazy_build => 1     );
+    has 'img_water'             => (is => 'rw', isa => 'Wx::StaticBitmap',  lazy_build => 1     );
+    has 'img_energy'            => (is => 'rw', isa => 'Wx::StaticBitmap',  lazy_build => 1     );
     has 'lst_bldgs_onsite'      => (is => 'rw', isa => 'Wx::ListCtrl',      lazy_build => 1     );
     has 'lst_bldgs_to_repair'   => (is => 'rw', isa => 'Wx::ListCtrl',      lazy_build => 1     );
     has 'lbl_header'            => (is => 'rw', isa => 'Wx::StaticText',    lazy_build => 1     );
     has 'lbl_instructions'      => (is => 'rw', isa => 'Wx::StaticText',    lazy_build => 1     );
+    has 'lbl_food'              => (is => 'rw', isa => 'Wx::StaticText',    lazy_build => 1     );
+    has 'lbl_ore'               => (is => 'rw', isa => 'Wx::StaticText',    lazy_build => 1     );
+    has 'lbl_water'             => (is => 'rw', isa => 'Wx::StaticText',    lazy_build => 1     );
+    has 'lbl_energy'            => (is => 'rw', isa => 'Wx::StaticText',    lazy_build => 1     );
 
     sub BUILD {
         my $self = shift;
@@ -129,10 +151,12 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
         $self->lst_bldgs_onsite();
         $self->populate_bldgs_list( $self->lst_bldgs_onsite );
 
+        ### Header, instructions
         $self->szr_header->Add($self->lbl_header, 0, 0, 0);
         $self->szr_header->AddSpacer(5);
         $self->szr_header->Add($self->lbl_instructions, 0, 0, 0);
 
+        ### Add/delete buildings buttons
         $self->szr_btn_list->AddStretchSpacer(6);
         $self->szr_btn_list->Add($self->btn_add, 1, 0, 0);
         $self->szr_btn_list->Add($self->btn_add_all, 1, 0, 0);
@@ -142,6 +166,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
         $self->szr_btn_list->Add($self->btn_add_glyphs, 1, 0, 0);
         $self->szr_btn_list->AddStretchSpacer(1);
 
+        ### Left & right lists, plus the buttons
         $self->szr_lists->Add($self->lst_bldgs_onsite, 10, 0, 0);
         $self->szr_lists->AddSpacer(5);
         $self->szr_lists->Add($self->szr_btn_list, 0, 0, 0);
@@ -150,14 +175,32 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
         my $s = $self->parent->GetSize;
         $self->szr_lists->SetMinSize( Wx::Size->new($s->GetWidth - $self->btn_w, -1) );
 
-        $self->szr_repair->AddSpacer(380);  # 380 is about perfect on Samwise - CHECK on windows.
-        $self->szr_repair->Add($self->btn_repair, 2, 0, 0);
+        ### CHECK
+        ### Center the Repair button with the nested stretch spacer trick.
+        ### Originally hardcoded a left spacer - 380 worked on samwise but was 
+        ### wrong on windows.
+        ### This is now looking good on Windows; re-check on samwise.
 
+        ### Repair button
+        $self->szr_repair_in->AddStretchSpacer(8);
+        $self->szr_repair_in->Add($self->btn_repair, 10, 0, 0);
+        $self->szr_repair_in->AddStretchSpacer(6);
+        $self->szr_repair_out->AddStretchSpacer();
+        $self->szr_repair_out->Add($self->szr_repair_in, 1, wxALIGN_CENTER, 0);
+        $self->szr_repair_out->AddStretchSpacer();
+
+        ### Res
+        $self->update_res_panel();
+
+        ### Panel
         $self->content_sizer->Add($self->szr_header, 0, 0, 0);
         $self->content_sizer->AddSpacer(20);
         $self->content_sizer->Add($self->szr_lists, 0, 0, 0);
         $self->content_sizer->AddSpacer(20);
-        $self->content_sizer->Add($self->szr_repair, 0, 0, 0);
+        $self->content_sizer->Add($self->szr_repair_out, 0, 0, 0);
+        $self->content_sizer->AddSpacer(20);
+        $self->content_sizer->Add($self->szr_res_out, 0, 0, 0);
+
         return $self;
     }
     sub _build_btn_add {#{{{
@@ -195,7 +238,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
             Wx::Size->new($self->btn_w, $self->btn_h),
         );
         $v->SetFont( $self->get_font('/para_text_1') );
-        my $tt = Wx::ToolTip->new("Glyph buildings are free to repair.");
+        my $tt = Wx::ToolTip->new("Glyph buildings are free to repair, so you usually want to do them first.");
         $v->SetToolTip($tt);
         return $v;
     }#}}}
@@ -251,22 +294,16 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
             return;
         };
 
-        unless( $self->show_bldgs eq 'all' ) {
-            my $ret_bldgs = {};
-            while( my($id, $hr) = each %{$bldgs} ) {
-                $ret_bldgs->{$id} = $hr if( $hr->{'efficiency'} < 100 );
-            }
-            $bldgs = $ret_bldgs;
+        my $ret_bldgs = {};
+        while( my($id, $hr) = each %{$bldgs} ) {
+
+            next if ( $self->show_bldgs ne 'all' and $hr->{'efficiency'} < 100 );
+
+            $hr->{'id'} = $id;
+            $ret_bldgs->{$id} = $hr;
         }
 
-    ### CHECK
-    while(my($id, $hr) = each %$bldgs ) {
-        if( $hr->{'name'} =~ /Beach/ ) {
-            say Dumper $hr;
-        }
-    }
-
-        return $bldgs;
+        return $ret_bldgs;
     }#}}}
     sub _build_glyph_bldgs {#{{{
         my $self  = shift;
@@ -322,6 +359,62 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
 
         return $v;
     }#}}}
+    sub _build_img_food {#{{{
+        my $self = shift;
+
+        my $img  = $self->wxbb->resolve(service => '/Assets/images/res_l/food.png');
+        $img->Rescale(45, 45);
+        my $bmp  = Wx::Bitmap->new($img);
+        return Wx::StaticBitmap->new(
+            $self->parent, -1, 
+            $bmp,
+            wxDefaultPosition,
+            Wx::Size->new($img->GetWidth, $img->GetHeight),
+            wxFULL_REPAINT_ON_RESIZE
+        );
+    }#}}}
+    sub _build_img_ore {#{{{
+        my $self = shift;
+
+        my $img  = $self->wxbb->resolve(service => '/Assets/images/res_l/ore.png');
+        $img->Rescale(39, 45);
+        my $bmp  = Wx::Bitmap->new($img);
+        return Wx::StaticBitmap->new(
+            $self->parent, -1, 
+            $bmp,
+            wxDefaultPosition,
+            Wx::Size->new($img->GetWidth, $img->GetHeight),
+            wxFULL_REPAINT_ON_RESIZE
+        );
+    }#}}}
+    sub _build_img_water {#{{{
+        my $self = shift;
+
+        my $img  = $self->wxbb->resolve(service => '/Assets/images/res_l/water.png');
+        $img->Rescale(36, 45);
+        my $bmp  = Wx::Bitmap->new($img);
+        return Wx::StaticBitmap->new(
+            $self->parent, -1, 
+            $bmp,
+            wxDefaultPosition,
+            Wx::Size->new($img->GetWidth, $img->GetHeight),
+            wxFULL_REPAINT_ON_RESIZE
+        );
+    }#}}}
+    sub _build_img_energy {#{{{
+        my $self = shift;
+
+        my $img  = $self->wxbb->resolve(service => '/Assets/images/res_l/energy.png');
+        $img->Rescale(31, 45);
+        my $bmp  = Wx::Bitmap->new($img);
+        return Wx::StaticBitmap->new(
+            $self->parent, -1, 
+            $bmp,
+            wxDefaultPosition,
+            Wx::Size->new($img->GetWidth, $img->GetHeight),
+            wxFULL_REPAINT_ON_RESIZE
+        );
+    }#}}}
     sub _build_lbl_header {#{{{
         my $self = shift;
         my $y = Wx::StaticText->new(
@@ -330,6 +423,46 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
             wxDefaultPosition, Wx::Size->new(-1, 40)
         );
         $y->SetFont( $self->get_font('/header_1') );
+        return $y;
+    }#}}}
+    sub _build_lbl_food {#{{{
+        my $self = shift;
+        my $y = Wx::StaticText->new(
+            $self->parent, -1, 
+            q{},
+            wxDefaultPosition, Wx::Size->new(80, 20)
+        );
+        $y->SetFont( $self->get_font('/bold_para_text_2') );
+        return $y;
+    }#}}}
+    sub _build_lbl_ore {#{{{
+        my $self = shift;
+        my $y = Wx::StaticText->new(
+            $self->parent, -1, 
+            q{},
+            wxDefaultPosition, Wx::Size->new(80, 20)
+        );
+        $y->SetFont( $self->get_font('/bold_para_text_2') );
+        return $y;
+    }#}}}
+    sub _build_lbl_water {#{{{
+        my $self = shift;
+        my $y = Wx::StaticText->new(
+            $self->parent, -1, 
+            q{},
+            wxDefaultPosition, Wx::Size->new(80, 20)
+        );
+        $y->SetFont( $self->get_font('/bold_para_text_2') );
+        return $y;
+    }#}}}
+    sub _build_lbl_energy {#{{{
+        my $self = shift;
+        my $y = Wx::StaticText->new(
+            $self->parent, -1, 
+            q{},
+            wxDefaultPosition, Wx::Size->new(80, 20)
+        );
+        $y->SetFont( $self->get_font('/bold_para_text_2') );
         return $y;
     }#}}}
     sub _build_lbl_instructions {#{{{
@@ -400,12 +533,15 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
     }#}}}
     sub _build_status {#{{{
         my $self = shift;
-        my $s = LacunaWaX::Dialog::Status->new(
-            app      => $self->app,
-            ancestor => $self,
-            title    => 'Status',
+
+        my $v = LacunaWaX::Dialog::Status->new( 
+            app         => $self->app,
+            ancestor    => $self,
+            title       => 'Repairing',
+            recsep      => '-=-=-=-=-=-=-',
         );
-        return $s;
+        $v->hide;
+        return $v;
     }#}}}
     sub _build_szr_header {#{{{
         my $self = shift;
@@ -413,26 +549,63 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
     }#}}}
     sub _build_szr_btn_list {#{{{
         my $self = shift;
-        return $self->build_sizer($self->parent, wxVERTICAL, 'Lists');
+        return $self->build_sizer($self->parent, wxVERTICAL, 'Buttons');
     }#}}}
     sub _build_szr_lists {#{{{
         my $self = shift;
         return $self->build_sizer($self->parent, wxHORIZONTAL, 'Lists');
     }#}}}
-    sub _build_szr_repair {#{{{
+    sub _build_szr_repair_out {#{{{
         my $self = shift;
-        return $self->build_sizer($self->parent, wxHORIZONTAL, 'Repair');
+        return $self->build_sizer($self->parent, wxHORIZONTAL, 'Repair Outside');
+    }#}}}
+    sub _build_szr_repair_in {#{{{
+        my $self = shift;
+        return $self->build_sizer($self->parent, wxHORIZONTAL, 'Repair Inside');
+    }#}}}
+    sub _build_szr_res_out {#{{{
+        my $self = shift;
+        return $self->build_sizer($self->parent, wxHORIZONTAL, 'Res Outside');
+    }#}}}
+    sub _build_szr_res_in {#{{{
+        my $self = shift;
+        return $self->build_sizer($self->parent, wxHORIZONTAL, 'Res Inside');
+    }#}}}
+    sub _build_szr_food {#{{{
+        my $self = shift;
+        my $v = $self->build_sizer($self->parent, wxVERTICAL, 'Food');
+        $v->SetMinSize( Wx::Size->new($self->res_w, $self->res_h) );
+        return $v;
+    }#}}}
+    sub _build_szr_ore {#{{{
+        my $self = shift;
+        my $v = $self->build_sizer($self->parent, wxVERTICAL, 'ore');
+        $v->SetMinSize( Wx::Size->new($self->res_w, $self->res_h) );
+        return $v;
+    }#}}}
+    sub _build_szr_water {#{{{
+        my $self = shift;
+        my $v = $self->build_sizer($self->parent, wxVERTICAL, 'water');
+        $v->SetMinSize( Wx::Size->new($self->res_w, $self->res_h) );
+        return $v;
+    }#}}}
+    sub _build_szr_energy {#{{{
+        my $self = shift;
+        my $v = $self->build_sizer($self->parent, wxVERTICAL, 'energy');
+        $v->SetMinSize( Wx::Size->new($self->res_w, $self->res_h) );
+        return $v;
     }#}}}
     sub _set_events {#{{{
         my $self = shift;
-        EVT_BUTTON(         $self->parent, $self->btn_add->GetId,               sub{$self->OnAddSingle(@_)}  );
-        EVT_BUTTON(         $self->parent, $self->btn_add_all->GetId,           sub{$self->OnAddAll(@_)}  );
-        EVT_BUTTON(         $self->parent, $self->btn_del->GetId,               sub{$self->OnDelSingle(@_)}  );
-        EVT_BUTTON(         $self->parent, $self->btn_del_all->GetId,           sub{$self->OnDelAll(@_)}  );
-        EVT_BUTTON(         $self->parent, $self->btn_add_glyphs->GetId,        sub{$self->OnAddGlyphs(@_)}  );
-        EVT_BUTTON(         $self->parent, $self->btn_repair->GetId,            sub{$self->OnRepair(@_)}  );
-        EVT_LIST_COL_CLICK( $self->parent, $self->lst_bldgs_onsite->GetId,      sub{$self->OnLeftLstHeaderClick(@_)}  );
-        EVT_LIST_COL_CLICK( $self->parent, $self->lst_bldgs_to_repair->GetId,   sub{$self->OnRightLstHeaderClick(@_)}  );
+        EVT_BUTTON(         $self->parent, $self->btn_add->GetId,               sub{$self->OnAddSingle(@_)}             );
+        EVT_BUTTON(         $self->parent, $self->btn_add_all->GetId,           sub{$self->OnAddAll(@_)}                );
+        EVT_BUTTON(         $self->parent, $self->btn_del->GetId,               sub{$self->OnDelSingle(@_)}             );
+        EVT_BUTTON(         $self->parent, $self->btn_del_all->GetId,           sub{$self->OnDelAll(@_)}                );
+        EVT_BUTTON(         $self->parent, $self->btn_add_glyphs->GetId,        sub{$self->OnAddGlyphs(@_)}             );
+        EVT_BUTTON(         $self->parent, $self->btn_repair->GetId,            sub{$self->OnRepair(@_)}                );
+        EVT_CLOSE(          $self->parent,                                      sub{$self->OnClose(@_)}                 );
+        EVT_LIST_COL_CLICK( $self->parent, $self->lst_bldgs_onsite->GetId,      sub{$self->OnLeftLstHeaderClick(@_)}    );
+        EVT_LIST_COL_CLICK( $self->parent, $self->lst_bldgs_to_repair->GetId,   sub{$self->OnRightLstHeaderClick(@_)}   );
         return 1;
     }#}}}
 
@@ -446,7 +619,16 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
 
 =pod
 
-Inserts a properly-formated row into the TOP of the indicated list.
+Inserts a properly-formated row to the indicated list.  Remember that "insert" 
+means "adds to the top of the list".
+
+ $self->add_row(
+    $self->some_ListCtrl,
+    "building name",
+    "x coord",
+    "y coord",
+    "damage (integer percent)",
+ );
 
 Note that you must send damage, not efficiency.  The game server hands us back 
 efficiency percent (eg "percent undamaged").  So if you're working with a 
@@ -457,14 +639,15 @@ server reply, get damage by:
 All strings passed in will be trimmed of whitespace (front and back).  $damage 
 will also have any % signs stripped.
 
-Returns the index of the row just added.
+Returns the index of the row just added, which will always be 0 since we're 
+inserting.
 
 =cut
 
-        $name   = $self->trim($name);
-        $x      = $self->trim($x);
-        $y      = $self->trim($y);
-        $damage = $self->trim($damage);
+        $name   = $self->str_trim($name);
+        $x      = $self->str_trim($x);
+        $y      = $self->str_trim($y);
+        $damage = $self->str_trim($damage);
         $damage =~ s/[%]//g;
 
         ### Set the current zero-based row number as the item's data.  We have 
@@ -486,6 +669,29 @@ Returns the index of the row just added.
         my $self = shift;
         $self->buildings->{$b}->{'name'} cmp $self->buildings->{$a}->{'name'};
     }#}}}
+    sub clear_list {#{{{
+        my $self = shift;
+        my $list = shift;
+
+=head2 clear_list 
+
+Removes all elements from a list, leaving it empty.  Unlike ListCtrl's ClearAll 
+method, which completely clears the thing, including its headers and column 
+assignments, this simply removes the list items, leaving the headers and column 
+assignments intact.
+
+ $self->clear_list( $self->lst_object );
+
+=cut
+
+        while( 1 ) {
+            my $row = -1;
+            $row = $list->GetNextItem($row, wxLIST_NEXT_ALL, wxLIST_STATE_DONTCARE);
+            last if $row == -1;
+            $list->DeleteItem( $row );
+        }
+        return 1;
+    }#}}}
     sub list_sort_alpha {#{{{
         my $self = shift;
         my $ay   = shift;
@@ -493,14 +699,30 @@ Returns the index of the row just added.
         my $list = shift;
         my $col  = shift;
 
+        ### Since there's a good chance for lots of dupes (mainly spaceports), 
+        ### include secondary and tertiary sorts on x and y coords.
+        ###
+        ### Passing in $col is a bit silly here, since there's only a single 
+        ### column that can be sorted alpha.
+
         my $i1_off = $list->FindItemData(-1, $ay);
         my $i2_off = $list->FindItemData(-1, $bee);
         my $i1 = $list->GetItem($i1_off, $col);
         my $i2 = $list->GetItem($i2_off, $col);
-        my $n1 = $i1->GetText;
-        my $n2 = $i2->GetText;
+        my $n1 = $self->str_trim( $i1->GetText );
+        my $n2 = $self->str_trim( $i2->GetText );
 
-        my $rv = $n1 cmp $n2;
+        my $ix1 = $list->GetItem($i1_off, 1);
+        my $ix2 = $list->GetItem($i2_off, 1);
+        my $nx1 = $self->str_trim( $ix1->GetText );
+        my $nx2 = $self->str_trim( $ix2->GetText );
+
+        my $iy1 = $list->GetItem($i1_off, 2);
+        my $iy2 = $list->GetItem($i2_off, 2);
+        my $ny1 = $self->str_trim( $iy1->GetText );
+        my $ny2 = $self->str_trim( $iy2->GetText );
+
+        my $rv = ( ($n1 cmp $n2) or ($nx1 <=> $nx2) or ($ny2 <=> $ny2) );
         return $rv;
     }#}}}
     sub list_sort_num {#{{{
@@ -510,17 +732,38 @@ Returns the index of the row just added.
         my $list = shift;
         my $col  = shift;
 
+        ### If we're sorting by either the x or y coordinate, we want to do a 
+        ### secondary sort on the other coordinate.  But it's also possible to 
+        ### enter this sort on the damage column, in which case we want no 
+        ### secondary sort.
+        my $col2 = ($col == 1)
+            ? 2 :  ($col == 2)
+            ? 1 :  undef;
+
         my $i1_off = $list->FindItemData(-1, $ay);
         my $i2_off = $list->FindItemData(-1, $bee);
         my $i1 = $list->GetItem($i1_off, $col);
         my $i2 = $list->GetItem($i2_off, $col);
-        my $n1 = $i1->GetText;
-        my $n2 = $i2->GetText;
+        my $n1 = $self->str_trim( $i1->GetText );
+        my $n2 = $self->str_trim( $i2->GetText );
 
-        my $dat_1 = $n1 =~ s/[\s%]+//gr;
-        my $dat_2 = $n2 =~ s/[\s%]+//gr;
+        my $dat_1_1 = $n1 =~ s/[\s%]+//gr;
+        my $dat_1_2 = $n2 =~ s/[\s%]+//gr;
 
-        my $rv = $dat_1 <=> $dat_2;
+        my $rv;
+        if( defined $col2 ) {
+            $i1 = $list->GetItem($i1_off, $col2);
+            $i2 = $list->GetItem($i2_off, $col2);
+            $n1 = $self->str_trim( $i1->GetText );
+            $n2 = $self->str_trim( $i2->GetText );
+            my $dat_2_1 = $n1 =~ s/[\s%]+//gr;
+            my $dat_2_2 = $n2 =~ s/[\s%]+//gr;
+            $rv = ( ($dat_1_1 <=> $dat_1_2) or ($dat_2_1 <=> $dat_2_2) );
+        }
+        else {
+            $rv = $dat_1_1 <=> $dat_1_2;
+        }
+
         return $rv;
     }#}}}
     sub populate_bldgs_list {#{{{
@@ -543,13 +786,100 @@ Returns the index of the row just added.
 
         $self->reset_row;
     }#}}}
-    sub trim {#{{{
+    sub repair {#{{{
         my $self = shift;
-        my $str  = shift;
-        $str =~ s/^\s+//;
-        $str =~ s/\s+$//;
-        return $str;
+        my($name, $x, $y) = @_;
+
+=head2 repair
+
+Attempts to repair the given building.  Throws exception if the building was 
+not found or if it was found but the repair attempt failed (probably because 
+of a lack of resources).
+
+CHECK
+I have not tested the "fails if we're out of res" yet.
+
+ $self->repair( $name, $x, $y );
+
+=cut
+
+        foreach my $id( $self->bldg_ids ) {
+            my $hr = $self->get_bldg($id);
+            next unless ($hr->{'name'} eq $name and $hr->{'x'} eq $x and $hr->{'y'} eq $y);
+
+            my $obj = $self->game_client->get_building_object(
+                $self->planet_id,
+                $hr,
+            );
+
+            ### This should explode if we're out of res.  That's OK - this 
+            ### method should be in a try/catch.
+            my $rv = $obj->repair;
+            return $rv;
+        }
+
+        die "Building '$name' was not found!\n";
     }#}}}
+    sub status_say {#{{{
+        my $self = shift;
+        my $msg  = shift;
+        if( $self->has_status ) {
+            try{ $self->status->say($msg) };
+        }
+        return 1;
+    }#}}}
+    sub status_say_recsep {#{{{
+        my $self = shift;
+        if( $self->has_status ) {
+            try{ $self->status->say_recsep };
+        }
+        return 1;
+    }#}}}
+    sub update_res_panel {
+        my $self = shift;
+
+        my $status = $self->game_client->get_body_status($self->planet_id, 1);  # force
+
+        my $food = $status->{'food_stored'};
+        my $ore = $status->{'ore_stored'};
+        my $water = $status->{'water_stored'};
+        my $energy = $status->{'energy_stored'};
+
+        $self->lbl_food->SetLabel(   $self->format_num($food)   );
+        $self->lbl_ore->SetLabel(    $self->format_num($ore)    );
+        $self->lbl_water->SetLabel(  $self->format_num($water)  );
+        $self->lbl_energy->SetLabel( $self->format_num($energy) );
+        
+        $self->szr_food->Add($self->img_food, 0, 0, 0);
+        $self->szr_food->AddSpacer(5);
+        $self->szr_food->Add($self->lbl_food, 0, 0, 0);
+        $self->szr_ore->Add($self->img_ore, 0, 0, 0);
+        $self->szr_ore->AddSpacer(5);
+        $self->szr_ore->Add($self->lbl_ore, 0, 0, 0);
+        $self->szr_water->Add($self->img_water, 0, 0, 0);
+        $self->szr_water->AddSpacer(5);
+        $self->szr_water->Add($self->lbl_water, 0, 0, 0);
+        $self->szr_energy->Add($self->img_energy, 0, 0, 0);
+        $self->szr_energy->AddSpacer(5);
+        $self->szr_energy->Add($self->lbl_energy, 0, 0, 0);
+
+        $self->szr_res_in->AddStretchSpacer(2);
+        $self->szr_res_in->Add($self->szr_food, 2, 0, 0);
+        $self->szr_res_in->AddSpacer(10);
+        $self->szr_res_in->Add($self->szr_ore, 2, 0, 0);
+        $self->szr_res_in->AddSpacer(10);
+        $self->szr_res_in->Add($self->szr_water, 2, 0, 0);
+        $self->szr_res_in->AddSpacer(10);
+        $self->szr_res_in->Add($self->szr_energy, 2, 0, 0);
+        $self->szr_res_in->AddSpacer(10);
+        $self->szr_res_in->AddStretchSpacer(1);
+
+        #$self->szr_res_out->AddStretchSpacer();
+        $self->szr_res_out->Add($self->szr_res_in, 1, wxALIGN_CENTER, 0);
+        #$self->szr_res_out->AddStretchSpacer();
+
+        return 1;
+    }
 
     sub OnAddSingle {#{{{
         my $self    = shift;
@@ -602,40 +932,35 @@ Returns the index of the row just added.
         my $parent  = shift;    # Wx::ScrolledWindow
         my $event   = shift;    # Wx::CommandEvent
 
+        my @glyph_rows = ();
+
         my $row = -1;
         while( 1 ) {
             $row = $self->lst_bldgs_onsite->GetNextItem($row, wxLIST_NEXT_ALL, wxLIST_STATE_DONTCARE);
             last if $row == -1;
 
             my $itm = $self->lst_bldgs_onsite->GetItem($row);
-            my $name = $itm->GetText;
+            my $name = $self->str_trim( $itm->GetText );
             if( $self->find_glyph_bldg(sub{$_ eq lc $name}) ) {
+                my $x = $self->str_trim( $self->lst_bldgs_onsite->GetItem($row, 1)->GetText );
+                my $y = $self->str_trim( $self->lst_bldgs_onsite->GetItem($row, 2)->GetText );
+                my $d = $self->str_trim( $self->lst_bldgs_onsite->GetItem($row, 3)->GetText );
+                unshift @glyph_rows, [$name, $x, $y, $d];
+
                 $self->lst_bldgs_onsite->DeleteItem( $row );
                 $row--; # since we just deleted one, back up or we'll skip the next one if two are consecutive.
             }
         }
 
-        foreach my $id( $self->bldg_ids ) {
-            my $bldg = $self->get_bldg($id);
-            ### The stripping is to make Gratch's match - the ' is messing up 
-            ### the match without the strip.  Don't know why - it doesn't 
-            ### cause problems above.
-            if( $self->find_glyph_bldg(sub{my $it = $_; my $n = $bldg->{'name'}; $it =~ s/\W//g; $n =~ s/\W//g; return($it eq lc $n)}) ) {
-                $self->add_row(
-                    $self->lst_bldgs_to_repair,
-                    $bldg->{'name'},
-                    $bldg->{'x'},
-                    $bldg->{'y'},
-                    (100 - $bldg->{'efficiency'}),
-                )
-            }
-            else {
-                if( $bldg->{'name'} =~ /gratch/i ) {
-                    say Dumper $bldg;
-                }
-            }
+        foreach my $r(@glyph_rows) {
+            $self->add_row( $self->lst_bldgs_to_repair, @{$r} );
         }
             
+        return 1;
+    }#}}}
+    sub OnClose {#{{{
+        my $self = shift;
+
         return 1;
     }#}}}
     sub OnDelSingle {#{{{
@@ -674,13 +999,7 @@ Returns the index of the row just added.
         my $parent  = shift;    # Wx::ScrolledWindow
         my $event   = shift;    # Wx::CommandEvent
 
-        while( 1 ) {
-            my $row = -1;
-            $row = $self->lst_bldgs_to_repair->GetNextItem($row, wxLIST_NEXT_ALL, wxLIST_STATE_DONTCARE);
-            last if $row == -1;
-            $self->lst_bldgs_to_repair->DeleteItem( $row );
-        }
-
+        $self->clear_list($self->lst_bldgs_to_repair);
         $self->populate_bldgs_list( $self->lst_bldgs_onsite );
         return 1;
     }#}}}
@@ -739,29 +1058,56 @@ Returns the index of the row just added.
         my $parent  = shift;    # Wx::ScrolledWindow
         my $event   = shift;    # Wx::CommandEvent
 
-say "repair";
+        $self->status->show;
 
-### - Iterate the list on the right, repair each building.  Stop the loop when a 
-### repair fails because out of res.
-###
-### - Clear the list on the right.
-###
-### - Clear the list on the left.
-###
-### - Call $self->clear_buildings;
-### - Call _build_buildings(1);
-###     - (1) is 'force'
-###
-### - Re-call populate_bldgs_list to show the current state after repairs.
-###
-###
-### - We really do need to display current res on this screen somewhere.  When 
-### we have that, we'll need to update it after the repairs.
-###
-###     - That "show res" #chunk should be its own object.  I'm thinking just 
-###     a horizontal sizer containing four vertical sizers with the res image, 
-###     label, and amount.  Probably /hr amount as well.
+        while( 1 ) {
+            my $row = -1;
+            $row = $self->lst_bldgs_to_repair->GetNextItem($row, wxLIST_NEXT_ALL, wxLIST_STATE_DONTCARE);
+            last if $row == -1;
 
+            ### ListCtrl's text values have been formatted; trim!
+            my $name = $self->str_trim( $self->lst_bldgs_to_repair->GetItem($row)->GetText );
+            my $x    = $self->str_trim( $self->lst_bldgs_to_repair->GetItem($row, 1)->GetText );
+            my $y    = $self->str_trim( $self->lst_bldgs_to_repair->GetItem($row, 2)->GetText );
+
+            $self->lst_bldgs_to_repair->DeleteItem( $row );
+            $self->status_say("Repairing $name ($x,$y)...");
+
+            my $rv = try {
+                $self->repair($name, $x, $y);
+            }
+            catch {
+                my $msg = (ref $_) ? $_->text : $_;
+                $self->status_say("Attempt to repair '$name' at ($x, $y) failed: $msg");
+                return;
+            };
+            last unless $rv;
+        }
+
+        $self->clear_list($self->lst_bldgs_to_repair);
+        $self->clear_buildings;
+        $self->_build_buildings(1);     # force
+        $self->populate_bldgs_list( $self->lst_bldgs_onsite );
+
+        $self->status_say_recsep;
+        $self->status_say("All requested buildings have been repaired.");
+
+        return 1;
+    }#}}}
+    sub OnDialogStatusClose {#{{{
+        my $self    = shift;
+        my $status  = shift;    # LacunaWaX::Dialog::Status
+
+        ### This is not a true event.  It gets called explicitly by 
+        ### Dialog::Status's OnClose event.
+        ###
+        ### I'd prefer to set some sort of an event, but am not sure exactly how 
+        ### to do that.  So for now, the sitter voting loop just has many "if 
+        ### $self->stop_voting ..." conditions to emulate an event.
+
+        if( $self->has_status ) {
+            $self->clear_status;
+        }
         return 1;
     }#}}}
 

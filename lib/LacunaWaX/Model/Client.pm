@@ -814,8 +814,9 @@ If you want just a subset, send an arrayref of the types you're interested in:
         return $body;
     }#}}}
     sub get_body_status {#{{{
-        my $self = shift;
-        my $pid  = shift;
+        my $self  = shift;
+        my $pid   = shift;
+        my $force = shift || 0;
 
 =head2 get_body_status
 
@@ -855,7 +856,7 @@ planet.
         };
 
         my $bs;
-        if( $self->wxbb ) {
+        if( $self->wxbb and not $force ) {
             my $chi = $self->wxbb->resolve( service => '/Cache/raw_memory' );
             my $key = $self->make_key('BODIES', 'STATUS', $pid);
             $bs     = $chi->compute($key, '1 hour', $code_to_cache);

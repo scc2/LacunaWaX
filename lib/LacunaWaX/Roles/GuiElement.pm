@@ -190,6 +190,7 @@ package LacunaWaX::Roles::GuiElement {
             server_record_by_id     => 'server_record_by_id',
             set_caption             => 'caption',
             set_connected_server    => 'server',
+            str_trim                => 'str_trim',
             throb                   => 'throb',
             travel_time             => 'travel_time',
             wxbb                    => 'wxbb',
