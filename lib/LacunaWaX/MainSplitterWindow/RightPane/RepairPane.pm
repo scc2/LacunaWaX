@@ -26,6 +26,7 @@ Sorting
 package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
     use v5.14;
     use Data::Dumper;
+    use English qw( -no_match_vars );
     use LacunaWaX::Model::Client;
     use List::Util qw(first);
     use Moose;
@@ -177,7 +178,8 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
         $self->szr_lists->SetMinSize( Wx::Size->new($s->GetWidth - $self->btn_w, -1) );
 
         ### Repair button
-        $self->szr_repair_in->AddStretchSpacer(8);
+        my $spacer_prop = ($OSNAME eq 'linux') ? 11 : 8;
+        $self->szr_repair_in->AddStretchSpacer($spacer_prop);
         $self->szr_repair_in->Add($self->btn_repair, 10, 0, 0);
         $self->szr_repair_in->AddStretchSpacer(6);
         $self->szr_repair_out->AddStretchSpacer();
