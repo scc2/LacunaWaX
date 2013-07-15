@@ -1,44 +1,50 @@
 
-### Search for CHECK
-
-
-
-=pod
-
-
-Res images need to be centered above their numeric labels (more sizers!)
-
-
-I'm also thinking about a text box where the user can enter the lowest they 
-want their resources to go (but this is only after everything else works.)
-
-
-Sorting
-    - When sorting by X or Y, do a secondary sort by the other coord.
-    - Keep track of which direction we sorted by last, so the next click on 
-      the same heading sorts in the other direction.
-        - Sorting by any header should clear all of those remembered states.
-
-=cut
-
-
-
 package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
     use v5.14;
     use Data::Dumper;
+    use LacunaWaX::Generics::ResBar;
     use LacunaWaX::Model::Client;
     use List::Util qw(first);
     use Moose;
-    use Number::Format;
     use Try::Tiny;
     use Wx qw(:everything);
     use Wx::Event qw(EVT_BUTTON EVT_CLOSE EVT_LIST_COL_CLICK);
     with 'LacunaWaX::Roles::MainSplitterWindow::RightPane';
 
-    has 'sizer_debug'   => (is => 'rw', isa => 'Int',                       lazy => 1,      default => 0    );
-    has 'planet_id'     => (is => 'rw', isa => 'Int',                       lazy_build => 1                 );
-    has 'planet_name'   => (is => 'rw', isa => 'Str',                                       required => 1   );
-    has 'status'        => (is => 'rw', isa => 'LacunaWaX::Dialog::Status', lazy_build => 1                 );
+    has 'sizer_debug'   => (is => 'rw', isa => 'Int',                           lazy => 1,      default => 0    );
+    has 'planet_id'     => (is => 'rw', isa => 'Int',                           lazy_build => 1                 );
+    has 'planet_name'   => (is => 'rw', isa => 'Str',                                           required => 1   );
+    has 'status'        => (is => 'rw', isa => 'LacunaWaX::Dialog::Status',     lazy_build => 1                 );
+    has 'res_bar'       => (is => 'rw', isa => 'LacunaWaX::Generics::ResBar',   lazy_build => 1                 );
+
+    has 'show_bldgs' => (
+        is      => 'rw',
+        isa     => 'Str',
+        lazy    => 1,
+        #default => 'all',
+        default => 'flurble',
+        documentation => q{
+            Determines whether we show all buildings in the left ListCtrl, or 
+            only damaged buildings.  If the value is anything other than 
+            'all', we'll just display damaged buildings.  "Only damaged" seems 
+            to make more sense for real use, but 'all' is easier to work on 
+            and test.
+            This should only be set to 'all' while developing (so you can see 
+            contents in the left list without having to snark yourself).
+        }
+    );
+
+    has 'flg_stop' => (
+        is      => 'rw',
+        isa     => 'Int',
+        lazy    => 1,
+        default => 0,
+        documentation => q{
+            If the user closes the status window while repairs are in progress, this flag will
+            get turned on, and repairs will stop.  After the current loop ends, this flag will 
+            get turned back off again.
+        }
+    );
 
     has 'row' => (
         is => 'rw',
@@ -53,20 +59,6 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
         documentation => q{
             Keeps track of which row we're working on while inserting items into a list.
             Be careful with this.
-        }
-    );
-
-    has 'show_bldgs' => (
-        is      => 'rw',
-        isa     => 'Str',
-        lazy    => 1,
-        default => 'all',
-        documentation => q{
-            Determines whether we show all buildings in the left ListCtrl, or only damaged buildings.
-            If the value is anything other than 'all', we'll just display damaged buildings.
-            "Only damaged" seems to make more sense for real use, but 'all' is easier to work on and test.
-
-            This should probably go away.
         }
     );
 
@@ -97,34 +89,16 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
         lazy_build  => 1,
     );
 
-    has 'num_formatter' => (
-        is      => 'rw',
-        isa     => 'Number::Format',
-        lazy    => 1,
-        default => sub{ Number::Format->new },
-        handles => {
-            format_num => 'format_number',
-        }
-    );
-
     has 'btn_w' => (is => 'rw', isa => 'Int', lazy => 1, default => 50  );
     has 'btn_h' => (is => 'rw', isa => 'Int', lazy => 1, default => 30  );
     has 'lst_w' => (is => 'rw', isa => 'Int', lazy => 1, default => 25  );
     has 'lst_h' => (is => 'rw', isa => 'Int', lazy => 1, default => 500 );
-    has 'res_w' => (is => 'rw', isa => 'Int', lazy => 1, default => 140 );  # sizer size, not image size
-    has 'res_h' => (is => 'rw', isa => 'Int', lazy => 1, default => -1  );  # sizer size, not image size
 
     has 'szr_header'        => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1, documentation => 'vertical'     );
     has 'szr_btn_list'      => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1, documentation => 'vertical'     );
     has 'szr_lists'         => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1, documentation => 'horizontal'   );
     has 'szr_repair_out'    => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1, documentation => 'horizontal'   );
     has 'szr_repair_in'     => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1, documentation => 'horizontal'   );
-    has 'szr_res_out'       => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1, documentation => 'horizontal'   );
-    has 'szr_res_in'        => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1, documentation => 'horizontal'   );
-    has 'szr_food'          => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1, documentation => 'vertical'     );
-    has 'szr_ore'           => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1, documentation => 'vertical'     );
-    has 'szr_water'         => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1, documentation => 'vertical'     );
-    has 'szr_energy'        => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1, documentation => 'vertical'     );
 
     has 'btn_add'               => (is => 'rw', isa => 'Wx::Button',        lazy_build => 1     );
     has 'btn_add_all'           => (is => 'rw', isa => 'Wx::Button',        lazy_build => 1     );
@@ -132,18 +106,10 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
     has 'btn_del_all'           => (is => 'rw', isa => 'Wx::Button',        lazy_build => 1     );
     has 'btn_add_glyphs'        => (is => 'rw', isa => 'Wx::Button',        lazy_build => 1     );
     has 'btn_repair'            => (is => 'rw', isa => 'Wx::Button',        lazy_build => 1     );
-    has 'img_food'              => (is => 'rw', isa => 'Wx::StaticBitmap',  lazy_build => 1     );
-    has 'img_ore'               => (is => 'rw', isa => 'Wx::StaticBitmap',  lazy_build => 1     );
-    has 'img_water'             => (is => 'rw', isa => 'Wx::StaticBitmap',  lazy_build => 1     );
-    has 'img_energy'            => (is => 'rw', isa => 'Wx::StaticBitmap',  lazy_build => 1     );
     has 'lst_bldgs_onsite'      => (is => 'rw', isa => 'Wx::ListCtrl',      lazy_build => 1     );
     has 'lst_bldgs_to_repair'   => (is => 'rw', isa => 'Wx::ListCtrl',      lazy_build => 1     );
     has 'lbl_header'            => (is => 'rw', isa => 'Wx::StaticText',    lazy_build => 1     );
     has 'lbl_instructions'      => (is => 'rw', isa => 'Wx::StaticText',    lazy_build => 1     );
-    has 'lbl_food'              => (is => 'rw', isa => 'Wx::StaticText',    lazy_build => 1     );
-    has 'lbl_ore'               => (is => 'rw', isa => 'Wx::StaticText',    lazy_build => 1     );
-    has 'lbl_water'             => (is => 'rw', isa => 'Wx::StaticText',    lazy_build => 1     );
-    has 'lbl_energy'            => (is => 'rw', isa => 'Wx::StaticText',    lazy_build => 1     );
 
     sub BUILD {
         my $self = shift;
@@ -175,12 +141,6 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
         my $s = $self->parent->GetSize;
         $self->szr_lists->SetMinSize( Wx::Size->new($s->GetWidth - $self->btn_w, -1) );
 
-        ### CHECK
-        ### Center the Repair button with the nested stretch spacer trick.
-        ### Originally hardcoded a left spacer - 380 worked on samwise but was 
-        ### wrong on windows.
-        ### This is now looking good on Windows; re-check on samwise.
-
         ### Repair button
         $self->szr_repair_in->AddStretchSpacer(8);
         $self->szr_repair_in->Add($self->btn_repair, 10, 0, 0);
@@ -189,9 +149,6 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
         $self->szr_repair_out->Add($self->szr_repair_in, 1, wxALIGN_CENTER, 0);
         $self->szr_repair_out->AddStretchSpacer();
 
-        ### Res
-        $self->update_res_panel();
-
         ### Panel
         $self->content_sizer->Add($self->szr_header, 0, 0, 0);
         $self->content_sizer->AddSpacer(20);
@@ -199,7 +156,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
         $self->content_sizer->AddSpacer(20);
         $self->content_sizer->Add($self->szr_repair_out, 0, 0, 0);
         $self->content_sizer->AddSpacer(20);
-        $self->content_sizer->Add($self->szr_res_out, 0, 0, 0);
+        $self->content_sizer->Add($self->res_bar->szr_main, 0, 0, 0);
 
         return $self;
     }
@@ -283,7 +240,24 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
     }#}}}
     sub _build_buildings {#{{{
         my $self  = shift;
-        my $force = shift || 0;
+        my $force = shift // 1; # default to a full refresh from the server.
+
+=head2 _build_buildings
+
+Pulls data on the buildings on the current planet from the server.
+
+Avoids the cache, so every time this builder gets called, it's getting live 
+data from the server, so the current and correct damage percentages can be 
+shown.
+
+If you decide you do want to call this and hit the cache for whatever reason, 
+call it as
+
+ $self->_build_buildings(0);
+
+...this will pull the buildings data from the cache.
+
+=cut
 
         my $bldgs = try {
             $self->game_client->get_buildings($self->planet_id, undef, $force);
@@ -297,7 +271,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
         my $ret_bldgs = {};
         while( my($id, $hr) = each %{$bldgs} ) {
 
-            next if ( $self->show_bldgs ne 'all' and $hr->{'efficiency'} < 100 );
+            next if ( $self->show_bldgs ne 'all' and $hr->{'efficiency'} == 100 );
 
             $hr->{'id'} = $id;
             $ret_bldgs->{$id} = $hr;
@@ -359,62 +333,6 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
 
         return $v;
     }#}}}
-    sub _build_img_food {#{{{
-        my $self = shift;
-
-        my $img  = $self->wxbb->resolve(service => '/Assets/images/res_l/food.png');
-        $img->Rescale(45, 45);
-        my $bmp  = Wx::Bitmap->new($img);
-        return Wx::StaticBitmap->new(
-            $self->parent, -1, 
-            $bmp,
-            wxDefaultPosition,
-            Wx::Size->new($img->GetWidth, $img->GetHeight),
-            wxFULL_REPAINT_ON_RESIZE
-        );
-    }#}}}
-    sub _build_img_ore {#{{{
-        my $self = shift;
-
-        my $img  = $self->wxbb->resolve(service => '/Assets/images/res_l/ore.png');
-        $img->Rescale(39, 45);
-        my $bmp  = Wx::Bitmap->new($img);
-        return Wx::StaticBitmap->new(
-            $self->parent, -1, 
-            $bmp,
-            wxDefaultPosition,
-            Wx::Size->new($img->GetWidth, $img->GetHeight),
-            wxFULL_REPAINT_ON_RESIZE
-        );
-    }#}}}
-    sub _build_img_water {#{{{
-        my $self = shift;
-
-        my $img  = $self->wxbb->resolve(service => '/Assets/images/res_l/water.png');
-        $img->Rescale(36, 45);
-        my $bmp  = Wx::Bitmap->new($img);
-        return Wx::StaticBitmap->new(
-            $self->parent, -1, 
-            $bmp,
-            wxDefaultPosition,
-            Wx::Size->new($img->GetWidth, $img->GetHeight),
-            wxFULL_REPAINT_ON_RESIZE
-        );
-    }#}}}
-    sub _build_img_energy {#{{{
-        my $self = shift;
-
-        my $img  = $self->wxbb->resolve(service => '/Assets/images/res_l/energy.png');
-        $img->Rescale(31, 45);
-        my $bmp  = Wx::Bitmap->new($img);
-        return Wx::StaticBitmap->new(
-            $self->parent, -1, 
-            $bmp,
-            wxDefaultPosition,
-            Wx::Size->new($img->GetWidth, $img->GetHeight),
-            wxFULL_REPAINT_ON_RESIZE
-        );
-    }#}}}
     sub _build_lbl_header {#{{{
         my $self = shift;
         my $y = Wx::StaticText->new(
@@ -425,57 +343,19 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
         $y->SetFont( $self->get_font('/header_1') );
         return $y;
     }#}}}
-    sub _build_lbl_food {#{{{
-        my $self = shift;
-        my $y = Wx::StaticText->new(
-            $self->parent, -1, 
-            q{},
-            wxDefaultPosition, Wx::Size->new(80, 20)
-        );
-        $y->SetFont( $self->get_font('/bold_para_text_2') );
-        return $y;
-    }#}}}
-    sub _build_lbl_ore {#{{{
-        my $self = shift;
-        my $y = Wx::StaticText->new(
-            $self->parent, -1, 
-            q{},
-            wxDefaultPosition, Wx::Size->new(80, 20)
-        );
-        $y->SetFont( $self->get_font('/bold_para_text_2') );
-        return $y;
-    }#}}}
-    sub _build_lbl_water {#{{{
-        my $self = shift;
-        my $y = Wx::StaticText->new(
-            $self->parent, -1, 
-            q{},
-            wxDefaultPosition, Wx::Size->new(80, 20)
-        );
-        $y->SetFont( $self->get_font('/bold_para_text_2') );
-        return $y;
-    }#}}}
-    sub _build_lbl_energy {#{{{
-        my $self = shift;
-        my $y = Wx::StaticText->new(
-            $self->parent, -1, 
-            q{},
-            wxDefaultPosition, Wx::Size->new(80, 20)
-        );
-        $y->SetFont( $self->get_font('/bold_para_text_2') );
-        return $y;
-    }#}}}
     sub _build_lbl_instructions {#{{{
         my $self = shift;
 
         my $indent = q{ }x4;
-        my $text = "This is where the instructions go.";
+        my $text = "Move the damaged buidings in the list on the left to the list on the right, then click Repair!
+
+If many buildings are damaged, you may run out of resources before you can repair everything.  So it's recommended that you repair the most important buildings first, then check your resource status, then move on to the less important buidings.";
 
         my $y = Wx::StaticText->new(
             $self->parent, -1,
             $text,
             wxDefaultPosition, 
-            Wx::Size->new(-1, 20)
+            Wx::Size->new(-1, 50)
         );
         $y->SetFont( $self->get_font('/para_text_2') );
         $y->Wrap( 560 );
@@ -531,6 +411,17 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
         my $self = shift;
         return $self->game_client->planet_id( $self->planet_name );
     }#}}}
+    sub _build_res_bar {#{{{
+        my $self = shift;
+        my $res_bar = LacunaWaX::Generics::ResBar->new(
+            app         => $self->app,
+            ancestor    => $self->ancestor,
+            parent      => $self->parent,
+            planet_name => $self->planet_name,
+            
+        );
+        return $res_bar;
+    }#}}}
     sub _build_status {#{{{
         my $self = shift;
 
@@ -562,38 +453,6 @@ package LacunaWaX::MainSplitterWindow::RightPane::RepairPane {
     sub _build_szr_repair_in {#{{{
         my $self = shift;
         return $self->build_sizer($self->parent, wxHORIZONTAL, 'Repair Inside');
-    }#}}}
-    sub _build_szr_res_out {#{{{
-        my $self = shift;
-        return $self->build_sizer($self->parent, wxHORIZONTAL, 'Res Outside');
-    }#}}}
-    sub _build_szr_res_in {#{{{
-        my $self = shift;
-        return $self->build_sizer($self->parent, wxHORIZONTAL, 'Res Inside');
-    }#}}}
-    sub _build_szr_food {#{{{
-        my $self = shift;
-        my $v = $self->build_sizer($self->parent, wxVERTICAL, 'Food');
-        $v->SetMinSize( Wx::Size->new($self->res_w, $self->res_h) );
-        return $v;
-    }#}}}
-    sub _build_szr_ore {#{{{
-        my $self = shift;
-        my $v = $self->build_sizer($self->parent, wxVERTICAL, 'ore');
-        $v->SetMinSize( Wx::Size->new($self->res_w, $self->res_h) );
-        return $v;
-    }#}}}
-    sub _build_szr_water {#{{{
-        my $self = shift;
-        my $v = $self->build_sizer($self->parent, wxVERTICAL, 'water');
-        $v->SetMinSize( Wx::Size->new($self->res_w, $self->res_h) );
-        return $v;
-    }#}}}
-    sub _build_szr_energy {#{{{
-        my $self = shift;
-        my $v = $self->build_sizer($self->parent, wxVERTICAL, 'energy');
-        $v->SetMinSize( Wx::Size->new($self->res_w, $self->res_h) );
-        return $v;
     }#}}}
     sub _set_events {#{{{
         my $self = shift;
@@ -731,6 +590,7 @@ assignments intact.
         my $bee  = shift;
         my $list = shift;
         my $col  = shift;
+        my $rev  = shift;   # flag - if true, reverse sort.
 
         ### If we're sorting by either the x or y coordinate, we want to do a 
         ### secondary sort on the other coordinate.  But it's also possible to 
@@ -750,6 +610,11 @@ assignments intact.
         my $dat_1_1 = $n1 =~ s/[\s%]+//gr;
         my $dat_1_2 = $n2 =~ s/[\s%]+//gr;
 
+        ### NOTE
+        ### Damage is the only column that needs to do a reverse sort, and it 
+        ### doesn't do a sub-sort.  So there's nothing in the sub-sort 
+        ### condition below that's even looking at the $rev flag.
+
         my $rv;
         if( defined $col2 ) {
             $i1 = $list->GetItem($i1_off, $col2);
@@ -761,6 +626,9 @@ assignments intact.
             $rv = ( ($dat_1_1 <=> $dat_1_2) or ($dat_2_1 <=> $dat_2_2) );
         }
         else {
+            if( $rev ) {
+                ($dat_1_1, $dat_1_2) = ($dat_1_2, $dat_1_1);
+            }
             $rv = $dat_1_1 <=> $dat_1_2;
         }
 
@@ -835,51 +703,6 @@ I have not tested the "fails if we're out of res" yet.
         }
         return 1;
     }#}}}
-    sub update_res_panel {
-        my $self = shift;
-
-        my $status = $self->game_client->get_body_status($self->planet_id, 1);  # force
-
-        my $food = $status->{'food_stored'};
-        my $ore = $status->{'ore_stored'};
-        my $water = $status->{'water_stored'};
-        my $energy = $status->{'energy_stored'};
-
-        $self->lbl_food->SetLabel(   $self->format_num($food)   );
-        $self->lbl_ore->SetLabel(    $self->format_num($ore)    );
-        $self->lbl_water->SetLabel(  $self->format_num($water)  );
-        $self->lbl_energy->SetLabel( $self->format_num($energy) );
-        
-        $self->szr_food->Add($self->img_food, 0, 0, 0);
-        $self->szr_food->AddSpacer(5);
-        $self->szr_food->Add($self->lbl_food, 0, 0, 0);
-        $self->szr_ore->Add($self->img_ore, 0, 0, 0);
-        $self->szr_ore->AddSpacer(5);
-        $self->szr_ore->Add($self->lbl_ore, 0, 0, 0);
-        $self->szr_water->Add($self->img_water, 0, 0, 0);
-        $self->szr_water->AddSpacer(5);
-        $self->szr_water->Add($self->lbl_water, 0, 0, 0);
-        $self->szr_energy->Add($self->img_energy, 0, 0, 0);
-        $self->szr_energy->AddSpacer(5);
-        $self->szr_energy->Add($self->lbl_energy, 0, 0, 0);
-
-        $self->szr_res_in->AddStretchSpacer(2);
-        $self->szr_res_in->Add($self->szr_food, 2, 0, 0);
-        $self->szr_res_in->AddSpacer(10);
-        $self->szr_res_in->Add($self->szr_ore, 2, 0, 0);
-        $self->szr_res_in->AddSpacer(10);
-        $self->szr_res_in->Add($self->szr_water, 2, 0, 0);
-        $self->szr_res_in->AddSpacer(10);
-        $self->szr_res_in->Add($self->szr_energy, 2, 0, 0);
-        $self->szr_res_in->AddSpacer(10);
-        $self->szr_res_in->AddStretchSpacer(1);
-
-        #$self->szr_res_out->AddStretchSpacer();
-        $self->szr_res_out->Add($self->szr_res_in, 1, wxALIGN_CENTER, 0);
-        #$self->szr_res_out->AddStretchSpacer();
-
-        return 1;
-    }
 
     sub OnAddSingle {#{{{
         my $self    = shift;
@@ -1009,17 +832,17 @@ I have not tested the "fails if we're out of res" yet.
         my $event   = shift;    # Wx::ListEvent
 
         given($event->GetColumn) {  # zero-based integer offset
-            when(0) {
+            when(0) {   # name
                 $self->lst_bldgs_onsite->SortItems( sub{$self->list_sort_alpha(@_, $self->lst_bldgs_onsite, 0)} );
             }
-            when(1) {
+            when(1) {   # X
                 my $rv = $self->lst_bldgs_onsite->SortItems( sub{$self->list_sort_num(@_, $self->lst_bldgs_onsite, 1)} );
             }
-            when(2) {
+            when(2) {   # Y
                 my $rv = $self->lst_bldgs_onsite->SortItems( sub{$self->list_sort_num(@_, $self->lst_bldgs_onsite, 2)} );
             }
-            when(3) {
-                my $rv = $self->lst_bldgs_onsite->SortItems( sub{$self->list_sort_num(@_, $self->lst_bldgs_onsite, 3)} );
+            when(3) {   # Damage (reverse sort)
+                my $rv = $self->lst_bldgs_onsite->SortItems( sub{$self->list_sort_num(@_, $self->lst_bldgs_onsite, 3, 1)} );
             }
             default {
                 my $rv = $self->lst_bldgs_onsite->SortItems( sub{$self->list_sort_alpha(@_, $self->lst_bldgs_onsite, 0)} );
@@ -1034,17 +857,17 @@ I have not tested the "fails if we're out of res" yet.
         my $event   = shift;    # Wx::ListEvent
 
         given($event->GetColumn) {  # zero-based integer offset
-            when(0) {
+            when(0) {   # name
                 $self->lst_bldgs_to_repair->SortItems( sub{$self->list_sort_alpha(@_, $self->lst_bldgs_to_repair, 0)} );
             }
-            when(1) {
+            when(1) {   # x
                 my $rv = $self->lst_bldgs_to_repair->SortItems( sub{$self->list_sort_num(@_, $self->lst_bldgs_to_repair, 1)} );
             }
-            when(2) {
+            when(2) {   # y
                 my $rv = $self->lst_bldgs_to_repair->SortItems( sub{$self->list_sort_num(@_, $self->lst_bldgs_to_repair, 2)} );
             }
-            when(3) {
-                my $rv = $self->lst_bldgs_to_repair->SortItems( sub{$self->list_sort_num(@_, $self->lst_bldgs_to_repair, 3)} );
+            when(3) {   # Damage (reverse sort)
+                my $rv = $self->lst_bldgs_to_repair->SortItems( sub{$self->list_sort_num(@_, $self->lst_bldgs_to_repair, 3, 1)} );
             }
             default {
                 my $rv = $self->lst_bldgs_to_repair->SortItems( sub{$self->list_sort_alpha(@_, $self->lst_bldgs_to_repair, 0)} );
@@ -1058,14 +881,17 @@ I have not tested the "fails if we're out of res" yet.
         my $parent  = shift;    # Wx::ScrolledWindow
         my $event   = shift;    # Wx::CommandEvent
 
-        $self->status->show;
+        ### Reset this on each re-entry to this handler.
+        $self->flg_stop(0);
 
+        my $partial = 0;
+        $self->status->show;
         while( 1 ) {
             my $row = -1;
             $row = $self->lst_bldgs_to_repair->GetNextItem($row, wxLIST_NEXT_ALL, wxLIST_STATE_DONTCARE);
             last if $row == -1;
+            last if $self->flg_stop;
 
-            ### ListCtrl's text values have been formatted; trim!
             my $name = $self->str_trim( $self->lst_bldgs_to_repair->GetItem($row)->GetText );
             my $x    = $self->str_trim( $self->lst_bldgs_to_repair->GetItem($row, 1)->GetText );
             my $y    = $self->str_trim( $self->lst_bldgs_to_repair->GetItem($row, 2)->GetText );
@@ -1078,19 +904,57 @@ I have not tested the "fails if we're out of res" yet.
             }
             catch {
                 my $msg = (ref $_) ? $_->text : $_;
-                $self->status_say("Attempt to repair '$name' at ($x, $y) failed: $msg");
+
+                unless( $msg =~ /Not enough resources/ ) {
+                    ### The 'not enough resources' is something we're 
+                    ### expecting and dealing with below.  If we get any other 
+                    ### error, we want it displayed.
+                    $self->status_say("Attempt to repair '$name' at ($x, $y) failed: $msg");
+                }
+
                 return;
             };
-            last unless $rv;
+
+            if( ! $rv ) {
+                $self->status_say("...$name could not be repaired at all - not enough resources.");
+                $partial = 1;
+            }
+            else {
+                my $eff = $rv->{'building'}{'efficiency'};
+                if( $eff < 100 ) {
+                    $self->status_say("...$name partially repaired to ${eff}%.  Not enough resources for a full repair.");
+                    $partial = 1;
+                }
+                else {
+                    $self->status_say("...$name repaired!");
+                }
+            }
+            $self->status_say("");
         }
 
+        ### If the user canceled the repair loop by closing the status window, 
+        ### this flag will be on.  Turn it off so the next run of the loop 
+        ### will continue until it finishes or the user cancels it again.
+        $self->flg_stop(0);
+
         $self->clear_list($self->lst_bldgs_to_repair);
+        $self->clear_list($self->lst_bldgs_onsite);
         $self->clear_buildings;
-        $self->_build_buildings(1);     # force
+        $self->_build_buildings(1); 
         $self->populate_bldgs_list( $self->lst_bldgs_onsite );
+        $self->res_bar->update_res;
 
         $self->status_say_recsep;
-        $self->status_say("All requested buildings have been repaired.");
+        $self->status_say("");
+
+        if( $partial ) {
+            $self->status_say("We've repaired as much as possible before running out of resources.  You'll need to return later after your res builds back up to complete all repairs.");
+        }
+        else {
+            $self->status_say("All requested buildings have been repaired.");
+        }
+        $self->status_say("");
+        $self->status_say("You may close this window.");
 
         return 1;
     }#}}}
@@ -1108,6 +972,7 @@ I have not tested the "fails if we're out of res" yet.
         if( $self->has_status ) {
             $self->clear_status;
         }
+        $self->flg_stop(1);
         return 1;
     }#}}}
 
