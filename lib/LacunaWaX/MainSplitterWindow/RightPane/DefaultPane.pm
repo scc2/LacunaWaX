@@ -45,7 +45,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::DefaultPane {
             $self->parent, -1, 
             $self->text, 
             wxDefaultPosition, 
-            Wx::Size->new(500,300)
+            Wx::Size->new(500,400)
         );
         $v->SetFont( $self->get_font('/para_text_2') );
         return $v;
