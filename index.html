@@ -47,19 +47,57 @@
 
 <p>Copyright 2012-2013 Jonathan D. Barton (<a href="mailto:tmtowtdi@gmail.com">tmtowtdi@gmail.com</a>)</p>
 
-<p>See NOTES for developer notes.</p>
+<h2>INSTALLING</h2>
+<ul>
+    <li>
+        To install on Windows, download the EXE installer and run it.
+    </li>
+    <li>
+        To install on anything other than Windows, you'll need to run from source, 
+        which takes a bit more work.  Reasonable installation docs for running from 
+        source are on the TODO list.
+    </li>
+</ul>
 
-<h2>INSTALLATION</h2>
-    <ul>
-        <li>
-            To install on Windows, download the EXE installer and run it.
-        </li>
-        <li>
-            To install on anything other than Windows, you'll need to run from source, 
-            which takes a bit more work.  Reasonable installation docs for running from 
-            source are on the TODO list.
-        </li>
-    </ul>
+<h2>UPGRADING FROM PREVIOUS VERSIONS</h2>
+Usually, when you want to upgrade from an old version to a new version, all you need to do 
+is run the new version's installer.  You should not need to uninstall the old version 
+first; the new version will just lay itself over top of the old version and preserve all 
+of your preferences.
+<p>
+<p>
+
+However, a few people have occasionally had problems when installing a new version over 
+top of a much older version (not just the previously-released version).
+<p>
+
+When this happens, the install will look like it worked fine, but when you start the 
+program and try to access a panel, often one that previously worked, the entire program 
+will crash instead.
+<p>
+
+If that happens, the solution is to:
+<ul>
+    <li>
+        If you need to record any data from your old version (like lists of sitter 
+        passwords), re-install the old version, run the program, and make notes of what 
+        you need to preserve.  When you're finished, shut down LacunaWaX.
+    </li>
+    <li>
+        Uninstall LacunaWaX.
+    </li>
+    <li>
+        Fully delete the install directory, which will be in your Program Files directory.  
+        The directory (folder) you want to install is "TMT Tools\LacunaWaX" - just delete 
+        the whole thing.
+    </li>
+    <li>
+        Now install the new version.  It should work fine now, you'll just need to re-set 
+        your preferences.
+    </li>
+</ul>
+
+
 
 <h2>CAUTION</h2>
 
@@ -100,19 +138,6 @@ pre-requisite modules will need to be installed manually.</p>
         <p>Install any modules it complains about missing, and add them to the list above.</p>
 
         <p>Once all pre-reqs have been installed, that command will start the GUI.</p>
-
-        <h3>Blocked Google Drive?</h3>
-        The executable is being hosted from Google Drive, which is blocked in some 
-        countries.  If Drive is blocked for you and you're an S.M.A member, you can 
-        download it from <a 
-        href="http://kiamo.haphazardmedia.co.uk/warroom/download/file.php?id=49">The 
-        Warroom</a>.
-        <p>
-
-        If you're not an S.M.A member and Drive is blocked for you, you're currently 
-        somewhat out of luck.  I may ultimately host the .exe here on Github, but that's 
-        not being done yet.
-        <p>
 
       </section>
     </div>
