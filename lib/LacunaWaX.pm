@@ -35,6 +35,10 @@ package LacunaWaX {
     has 'db_log_file'       => (is => 'rw', isa => 'Str',                               lazy_build => 1);
     has 'icon_bundle'       => (is => 'rw', isa => 'Wx::IconBundle',                    lazy_build => 1);
 
+    ### X and Y of the current screen resolution
+    has 'display_x'     => (is => 'rw', isa => 'Int', lazy_build => 1);
+    has 'display_y'     => (is => 'rw', isa => 'Int', lazy_build => 1);
+
     has 'main_frame' => (
         is      => 'rw', 
         isa     => 'LacunaWaX::MainFrame', 
@@ -128,6 +132,14 @@ package LacunaWaX {
         my $file = $self->root_dir . '/user/lacuna_log.sqlite';
         return $file;
     }#}}}
+    sub _build_display_x {#{{{
+        my $self = shift;
+        return Wx::SystemSettings::GetMetric(wxSYS_SCREEN_X);
+    }#}}}
+    sub _build_display_y {#{{{
+        my $self = shift;
+        return Wx::SystemSettings::GetMetric(wxSYS_SCREEN_Y);
+    }#}}}
     sub _build_glyphs {#{{{
         return [sort qw(
             anthracite
@@ -176,9 +188,19 @@ package LacunaWaX {
         my $schema = $self->bb->resolve( service => '/Database/schema' );
         if( my $db_x = $schema->resultset('AppPrefsKeystore')->find({ name => 'MainWindowX' }) ) {
             if( my $db_y = $schema->resultset('AppPrefsKeystore')->find({ name => 'MainWindowY' }) ) {
-                $args->{'position'} = Wx::Point->new($db_x->value, $db_y->value);
+                my( $x, $y ) = ($db_x->value, $db_y->value );
+                if( 
+                        $x >= 0 and $x < $self->display_x
+                    and $y >= 0 and $y < $self->display_y
+                ) {
+                    ### Attempting to fix the hidden window problem.  Only try  
+                    ### to set the MainFrame's position if the recorded X and 
+                    ### Y are inside the bounds of the current display.
+                    $args->{'position'} = Wx::Point->new($x, $y);
+                }
             }
         }
+
 
         ### position arg is optional.  Window will be centered on display if 
         ### position is not sent.
