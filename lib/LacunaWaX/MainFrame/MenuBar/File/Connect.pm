@@ -50,7 +50,7 @@ package LacunaWaX::MainFrame::MenuBar::File::Connect {
         my $self = shift;
         foreach my $server_id( keys %{ $self->connections } ) {
             my $menu_item = $self->connections->{$server_id};
-            EVT_MENU( $self->parent, $menu_item->GetId, sub{$self->main_frame->OnGameServerConnect($server_id)} );
+            EVT_MENU( $self->parent, $menu_item->GetId, sub{$self->get_main_frame->OnGameServerConnect($server_id)} );
         }
         return 1;
     }#}}}
