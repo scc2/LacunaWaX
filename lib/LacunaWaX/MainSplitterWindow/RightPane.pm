@@ -1,5 +1,4 @@
 
-
 package LacunaWaX::MainSplitterWindow::RightPane {
     use v5.14;
     use Moose;
@@ -10,16 +9,17 @@ package LacunaWaX::MainSplitterWindow::RightPane {
     use Wx::Event qw(EVT_BUTTON EVT_SPINCTRL EVT_CLOSE);
     with 'LacunaWaX::Roles::GuiElement';
 
-    use LacunaWaX::MainSplitterWindow::RightPane::DefaultPane;
-    use LacunaWaX::MainSplitterWindow::RightPane::SummaryPane;
     use LacunaWaX::MainSplitterWindow::RightPane::BFGPane;
+    use LacunaWaX::MainSplitterWindow::RightPane::DefaultPane;
     use LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane;
-    use LacunaWaX::MainSplitterWindow::RightPane::SSIncoming;
     use LacunaWaX::MainSplitterWindow::RightPane::LotteryPane;
+    use LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane;
     use LacunaWaX::MainSplitterWindow::RightPane::RearrangerPane;
     use LacunaWaX::MainSplitterWindow::RightPane::RepairPane;
     use LacunaWaX::MainSplitterWindow::RightPane::SpiesPane;
-    use LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane;
+    use LacunaWaX::MainSplitterWindow::RightPane::SSIncoming;
+    use LacunaWaX::MainSplitterWindow::RightPane::SSHealth;
+    use LacunaWaX::MainSplitterWindow::RightPane::SummaryPane;
 
     has 'has_focus'     => (is => 'rw', isa => 'Int', lazy => 1, default => 0);
     has 'main_panel'    => (is => 'rw', isa => 'Wx::ScrolledWindow', predicate => 'has_main_panel');

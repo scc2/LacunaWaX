@@ -97,6 +97,7 @@ package LacunaWaX::MainSplitterWindow::LeftPane::BodiesTreeCtrl {
                 my $b64_bfg         = encode_base64(join q{:}, ('bfg', $pid));
                 my $b64_inc         = encode_base64(join q{:}, ('incoming', $pid));
                 my $b64_props       = encode_base64(join q{:}, ('propositions', $pid));
+                my $b64_sshealth    = encode_base64(join q{:}, ('sshealth', $pid));
 
                 ### Planet name produces summary and should be bolded
                 my $planet_name_id  = $self->treectrl->AppendItem(
@@ -121,6 +122,9 @@ package LacunaWaX::MainSplitterWindow::LeftPane::BodiesTreeCtrl {
                     ###
                     my $bfg_id = $self->treectrl->AppendItem( $planet_name_id, 
                         'Fire the BFG', -1, -1, Wx::TreeItemData->new($b64_bfg)
+                    );
+                    my $sshealth_id = $self->treectrl->AppendItem( 
+                        $planet_name_id, 'Health Alerts', -1, -1, Wx::TreeItemData->new($b64_sshealth)
                     );
                     my $inc_id = $self->treectrl->AppendItem( 
                         $planet_name_id, 'Incoming', -1, -1, Wx::TreeItemData->new($b64_inc)
@@ -293,6 +297,16 @@ package LacunaWaX::MainSplitterWindow::LeftPane::BodiesTreeCtrl {
                             required_buildings  => {'Parliament' => undef}, 
                             nothrob             => 1,
                         } 
+                    );
+                }
+                when(/^sshealth$/) {
+                    $self->get_right_pane->show_right_pane(
+                        'LacunaWaX::MainSplitterWindow::RightPane::SSHealth',
+                        $planet,
+                        ### A Police Station is required to see incoming, but 
+                        ### if it's not there we still want to be able to set 
+                        ### up alerts for res/hr, so the Police is _not_ being 
+                        ### set as a pre-req.
                     );
                 }
 

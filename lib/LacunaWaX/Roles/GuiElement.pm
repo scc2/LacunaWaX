@@ -186,6 +186,7 @@ package LacunaWaX::Roles::GuiElement {
             popmsg                  => 'popmsg',
             popconf                 => 'popconf',
             secs_to_human           => 'secs_to_human',
+            server                  => 'server',
             server_ids              => 'server_ids',
             server_record_by_id     => 'server_record_by_id',
             set_caption             => 'caption',

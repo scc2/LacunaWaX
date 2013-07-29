@@ -55,7 +55,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane {
 
     has 'szr_header'               => (is => 'rw', isa => 'Wx::Sizer',         lazy_build => 1, documentation => 'vertical'     );
     has 'szr_props'                => (is => 'rw', isa => 'Wx::Sizer',                          documentation => 'vertical'     );
-    has 'szr_close_status'            => (is => 'rw', isa => 'Wx::Sizer',         lazy_build => 1, documentation => 'horizontal'   );
+    has 'szr_close_status'         => (is => 'rw', isa => 'Wx::Sizer',         lazy_build => 1, documentation => 'horizontal'   );
 
     has 'lbl_planet_name'           => (is => 'rw', isa => 'Wx::StaticText',    lazy_build => 1);
     has 'lbl_instructions_box'      => (is => 'rw', isa => 'Wx::BoxSizer',      lazy_build => 1);
