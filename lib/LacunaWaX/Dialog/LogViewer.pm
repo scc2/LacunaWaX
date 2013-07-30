@@ -106,18 +106,20 @@ package LacunaWaX::Dialog::LogViewer {
     sub _build_component_labels {#{{{
         my $self = shift;
         ### If you update a label, also update the values below.
-        my $v = [ 'Clear', 'Archmin', 'Autovote', 'Lottery', 'Spies' ];
+        my $v = [ 'Clear', 'Archmin', 'Autovote', 'Lottery', 'Spies', 'SS Health' ];
         return $v;
     }#}}}
     sub _build_component_values {#{{{
         my $self = shift;
         ### If you update a value, also update the labels above.
         my $v = {
+            # Label         => Value
             Clear           => 'This does not appear in the table so this will clear the list',
             Archmin         => 'Archmin',
             Autovote        => 'Autovote',
             Lottery         => 'Lottery',
             Spies           => 'Spies',
+            'SS Health'     => 'SS_Health',
         };
         return $v;
     }#}}}
@@ -172,7 +174,7 @@ package LacunaWaX::Dialog::LogViewer {
             $self, -1, 
             "Component", 
             wxDefaultPosition, 
-            Wx::Size->new(390,50), 
+            Wx::Size->new(430,50), 
             $self->component_labels,
             1, 
             wxRA_SPECIFY_ROWS

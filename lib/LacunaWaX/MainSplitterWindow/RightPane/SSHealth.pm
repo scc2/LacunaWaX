@@ -29,7 +29,6 @@ Allow user to set up alerts per SS.
     - other than alliance spies
 
 - If our star becomes unseized
-    - Again, might make this a default alert.
     - If seized by an SS other than ourselves, check if the seizing SS is 
       owned by the alliance.  If so, no alert.
 
@@ -85,9 +84,10 @@ package LacunaWaX::MainSplitterWindow::RightPane::SSHealth {
     has 'lbl_enable_alert'  => (is => 'rw', isa => 'Wx::StaticText',    lazy_build => 1);
     has 'szr_enable_alert'  => (is => 'rw', isa => 'Wx::Sizer',         lazy_build => 1, documentation => 'horizontal' );
 
-    has 'lbl_min_res'  => (is => 'rw', isa => 'Wx::StaticText', lazy_build => 1);
-    has 'szr_min_res'  => (is => 'rw', isa => 'Wx::Sizer',      lazy_build => 1, documentation => 'horizontal' );
-    has 'txt_min_res'  => (is => 'rw', isa => 'Wx::TextCtrl',   lazy_build => 1);
+    has 'lbl_min_res_pre'   => (is => 'rw', isa => 'Wx::StaticText', lazy_build => 1);
+    has 'lbl_min_res_suf'   => (is => 'rw', isa => 'Wx::StaticText', lazy_build => 1);
+    has 'szr_min_res'       => (is => 'rw', isa => 'Wx::Sizer',      lazy_build => 1, documentation => 'horizontal' );
+    has 'txt_min_res'       => (is => 'rw', isa => 'Wx::TextCtrl',   lazy_build => 1);
 
     has 'szr_save' => (is => 'rw', isa => 'Wx::Sizer',  lazy_build => 1, documentation => 'vertical' );
     has 'btn_save' => (is => 'rw', isa => 'Wx::Button', lazy_build => 1);
@@ -103,9 +103,11 @@ package LacunaWaX::MainSplitterWindow::RightPane::SSHealth {
         $self->szr_enable_alert->AddSpacer(10);
         $self->szr_enable_alert->Add($self->chk_enable_alert, 0, 0, 0);
 
-        $self->szr_min_res->Add($self->lbl_min_res, 0, 0, 0);
+        $self->szr_min_res->Add($self->lbl_min_res_pre, 0, 0, 0);
         $self->szr_min_res->AddSpacer(10);
         $self->szr_min_res->Add($self->txt_min_res, 0, 0, 0);
+        $self->szr_min_res->AddSpacer(10);
+        $self->szr_min_res->Add($self->lbl_min_res_suf, 0, 0, 0);
 
         $self->szr_save->Add($self->btn_save, 0, 0, 0);
 
@@ -170,9 +172,10 @@ package LacunaWaX::MainSplitterWindow::RightPane::SSHealth {
             $self->parent, -1, 
             "Monitor Health of " . $self->planet_name,
             wxDefaultPosition, 
-            Wx::Size->new(-1, 40)
+            Wx::Size->new(-1, 80)
         );
         $v->SetFont( $self->get_font('/header_1') );
+        $v->Wrap( $self->parent->GetSize->GetWidth - 130 ); # accounts for the vertical scrollbar
         return $v;
     }#}}}
     sub _build_lbl_instructions {#{{{
@@ -182,14 +185,14 @@ package LacunaWaX::MainSplitterWindow::RightPane::SSHealth {
 
 If you want to be alerted, remember that you have to actually schedule the Schedule_ss_alerts.exe program!  Just setting preferences here and then not setting up a scheduled job will fail to ever warn you about anything.  See the Help documentation if you need help setting up a scheduled task.
 
-Alerts will be sent to you in game mail.  They will contain the 'Correspondence' tag.  If you're setting up alerts, DO NOT use the mail tool to blindly clear your Correspondence mail!  Also, don't go through your mail in-game and just Select All... Delete, or you may well miss an alert.
+Alerts will be sent to you in game mail, and will have the 'Correspondence' tag attached.  You should always filter your mail by Correspondence in the dropdown before deleting a bunch of mail, or you may miss alerts (not to mention actual messages sent by other players).
         
-'Bad Things' include:
+'Bad Things' that will be diagnosed include:
     - The station's star is unseized
-    - The station's star becomes seized by a non-allied station
+    - The station's star becomes seized by any other station
     - Any non-allied ships are incoming
         - This will only work if there's a Police Station built.
-    - Any foreign spies are detected
+    - Any spies are detected who are not on Counter Espionage
         - Again, this will only work if there's a Police Station.
     - Any of the station's resources per hour drop below the amount you set below.
 ";
@@ -200,15 +203,26 @@ Alerts will be sent to you in game mail.  They will contain the 'Correspondence'
             wxDefaultPosition, 
             Wx::Size->new(-1, 320)
         );
-        $v->Wrap( $self->parent->GetSize->GetWidth - 130 ); # - 35 accounts for the vertical scrollbar
+        $v->Wrap( $self->parent->GetSize->GetWidth - 130 ); # accounts for the vertical scrollbar
         $v->SetFont( $self->get_font('/para_text_2') );
         return $v;
     }#}}}
-    sub _build_lbl_min_res {#{{{
+    sub _build_lbl_min_res_pre {#{{{
         my $self = shift;
         my $v = Wx::StaticText->new(
             $self->parent, -1, 
-            "Alert if res/hr drops below: ",
+            "Alert if any res drops below: ",
+            wxDefaultPosition, 
+            Wx::Size->new(-1, 40)
+        );
+        $v->SetFont( $self->get_font('/para_text_2') );
+        return $v;
+    }#}}}
+    sub _build_lbl_min_res_suf {#{{{
+        my $self = shift;
+        my $v = Wx::StaticText->new(
+            $self->parent, -1, 
+            "/ hr",
             wxDefaultPosition, 
             Wx::Size->new(-1, 40)
         );

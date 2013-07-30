@@ -697,7 +697,7 @@ where rate is a ship's listed speed.
             my $chi  = $self->wxbb->resolve( service => '/Cache/raw_memory' );
             my $a_key  = join q{:}, ('ALLIANCE', $alliance_id);
             $alliance = $chi->compute($a_key, '1 hour', sub {
-                $self->app->game_client->alliance( id => $alliance_id );
+                $self->alliance( id => $alliance_id );
             });
 
             my $ap_key = join q{:}, ('ALLIANCE_PROFILE', $alliance_id);
@@ -706,7 +706,7 @@ where rate is a ship's listed speed.
             });
         }
         else {
-            $alliance = $self->app->game_client->alliance( id => $alliance_id );
+            $alliance = $self->alliance( id => $alliance_id );
             $alliance_profile = $alliance->view_profile($alliance_id);
         }
 
@@ -878,6 +878,8 @@ planet.
 =head2 get_building
 
 Returns a single GLC building object for a unique building.  
+
+eg Games::Lacuna::Client::Buildings::PoliceStation
 
 $type is fairly liberal - either the machine name ("entertainment") or the 
 human name ("Entertainment Ministry") can be passed.  Both are case insensitive.

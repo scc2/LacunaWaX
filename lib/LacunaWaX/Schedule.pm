@@ -25,6 +25,7 @@ package LacunaWaX::Schedule {
     use LacunaWaX::Schedule::Autovote;
     use LacunaWaX::Schedule::Lottery;
     use LacunaWaX::Schedule::Spies;
+    use LacunaWaX::Schedule::SS_Health;
 
     has 'bb'            => (is => 'rw', isa => 'LacunaWaX::Model::Container',   required    => 1);
     has 'schedule'      => (is => 'rw', isa => 'Str',                           required    => 1);
@@ -40,7 +41,7 @@ package LacunaWaX::Schedule {
         return $self;
     }
 
-    around 'lottery', 'archmin' => sub {
+    around qw(archmin autovote lottery spies ss_health) => sub {#{{{
         my $orig = shift;
         my $self = shift;
 
@@ -65,9 +66,7 @@ package LacunaWaX::Schedule {
         $self->mutex->lock_un;
         $logger->info("Scheduler run of task " . $self->schedule . " complete.");
         return $self;
-    };
-
-
+    };#}}}
     sub _build_mutex {#{{{
         my $self = shift;
         return LacunaWaX::Model::Mutex->new( bb => $self->bb, name => 'schedule' );
@@ -107,6 +106,15 @@ package LacunaWaX::Schedule {
         my $spies = LacunaWaX::Schedule::Spies->new( bb => $self->bb );
         my $cnt   = $spies->train_all_servers;
         $spies->logger->info("--- Spy Training Run Complete ---");
+
+        return $cnt;
+    }#}}}
+    sub ss_health {#{{{
+        my $self = shift;
+
+        my $ss_health = LacunaWaX::Schedule::SS_Health->new( bb => $self->bb );
+        my $cnt = $ss_health->diagnose_all_servers;
+        $ss_health->logger->info("--- Station Health Check Complete ---");
 
         return $cnt;
     }#}}}

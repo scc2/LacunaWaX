@@ -14,6 +14,7 @@ package LacunaWaX::Roles::ScheduledTask {
             basis by calls to game_connect().
         },
     );
+
     has 'bb' => (
         is          => 'rw',
         isa         => 'LacunaWaX::Model::Container',
