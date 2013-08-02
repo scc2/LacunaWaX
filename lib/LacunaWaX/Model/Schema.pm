@@ -183,8 +183,7 @@ package LacunaWaX::Model::Schema::SSAlerts {#{{{
     sub sqlt_deploy_hook {#{{{
         my $self  = shift;
         my $table = shift;
-        $table->add_index(name => 'SSAlerts_server_id',  fields => ['server_id']);
-        $table->add_index(name => 'SSAlerts_station_id', fields => ['station_id']);
+        $table->add_index(name => 'SSAlerts_station_id', fields => ['server_id', 'station_id']);
         return 1;
     }#}}}
 }#}}}

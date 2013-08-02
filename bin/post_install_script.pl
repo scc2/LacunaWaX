@@ -23,8 +23,7 @@ use LacunaWaX::Model::Directory;
 use LacunaWaX::Model::LogsSchema;
 use LacunaWaX::Model::Schema;
 
-
-### Creates 'TestOne' and 'TestTwo' test tables if true.  For debugging only; 
+### Creates 'TestOne' and 'TestTwo' tables if true.  For debugging only; 
 ### should usually be false.
 my $create_test_tables = 0; 
 
@@ -185,11 +184,12 @@ my $install_dir         = $Registry->{$install_dir_key};        # ends with a \
 my $this_version        = $LacunaWaX::VERSION;
 my $cava_version        = $Registry->{$cava_version_key}    // q{0.0};
 
+
 my $tmt_key     = 'HKEY_LOCAL_MACHINE/Software/TMT Tools/';
 my $lw_version  = $Registry->{ $tmt_key . "LacunaWaX/Version" } // '0.0';
 
 
-open my $ilog, '>', $install_dir . 'install_log.txt';
+open my $ilog, '>>', $install_dir . 'install_log.txt';
 my $dt = DateTime->now();
 $ilog->autoflush(1);
 say $ilog "---------- " . $dt->ymd . ' ' . $dt->hms . " ----------";
@@ -223,8 +223,11 @@ my $d = LacunaWaX::Model::DefaultData->new();
 say $ilog "Adding known servers";
 $d->add_servers($main_schema);
 
-say $ilog "Adding known stations";
-$d->add_stations($main_schema);
+
+### Now that this is no longer just an SMA tool, the whole add_stations() 
+### method should probably go away
+#say $ilog "Adding known stations";
+#$d->add_stations($main_schema);
 
 
 ### It looks wrong for "LacunaWaX/" to end with a delimiter and "/Version" to 
@@ -314,6 +317,22 @@ sub create_main_tables_and_indexes {#{{{
     say $ilog "Generating 1.10 Schema:";
     my( $one_point_ten_tables, $one_point_ten_indexes ) = tables_1point10();
     foreach my $hr( $one_point_ten_tables, $one_point_ten_indexes ) {
+        while( my($name,$stmt) = each %{$hr} ) {
+            say $ilog "Attempting to create '$name':";
+            try {
+                $dbh->do($stmt);
+            }
+            catch {
+                say $ilog "'$name' already exists; no need to re-create it.";
+            };
+        }
+    }
+    say $ilog "-=-=-=-";
+
+    say $ilog "-=-=-=-";
+    say $ilog "Generating 1.20 Schema:";
+    my( $one_point_twenty_tables, $one_point_twenty_indexes ) = tables_1point20();
+    foreach my $hr( $one_point_twenty_tables, $one_point_twenty_indexes ) {
         while( my($name,$stmt) = each %{$hr} ) {
             say $ilog "Attempting to create '$name':";
             try {
@@ -469,6 +488,23 @@ CREATE TABLE LotteryPrefs (
 )
 ';
     $index_statements->{'LotteryPrefs_body'} = 'CREATE UNIQUE INDEX LotteryPrefs_body ON LotteryPrefs (body_id, server_id)';
+    
+    return( $table_statements, $index_statements );
+}#}}}
+sub tables_1point20 {#{{{
+    my $table_statements = {};
+    my $index_statements = {};
+
+    $table_statements->{'SSAlerts'}  = '
+CREATE TABLE "SSAlerts" (
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+    "server_id" INTEGER NOT NULL,
+    "station_id" INTEGER NOT NULL, 
+    "enabled" INTEGER NOT NULL DEFAULT 0, 
+    "min_res" BIGINT NOT NULL  DEFAULT 0
+)
+';
+    $index_statements->{'SSAlerts_station_id'} = 'CREATE UNIQUE INDEX "SSAlerts_station_id" ON "SSAlerts" ("server_id" ASC, "station_id" ASC)';
     
     return( $table_statements, $index_statements );
 }#}}}

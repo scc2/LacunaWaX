@@ -37,13 +37,19 @@ sub delete_old_databases {#{{{
 
 =pod
 
-As part of Cava's build process, it copies everything in ROOT/user to 
-ROOT/Cava/release/LacunaWaX/user/.  This includes the live databases you're 
-using if you're running the program from source, and these databases include 
-your login credentials and logs as well as all of your preferences.
+As part of Cava's build process, it copies everything currently in ROOT/user 
+to ROOT/Cava/release/LacunaWaX/user/, and those files will be installed by the 
+installer created by Cava.
 
-We don't want to install our personal databases into a new install, so this 
-deletes those from the release directory.
+So if you're working on LacunaWaX code and running the program from source, 
+that's where the databases you're working on will be kept.  And they'll end up 
+being installed by everyone who uses the installer you end up creating.
+
+And those databases contain your own empire name, password, and any sitters 
+you entered into the sitter manager, along with all of your other preferences.  
+We don't want to publish that.
+
+So this deletes those databases from the release directory.
 
 =cut
 

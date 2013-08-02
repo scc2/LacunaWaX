@@ -26,7 +26,7 @@ package LacunaWaX {
     use MooseX::NonMoose;
     extends 'Wx::App';
 
-    our $VERSION = 1.18;
+    our $VERSION = '1.20';  # quoted so 1.20 doesn't become 1.2 (dummy)
 
     has 'root_dir'          => (is => 'rw', isa => 'Str',                               required   => 1);
     has 'bb'                => (is => 'rw', isa => 'LacunaWaX::Model::Container',       lazy_build => 1);
