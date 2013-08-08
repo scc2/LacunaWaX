@@ -467,6 +467,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::PropositionsPane::PropRow {
             local $SIG{ALRM} = sub { croak "voting stall"; };
             alarm 5;
             my $rv = $sitter_parl->cast_vote($self->prop->{'id'}, 1);
+#            my $rv = $sitter_parl->cast_vote($self->prop->{'id'}, 0);  # to force 'no' votes
             alarm 0;
             return $rv;
         }

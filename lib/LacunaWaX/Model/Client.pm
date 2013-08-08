@@ -684,8 +684,9 @@ where rate is a ship's listed speed.
     sub get_alliance_profile {#{{{
         my $self = shift;
 
-        ### Find the current user's alliance ID...
-        my $alliance_id = $self->get_alliance_id();
+        ### Find the current user's alliance ID.  Return undef right away if 
+        ### they're not in one.
+        my $alliance_id = $self->get_alliance_id() or return;
         unless($alliance_id) {
             croak "You are not in an alliance.";
         }
@@ -718,7 +719,8 @@ where rate is a ship's listed speed.
 
 =head2 get_alliance_members
 
-Returns the members of $self->empire_name's alliance.
+Returns the members of $self->empire_name's alliance, or an empty hashref if 
+the user is not in an alliance.
 
 By default, returns a hashref of members:
 
@@ -745,12 +747,16 @@ of the hashref:
 =cut
 
         my $alliance_profile = $self->get_alliance_profile;
+        unless( $alliance_profile ) {
+            ### User is not a member of an alliance.
+            return($as_array) ? [] : {};
+        }
         my $alliance_members = $alliance_profile->{'profile'}{'members'};
 
         return $alliance_members if $as_array;
 
         ### Rework alliance_members arrayref into simply {id => 'name'}
-        my $ally_hash = {};
+        my $ally_hash   = {};
         map{ $ally_hash->{$_->{'id'} } = $_->{'name'} }@{$alliance_members};
         return $ally_hash;
     }#}}}

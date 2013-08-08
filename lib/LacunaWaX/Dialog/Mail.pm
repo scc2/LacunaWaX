@@ -335,9 +335,17 @@ package LacunaWaX::Dialog::Mail {
             Wx::Size->new(400, 30)
         );
         $v->SetFont( $self->get_font('/header_2') );
-        $v->SetToolTip(
-"Messages sent by this form are doing an end-run around the profanity filter.  Use your head."
-        );
+
+        ### ally_members is an AoH.  The first entry will always be the @ally 
+        ### address at the top of the select box, so there will always be one 
+        ### entry.  If there exists _exactly_ one entry, this player is not in 
+        ### an alliance.
+        if( @{$self->ally_members} == 1 ) {
+            $v->SetToolTip( "Since you're not a member of an alliance, you can't send alliance mail, so this won't do anything." );
+        }
+        else {
+            $v->SetToolTip( "Messages sent by this form are doing an end-run around the profanity filter.  Use your head." );
+        }
         return $v;
     }#}}}
     sub _build_lbl_subject {#{{{
