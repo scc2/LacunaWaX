@@ -14,6 +14,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane {
     use LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane::RecipeForm;
 
     has 'sizer_debug' => (is => 'rw', isa => 'Int',  lazy => 1, default => 0);
+	#has 'sizer_debug' => (is => 'rw', isa => 'Int',  lazy => 1, default => 1);
 
     has 'planet_name'   => (is => 'rw', isa => 'Str', required => 1     );
     has 'planet_id'     => (is => 'rw', isa => 'Int', lazy_build => 1   );
@@ -51,10 +52,10 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane {
     has 'glyph_pusher_box'      => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1);
     has 'header_sizer'          => (is => 'rw', isa => 'Wx::BoxSizer',  lazy_build => 1, documentation => 'vertcal');
     has 'lbl_glyph_home'        => (is => 'rw', isa => 'Wx::StaticText',        lazy_build => 1);
-    has 'lbl_planet_name'       => (is => 'rw', isa => 'Wx::StaticText',        lazy_build => 1);
     has 'lbl_pusher_ship'       => (is => 'rw', isa => 'Wx::StaticText',        lazy_build => 1);
     has 'lbl_reserve_glyphs'    => (is => 'rw', isa => 'Wx::StaticText',        lazy_build => 1);
     has 'list_glyphs'           => (is => 'rw', isa => 'Maybe[Wx::ListCtrl]',   lazy_build => 1);
+    has 'lbl_planet_name'       => (is => 'rw', isa => 'Wx::StaticText',        lazy_build => 1);
     has 'list_sizer'            => (is => 'rw', isa => 'Wx::BoxSizer',  lazy_build => 1, documentation => 'vertcal');
     has 'txt_pusher_ship'       => (is => 'rw', isa => 'Wx::TextCtrl', lazy_build => 1);
     has 'txt_reserve_glyphs'    => (is => 'rw', isa => 'Wx::TextCtrl', lazy_build => 1);
@@ -62,14 +63,17 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane {
     has 'recipe_box'    => (is => 'rw', isa => 'Wx::BoxSizer',  lazy_build => 1);
     has 'recipe_forms'  => (is => 'rw', isa => 'ArrayRef',      lazy_build => 1);
 
+    
+    my $scc_glyph = 0;
+    
     sub BUILD {
         my $self = shift;
 
         ### See comments in the method as to why it's '_make', not '_build'.
         $self->dialog_status( $self->_make_dialog_status );
 
-        $self->header_sizer->Add($self->lbl_planet_name, 0, 0, 0);
         $self->list_sizer->Add($self->list_glyphs, 0, 0, 0);
+        $self->header_sizer->Add($self->lbl_planet_name, 0, 0, 0);
 
         $self->content_sizer->Add($self->header_sizer, 0, 0, 0);
         $self->content_sizer->Add($self->list_sizer, 0, 0, 0);
@@ -258,17 +262,6 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane {
         $lbl_glyph_home->SetFont( $self->get_font('/para_text_1') );
         return $lbl_glyph_home;
     }#}}}
-    sub _build_lbl_planet_name {#{{{
-        my $self = shift;
-        my $v = Wx::StaticText->new(
-            $self->parent, -1, 
-            'Glyphs on ' . $self->planet_name, 
-            wxDefaultPosition, 
-            Wx::Size->new(640, 40)
-        );
-        $v->SetFont( $self->get_font('/header_1') );
-        return $v;
-    }#}}}
     sub _build_lbl_pusher_ship {#{{{
         my $self = shift;
         my $lbl_pusher_ship = Wx::StaticText->new(
@@ -330,6 +323,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane {
         $self->yield;
 
         ### Add glyphs to the listctrl
+        $scc_glyph = 0;
         my $row = 0;
         foreach my $hr( @{$sorted_glyphs} ) {#{{{
             ### $row is also the offset of the image in the ImageList, provided 
@@ -337,15 +331,29 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane {
             my $row_idx = $list_ctrl->InsertImageItem($row, $row);
             $list_ctrl->SetItem($row_idx, 1, $hr->{name});
             $list_ctrl->SetItem($row_idx, 2, $hr->{quantity});
+            $scc_glyph += $hr->{quantity};
             $row++;
             $self->yield;
         }#}}}
 
+        #say($scc_glyph);
+        
         $list_ctrl->SetFont( $self->get_font('/para_text_1') );
 
         $self->endthrob();
         return $list_ctrl;
     }#}}}
+    sub _build_lbl_planet_name {#{{{
+        my $self = shift;
+        my $v = Wx::StaticText->new(
+            $self->parent, -1, 
+            'Glyphs on ' . $self->planet_name . ' (Total:' . $scc_glyph . ')', 
+            wxDefaultPosition, 
+            Wx::Size->new(640, 40)
+        );
+        $v->SetFont( $self->get_font('/header_1') );
+        return $v;
+    }#}}}  
     sub _build_list_sizer {#{{{
         my $self = shift;
         return $self->build_sizer($self->parent, wxVERTICAL, 'Glyphs List');
