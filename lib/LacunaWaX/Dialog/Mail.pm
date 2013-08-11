@@ -11,6 +11,7 @@ package LacunaWaX::Dialog::Mail {
     extends 'LacunaWaX::Dialog::NonScrolled';
 
     has 'sizer_debug' => (is => 'rw', isa => 'Int',  lazy => 1, default => 0);
+	#has 'sizer_debug' => (is => 'rw', isa => 'Int',  lazy => 1, default => 1);
 
     has 'addy_height'   => (is => 'rw', isa => 'Int',                           lazy => 1,      default => 25   );
     has 'ally_members'  => (is => 'rw', isa => 'ArrayRef',                      lazy_build => 1                 );
@@ -26,6 +27,7 @@ package LacunaWaX::Dialog::Mail {
     has 'chk_excav'         => (is => 'rw', isa => 'Wx::CheckBox',      lazy_build => 1);
     has 'chk_parl'          => (is => 'rw', isa => 'Wx::CheckBox',      lazy_build => 1);
     has 'chk_probe'         => (is => 'rw', isa => 'Wx::CheckBox',      lazy_build => 1);
+    has 'chk_cust'			=> (is => 'rw', isa => 'Wx::CheckBox',      lazy_build => 1);
     has 'chk_read'          => (is => 'rw', isa => 'Wx::CheckBox',      lazy_build => 1);
     has 'lbl_ally'          => (is => 'rw', isa => 'Wx::StaticText',    lazy_build => 1);
     has 'lbl_body'          => (is => 'rw', isa => 'Wx::StaticText',    lazy_build => 1);
@@ -40,12 +42,14 @@ package LacunaWaX::Dialog::Mail {
     has 'szr_body'          => (is => 'rw', isa => 'Wx::Sizer',         lazy_build => 1, documentation => 'horizontal');
     has 'szr_btn_send'      => (is => 'rw', isa => 'Wx::Sizer',         lazy_build => 1, documentation => 'horizontal');
     has 'szr_clear'         => (is => 'rw', isa => 'Wx::Sizer',         lazy_build => 1, documentation => 'vertical'    );
+    has 'szr_cust'			=> (is => 'rw', isa => 'Wx::Sizer',         lazy_build => 1, documentation => 'horizontal'  );	
     has 'szr_check'         => (is => 'rw', isa => 'Wx::Sizer',         lazy_build => 1, documentation => 'horizontal'  );
     has 'szr_header'        => (is => 'rw', isa => 'Wx::Sizer',         lazy_build => 1, documentation => 'vertical'    );
     has 'szr_instructions'  => (is => 'rw', isa => 'Wx::Sizer',         lazy_build => 1);
     has 'szr_send'          => (is => 'rw', isa => 'Wx::Sizer',         lazy_build => 1);
     has 'szr_subject'       => (is => 'rw', isa => 'Wx::Sizer',         lazy_build => 1, documentation => 'horizontal');
     has 'szr_to'            => (is => 'rw', isa => 'Wx::Sizer',         lazy_build => 1, documentation => 'horizontal');
+    has 'txt_cust'          => (is => 'rw', isa => 'Wx::TextCtrl',      lazy_build => 1);
     has 'txt_to'            => (is => 'rw', isa => 'Wx::TextCtrl',      lazy_build => 1);
     has 'txt_subject'       => (is => 'rw', isa => 'Wx::TextCtrl',      lazy_build => 1);
     has 'txt_body'          => (is => 'rw', isa => 'Wx::TextCtrl',      lazy_build => 1);
@@ -73,16 +77,24 @@ package LacunaWaX::Dialog::Mail {
         $self->szr_check->Add($self->chk_parl, 0, 0, 0);
         $self->szr_check->AddSpacer(2);
         $self->szr_check->Add($self->chk_probe, 0, 0, 0);
+        $self->szr_check->AddSpacer(2);
+        $self->szr_check->Add($self->chk_cust, 0, 0, 0);		
         $self->szr_check->AddSpacer(20);
-        $self->szr_check->Add($self->chk_read, 0, 0, 0);
-
+        $self->szr_check->Add($self->chk_read, 0, 0, 0);		
+		
         ### clear mail block
         $self->szr_clear->Add($self->lbl_hdr_clear, 0, 0, 0);
         $self->szr_clear->AddSpacer(5);
         $self->szr_clear->Add($self->szr_check, 0, 0, 0);
+		
+		### custom text entry	
         $self->szr_clear->AddSpacer(5);
-        $self->szr_clear->Add($self->btn_clear_inbox, 0, 0, 0);
-
+        $self->szr_clear->Add($self->szr_cust, 0, 0, 0);
+        $self->szr_cust->AddSpacer(5);
+        $self->szr_cust->Add($self->btn_clear_inbox, 0, 0, 0);		
+        $self->szr_cust->AddSpacer(20);
+        $self->szr_cust->Add($self->txt_cust, 0, 0, 0);		
+		
         ### send mail form sizers
         $self->szr_ally->Add($self->lbl_ally, 0, 0, 0);
         $self->szr_ally->Add($self->chc_ally, 0, 0, 0);
@@ -113,10 +125,11 @@ package LacunaWaX::Dialog::Mail {
         ### combine the above
         $self->main_sizer->Add($self->szr_header, 0, 0, 0);
         $self->main_sizer->AddSpacer(20);
-        $self->main_sizer->Add($self->szr_clear, 0, 0, 0);
+        $self->main_sizer->Add($self->szr_clear, 0, 0, 0);	
         $self->main_sizer->AddSpacer(40);
         $self->main_sizer->Add($self->szr_send, 0, 0, 0);
 
+		
         $self->btn_clear_inbox->SetFocus;
         $self->init_screen();
 
@@ -198,7 +211,7 @@ package LacunaWaX::Dialog::Mail {
         my $self = shift;
         return Wx::CheckBox->new(
             $self, -1, 
-            'Correspondence',
+            'Corresp.',
             wxDefaultPosition, 
             Wx::Size->new(-1,-1), 
         );
@@ -230,16 +243,34 @@ package LacunaWaX::Dialog::Mail {
             Wx::Size->new(-1,-1), 
         );
     }#}}}
+    sub _build_chk_cust {#{{{
+        my $self = shift;
+        return Wx::CheckBox->new(
+            $self, -1, 
+            'Custom',
+            wxDefaultPosition, 
+            Wx::Size->new(-1,-1), 
+        );
+    }#}}}	
     sub _build_chk_read {#{{{
         my $self = shift;
         my $v = Wx::CheckBox->new(
             $self, -1, 
-            'Only remove read',
+            'Only read',
             wxDefaultPosition, 
             Wx::Size->new(-1,-1), 
         );
         $v->SetValue(0);
         return $v;
+    }#}}}
+    sub _build_txt_cust {#{{{
+        my $self = shift;
+        return Wx::TextCtrl->new(
+            $self, -1, 
+            q{},
+            wxDefaultPosition, 
+            Wx::Size->new(200, $self->addy_height)
+        );
     }#}}}
     sub _build_inbox {#{{{
         my $self = shift;
@@ -335,17 +366,9 @@ package LacunaWaX::Dialog::Mail {
             Wx::Size->new(400, 30)
         );
         $v->SetFont( $self->get_font('/header_2') );
-
-        ### ally_members is an AoH.  The first entry will always be the @ally 
-        ### address at the top of the select box, so there will always be one 
-        ### entry.  If there exists _exactly_ one entry, this player is not in 
-        ### an alliance.
-        if( @{$self->ally_members} == 1 ) {
-            $v->SetToolTip( "Since you're not a member of an alliance, you can't send alliance mail, so this won't do anything." );
-        }
-        else {
-            $v->SetToolTip( "Messages sent by this form are doing an end-run around the profanity filter.  Use your head." );
-        }
+        $v->SetToolTip(
+"Messages sent by this form are doing an end-run around the profanity filter.  Use your head."
+        );
         return $v;
     }#}}}
     sub _build_lbl_subject {#{{{
@@ -391,6 +414,10 @@ package LacunaWaX::Dialog::Mail {
         my $self = shift;
         return $self->build_sizer($self, wxVERTICAL, 'Clear Sizer');
     }#}}}
+    sub _build_szr_cust {#{{{
+        my $self = shift;
+        return $self->build_sizer($self, wxHORIZONTAL, 'Custom Text Sizer');
+    }#}}}	
     sub _build_szr_check {#{{{
         my $self = shift;
         return $self->build_sizer($self, wxHORIZONTAL, 'Checkbox Sizer');
@@ -561,8 +588,16 @@ already used 'bless'.
         $self->txt_to->SetValue($to_out);
         return 1;
     }#}}}
+	
+	
+#===================================================================================
+	# SCC: Add custom string find and delete
+	# Test string: 'Created Disturbance'
+
+	
     sub _get_trash_messages {#{{{
         my $self            = shift;
+		my $go_cust			= shift;
         my $tags_to_trash   = shift;
         my $status          = shift;
         my $trash_these     = [];
@@ -578,68 +613,163 @@ already used 'bless'.
             $status->show;
         }
 
+		
+		#say('GetTrash :');
+		#say($self->txt_cust->GetValue . '<');
+		#say($self->txt_cust->GetLineText(0) . '<');		
+		
+		
         ### We always have to get the first page of messages, which will tell 
         ### us how many messages (and therefore pages) there are in total.
-        $status->say("Reading page 1");
-        my $contents = try {
-            $self->inbox->view_inbox({page_number => 1, tags => $tags_to_trash});
-        }
-        catch {
-            my $msg = (ref $_) ? $_->text : $_;
-            $self->poperr("Unable to get page 1: $msg");
-            return;
-        } or return;
-        my $msg_count   = $contents->{'message_count'};
-        my $msgs        = $contents->{'messages'};
-        foreach my $m(@{$msgs}) {
-            next if $self->chk_read->GetValue and not $m->{'has_read'};
-            push @{$trash_these}, $m->{'id'};
-        }
+        $status->say("Reading page 01");
+		
+		#Add section for custom text handling
+		my $scc_test 	= $go_cust; 
+		my $scc_str		= $self->txt_cust->GetValue;
+		
+		if ($scc_test eq 'Y') {
+			my $contents = try {
+				$self->inbox->view_inbox({page_number => 1});
+			}
+			catch {
+				my $msg = (ref $_) ? $_->text : $_;
+				$self->poperr("Unable to get page 1: $msg");
+				return;
+			} or return;
+			my $msg_count   = $contents->{'message_count'};
+			my $msgs        = $contents->{'messages'};
+			
+			foreach my $m(@{$msgs}) {
+				next if $self->chk_read->GetValue and not $m->{'has_read'};
+				
+				#print Dumper $m->{'subject'};
+				
+				if ($scc_str eq $m->{'subject'}) {
+					#$status->say($m->{'subject'} . ' will be deleted');
+					push @{$trash_these}, $m->{'id'};
+				}
+			}
 
-        ### Get subsequent pages if necessary.
-        my $max_page = int($msg_count / 25);
-        $max_page++ if $msg_count % 25;
-        for my $page(2..$max_page) {    # already got page 1
-            $status->say("Reading page $page");
-            my $contents = try {
-                $self->inbox->view_inbox({page_number => $page, tags => $tags_to_trash});
-            }
-            catch {
-                my $msg = (ref $_) ? $_->text : $_;
-                $self->poperr("Unable to get page $page: $msg");
-                return;
-            } or return;
-            my $msgs = $contents->{'messages'};
-            my $found_count = 0;
-            foreach my $m(@{$msgs}) {
-                next if $self->chk_read->GetValue and not $m->{'has_read'};
-                push @{$trash_these}, $m->{'id'};
-            }
-        }
+			### Get subsequent pages if necessary.
+			my $max_page = int($msg_count / 25);
+			$max_page++ if $msg_count % 25;
+			for my $page(2..$max_page) {    # already got page 1
+				$status->say("Reading page $page");
+				my $contents = try {
+					$self->inbox->view_inbox({page_number => $page});
+				}
+				catch {
+					my $msg = (ref $_) ? $_->text : $_;
+					$self->poperr("Unable to get page $page: $msg");
+					return;
+				} or return;
+				my $msgs = $contents->{'messages'};
+				my $found_count = 0;
+				foreach my $m(@{$msgs}) {
+					next if $self->chk_read->GetValue and not $m->{'has_read'};
+					if ($scc_str eq $m->{'subject'}) {
+						#$status->say($m->{'subject'} . ' will be deleted');
+						push @{$trash_these}, $m->{'id'};
+					}
+				}
+			}
 
+		} else {
+			my $contents = try {
+				$self->inbox->view_inbox({page_number => 1, tags => $tags_to_trash});
+			}
+			catch {
+				my $msg = (ref $_) ? $_->text : $_;
+				$self->poperr("Unable to get page 1: $msg");
+				return;
+			} or return;
+			my $msg_count   = $contents->{'message_count'};
+			my $msgs        = $contents->{'messages'};
+			
+			
+			#print $msg_count;
+			#print $m->{'subject'};
+			
+			foreach my $m(@{$msgs}) {
+				next if $self->chk_read->GetValue and not $m->{'has_read'};
+				
+				#print Dumper $m;
+				
+				push @{$trash_these}, $m->{'id'};
+			}
+
+			### Get subsequent pages if necessary.
+			my $max_page = int($msg_count / 25);
+			$max_page++ if $msg_count % 25;
+			for my $page(2..$max_page) {    # already got page 1
+				$status->say("Reading page $page");
+				my $contents = try {
+					$self->inbox->view_inbox({page_number => $page, tags => $tags_to_trash});
+				}
+				catch {
+					my $msg = (ref $_) ? $_->text : $_;
+					$self->poperr("Unable to get page $page: $msg");
+					return;
+				} or return;
+				my $msgs = $contents->{'messages'};
+				my $found_count = 0;
+				foreach my $m(@{$msgs}) {
+					next if $self->chk_read->GetValue and not $m->{'has_read'};
+					push @{$trash_these}, $m->{'id'};
+				}
+			}
+
+		}
+		
         if( $created_own_status ) {
             $status->close();
         }
 
         return $trash_these;
     }#}}}
+	
+	
+#===================================================================================	
+	
+	
     sub OnClearMail {#{{{
         my $self            = shift;
         my $dialog          = shift;
         my $event           = shift;
         my $tags_to_trash   = [];
+		my $go_cust			= 'N';
+		
 
-        foreach my $checkbox( $self->chk_alert, $self->chk_attacks, $self->chk_corr, $self->chk_excav, $self->chk_parl, $self->chk_probe ) {
-            push @{$tags_to_trash}, $checkbox->GetLabel if $checkbox->GetValue;
+		#say('OnClear :');
+		#say($self->txt_cust->GetValue . '<');
+		#say($self->txt_cust->GetLineText(0) . '<');
+		
+        foreach my $checkbox( $self->chk_alert, $self->chk_attacks, $self->chk_corr, $self->chk_excav, $self->chk_parl, $self->chk_probe,  $self->chk_cust) {
+			if ($checkbox->GetLabel eq 'Custom' and $checkbox->GetValue) {
+				#say($checkbox->GetLabel);
+				#say($checkbox->GetValue);
+				$go_cust = 'Y';
+				last;
+			} else {
+				push @{$tags_to_trash}, $checkbox->GetLabel if $checkbox->GetValue;
+			}
+			
         }
-        unless( @{$tags_to_trash} ) {
-            $self->poperr(
-                "I should remove nothing?  You got it.",
-                "No checkboxes checked",
-            );
-            $self->btn_clear_inbox->SetFocus;
-            return;
-        }
+		
+		if ($go_cust ne 'Y') {
+		
+			unless( @{$tags_to_trash} ) {
+				$self->poperr(
+					"I should remove nothing?  You got it.",
+					"No checkboxes checked",
+				);
+				$self->btn_clear_inbox->SetFocus;
+				return;
+			}
+		}
+		
+		
+		#say('Cust Val : ' . $go_cust);
 
         my $status = LacunaWaX::Dialog::Status->new(
             app      => $self->app,
@@ -649,8 +779,12 @@ already used 'bless'.
         $status->show;
 
 
-        my $trash_these = $self->_get_trash_messages($tags_to_trash, $status);
+        my $trash_these = $self->_get_trash_messages($go_cust, $tags_to_trash, $status);
 
+		#SCC:
+		#print Dumper $trash_these;
+		
+		
         $status->say("Deleting selected messages");
         my $rv = try {
             $self->inbox->trash_messages($trash_these);
@@ -672,6 +806,11 @@ already used 'bless'.
         $status->say("Mail clearing complete.");
         return 1;
     }#}}}
+	
+	
+#===================================================================================
+	
+	
     sub OnClearTo {#{{{
         my $self = shift;
         $self->txt_to->SetValue(q{});
