@@ -14,10 +14,21 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane {
     use LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane::RecipeForm;
 
     has 'sizer_debug' => (is => 'rw', isa => 'Int',  lazy => 1, default => 0);
-	#has 'sizer_debug' => (is => 'rw', isa => 'Int',  lazy => 1, default => 1);
 
     has 'planet_name'   => (is => 'rw', isa => 'Str', required => 1     );
     has 'planet_id'     => (is => 'rw', isa => 'Int', lazy_build => 1   );
+
+    has 'glyph_total' => (
+        is      => 'rw', 
+        isa     => 'Int', 
+        lazy    => 1, 
+        default => 0,
+        traits  => ['Number'],
+        handles => {
+            set_total       => 'set',
+            add_to_total    => 'add',
+        },
+    );
 
     has 'has_arch_min'  => (is => 'rw', isa => 'Int', lazy => 1,        default => 1,
         documentation => q{Set to false by call to _build_list_glyphs if no AM is found}
@@ -43,13 +54,13 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane {
     );
 
     has 'auto_search_box'       => (is => 'rw', isa => 'Wx::BoxSizer',  lazy_build => 1);
-    has 'btn_push_glyphs'       => (is => 'rw', isa => 'Wx::Button',   lazy_build => 1);
-    has 'chc_glyph_home'        => (is => 'rw', isa => 'Wx::Choice',   lazy_build => 1);
+    has 'btn_push_glyphs'       => (is => 'rw', isa => 'Wx::Button',    lazy_build => 1);
+    has 'chc_glyph_home'        => (is => 'rw', isa => 'Wx::Choice',    lazy_build => 1);
     has 'chc_auto_search'       => (is => 'rw', isa => 'Wx::Choice',    lazy_build => 1);
     has 'btn_auto_search'       => (is => 'rw', isa => 'Wx::Button',    lazy_build => 1);
-    has 'btn_build_all_halls'   => (is => 'rw', isa => 'Wx::Button', lazy_build => 1);
+    has 'btn_build_all_halls'   => (is => 'rw', isa => 'Wx::Button',    lazy_build => 1);
     has 'halls_btn_sizer'       => (is => 'rw', isa => 'Wx::BoxSizer',  lazy_build => 1, documentation => 'horizontal');
-    has 'glyph_pusher_box'      => (is => 'rw', isa => 'Wx::BoxSizer', lazy_build => 1);
+    has 'glyph_pusher_box'      => (is => 'rw', isa => 'Wx::BoxSizer',  lazy_build => 1);
     has 'header_sizer'          => (is => 'rw', isa => 'Wx::BoxSizer',  lazy_build => 1, documentation => 'vertcal');
     has 'lbl_glyph_home'        => (is => 'rw', isa => 'Wx::StaticText',        lazy_build => 1);
     has 'lbl_pusher_ship'       => (is => 'rw', isa => 'Wx::StaticText',        lazy_build => 1);
@@ -57,15 +68,12 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane {
     has 'list_glyphs'           => (is => 'rw', isa => 'Maybe[Wx::ListCtrl]',   lazy_build => 1);
     has 'lbl_planet_name'       => (is => 'rw', isa => 'Wx::StaticText',        lazy_build => 1);
     has 'list_sizer'            => (is => 'rw', isa => 'Wx::BoxSizer',  lazy_build => 1, documentation => 'vertcal');
-    has 'txt_pusher_ship'       => (is => 'rw', isa => 'Wx::TextCtrl', lazy_build => 1);
-    has 'txt_reserve_glyphs'    => (is => 'rw', isa => 'Wx::TextCtrl', lazy_build => 1);
+    has 'txt_pusher_ship'       => (is => 'rw', isa => 'Wx::TextCtrl',  lazy_build => 1);
+    has 'txt_reserve_glyphs'    => (is => 'rw', isa => 'Wx::TextCtrl',  lazy_build => 1);
 
     has 'recipe_box'    => (is => 'rw', isa => 'Wx::BoxSizer',  lazy_build => 1);
     has 'recipe_forms'  => (is => 'rw', isa => 'ArrayRef',      lazy_build => 1);
 
-    
-    my $scc_glyph = 0;
-    
     sub BUILD {
         my $self = shift;
 
@@ -323,7 +331,6 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane {
         $self->yield;
 
         ### Add glyphs to the listctrl
-        $scc_glyph = 0;
         my $row = 0;
         foreach my $hr( @{$sorted_glyphs} ) {#{{{
             ### $row is also the offset of the image in the ImageList, provided 
@@ -331,13 +338,11 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane {
             my $row_idx = $list_ctrl->InsertImageItem($row, $row);
             $list_ctrl->SetItem($row_idx, 1, $hr->{name});
             $list_ctrl->SetItem($row_idx, 2, $hr->{quantity});
-            $scc_glyph += $hr->{quantity};
+            $self->add_to_total( $hr->{quantity} );
             $row++;
             $self->yield;
         }#}}}
 
-        #say($scc_glyph);
-        
         $list_ctrl->SetFont( $self->get_font('/para_text_1') );
 
         $self->endthrob();
@@ -347,7 +352,7 @@ package LacunaWaX::MainSplitterWindow::RightPane::GlyphsPane {
         my $self = shift;
         my $v = Wx::StaticText->new(
             $self->parent, -1, 
-            'Glyphs on ' . $self->planet_name . ' (Total:' . $scc_glyph . ')', 
+            'Glyphs on ' . $self->planet_name . ' (Total:' . $self->glyph_total . ')', 
             wxDefaultPosition, 
             Wx::Size->new(640, 40)
         );

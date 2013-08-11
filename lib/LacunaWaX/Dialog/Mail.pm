@@ -11,7 +11,6 @@ package LacunaWaX::Dialog::Mail {
     extends 'LacunaWaX::Dialog::NonScrolled';
 
     has 'sizer_debug' => (is => 'rw', isa => 'Int',  lazy => 1, default => 0);
-	#has 'sizer_debug' => (is => 'rw', isa => 'Int',  lazy => 1, default => 1);
 
     has 'addy_height'   => (is => 'rw', isa => 'Int',                           lazy => 1,      default => 25   );
     has 'ally_members'  => (is => 'rw', isa => 'ArrayRef',                      lazy_build => 1                 );
@@ -265,12 +264,14 @@ package LacunaWaX::Dialog::Mail {
     }#}}}
     sub _build_txt_cust {#{{{
         my $self = shift;
-        return Wx::TextCtrl->new(
+        my $v = Wx::TextCtrl->new(
             $self, -1, 
             q{},
             wxDefaultPosition, 
             Wx::Size->new(200, $self->addy_height)
         );
+        $v->SetToolTip("Optional - choose the 'Custom' checkbox and type a subject here; all mails with that exact subject will be deleted regardless of tag.  Setting the Custom checkbox will override all other checkboxes.");
+        return $v;
     }#}}}
     sub _build_inbox {#{{{
         my $self = shift;
@@ -589,12 +590,6 @@ already used 'bless'.
         return 1;
     }#}}}
 	
-	
-#===================================================================================
-	# SCC: Add custom string find and delete
-	# Test string: 'Created Disturbance'
-
-	
     sub _get_trash_messages {#{{{
         my $self            = shift;
 		my $go_cust			= shift;
@@ -613,12 +608,6 @@ already used 'bless'.
             $status->show;
         }
 
-		
-		#say('GetTrash :');
-		#say($self->txt_cust->GetValue . '<');
-		#say($self->txt_cust->GetLineText(0) . '<');		
-		
-		
         ### We always have to get the first page of messages, which will tell 
         ### us how many messages (and therefore pages) there are in total.
         $status->say("Reading page 01");
@@ -727,22 +716,12 @@ already used 'bless'.
 
         return $trash_these;
     }#}}}
-	
-	
-#===================================================================================	
-	
-	
     sub OnClearMail {#{{{
         my $self            = shift;
         my $dialog          = shift;
         my $event           = shift;
         my $tags_to_trash   = [];
 		my $go_cust			= 'N';
-		
-
-		#say('OnClear :');
-		#say($self->txt_cust->GetValue . '<');
-		#say($self->txt_cust->GetLineText(0) . '<');
 		
         foreach my $checkbox( $self->chk_alert, $self->chk_attacks, $self->chk_corr, $self->chk_excav, $self->chk_parl, $self->chk_probe,  $self->chk_cust) {
 			if ($checkbox->GetLabel eq 'Custom' and $checkbox->GetValue) {
@@ -753,7 +732,6 @@ already used 'bless'.
 			} else {
 				push @{$tags_to_trash}, $checkbox->GetLabel if $checkbox->GetValue;
 			}
-			
         }
 		
 		if ($go_cust ne 'Y') {
@@ -806,10 +784,6 @@ already used 'bless'.
         $status->say("Mail clearing complete.");
         return 1;
     }#}}}
-	
-	
-#===================================================================================
-	
 	
     sub OnClearTo {#{{{
         my $self = shift;

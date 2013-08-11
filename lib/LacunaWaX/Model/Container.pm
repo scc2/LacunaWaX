@@ -259,6 +259,7 @@ package LacunaWaX::Model::Container {
                 service 'developers' => [
                     'Jonathan D. Barton (tmtowtdi@gmail.com)',
                     'Nathan McCalllum (thevasari@gmail.com)',
+                    'Swamp Thing',
                 ];
             };#}}}
         };
